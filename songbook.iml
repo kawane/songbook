@@ -19,7 +19,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="PROVIDED" name="Jetty 9.1.4.v20140401" level="application_server_libraries" />
+    <orderEntry type="library" scope="PROVIDED" name="Resin 4.0.39" level="application_server_libraries" />
   </component>
 </module>
 

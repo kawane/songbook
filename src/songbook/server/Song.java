@@ -5,6 +5,5 @@ package songbook.server;
  */
 public class Song {
 
-    public String title;
 
 }
