@@ -6,6 +6,11 @@
 # out directory
 out
 
+# Idea project files to ignore
+*.iws
+.idea/workspace.xml
+.idea/tasks.xml
+
 # Package Files #
 *.jar
 *.war
