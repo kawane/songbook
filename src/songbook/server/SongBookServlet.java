@@ -18,6 +18,8 @@ import java.sql.Statement;
 public class SongBookServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/html");
+
         final PrintWriter out = response.getWriter();
         out.println("<html>");
         out.println("<head><title>Songbook</title></head>");
