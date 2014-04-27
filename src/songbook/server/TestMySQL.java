@@ -9,9 +9,14 @@ import java.sql.SQLException;
  */
 public class TestMySQL {
 
+    public static final String getMySQLAccess() {
+        final String mysqlAccess = System.getProperty("mysql.access");
+        return mysqlAccess == null ? "localhost:3306/songbook?user=root" : mysqlAccess;
+    }
+
     public static String testConnection() {
         try {
-            final Connection connection = DriverManager.getConnection("jdbc:mysql://" + getMySQLHost() + ":" + getMySQLPort() + "/songbook?user=adminqKH3YN4&password=xtT-T2Lijk4W");
+            final Connection connection = DriverManager.getConnection("jdbc:mysql://" +  getMySQLAccess());
             return connection.getMetaData().toString();
         } catch (SQLException ex) {
             return ex.getClass().getSimpleName() + ": " + ex.getMessage();
@@ -22,13 +27,4 @@ public class TestMySQL {
         System.out.println(testConnection());
     }
 
-    private static String getMySQLPort() {
-        final String port = System.getenv("OPENSHIFT_MYSQL_DB_PORT");
-        return port == null ? "8080" : port;
-    }
-
-    private static String getMySQLHost() {
-        final String host = System.getenv("OPENSHIFT_MYSQL_DB_HOST");
-        return host == null ? "localhost" : host;
-    }
 }
