@@ -19,6 +19,17 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/libs/mysql-connector-java-5.1.30/mysql-connector-java-5.1.30-bin.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/libs/mysql-connector-java-5.1.30/src" />
+        </SOURCES>
+      </library>
+    </orderEntry>
     <orderEntry type="library" scope="PROVIDED" name="Jetty 9.1.4.v20140401" level="application_server_libraries" />
   </component>
 </module>
