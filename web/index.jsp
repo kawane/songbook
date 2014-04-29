@@ -1,4 +1,3 @@
-<%@ page import="songbook.server.Database" %>
 <%-- Created Laurent on 23/04/2014 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
