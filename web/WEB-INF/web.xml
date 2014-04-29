@@ -10,7 +10,7 @@
 
     <servlet-mapping>
         <servlet-name>SongBookServlet</servlet-name>
-        <url-pattern>/songs/*</url-pattern>
+        <url-pattern>rest/song/*</url-pattern>
     </servlet-mapping>
 
 </web-app>
