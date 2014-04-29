@@ -18,4 +18,12 @@ public class Database {
         return DriverManager.getConnection("jdbc:mysql://" +  getMySQLAccess());
     }
 
+
+    public static boolean isValidId(String id) {
+        if (id==null) return false;
+        for (int i=0; i<id.length(); i+=1) {
+            if (Character.isDigit(id.charAt(i)) == false) return false;
+        }
+        return true;
+    }
 }
