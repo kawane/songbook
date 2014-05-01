@@ -7,5 +7,7 @@
   <body>
     <h1>My Songbook 2</h1>
 
-    </body>
+  </body>
+
+  <script src="js/songbook.js"></script>
 </html>
