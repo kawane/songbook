@@ -7,10 +7,18 @@
         <servlet-name>SongBookServlet</servlet-name>
         <servlet-class>songbook.server.SongBookServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>IndexServlet</servlet-name>
+        <servlet-class>songbook.server.IndexServlet</servlet-class>
+    </servlet>
 
     <servlet-mapping>
         <servlet-name>SongBookServlet</servlet-name>
         <url-pattern>rest/song/*</url-pattern>
     </servlet-mapping>
 
+    <servlet-mapping>
+        <servlet-name>IndexServlet</servlet-name>
+        <url-pattern>/home</url-pattern>
+    </servlet-mapping>
 </web-app>
