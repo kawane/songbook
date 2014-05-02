@@ -71,7 +71,9 @@ public class Templates {
                 "<!-- Include all compiled plugins (below), or include individual files as needed -->\n" +
                 "<script src=\"//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js\"></script>\n" +
                 "<script src=\"js/songbook.js\"></script>\n" +
-                "<script type=\"javascript\">"+ functionToCall +"</script>\n" +
+                "<script type=\"text/javascript\">\n"+
+                "   " + functionToCall +"\n"+
+                "</script>\n" +
                 "</body>\n" +
                 "</html>\n"
                 ;
@@ -85,7 +87,7 @@ public class Templates {
                 "<div id=\"content\" class=\"row\">\n" +
                 "  <div id=\"song-list\"></div>\n" +
                 "</div>" +
-                getFooter("songbook.retrieveAndListSongs('song-list')")
+                getFooter("songbook.retrieveAndListSongs('song-list');")
                 ;
     }
 }
