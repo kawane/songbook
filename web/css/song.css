@@ -1,0 +1,86 @@
+
+
+.song {
+	margin: 2em;
+	font-family: monospace;
+	white-space: nowrap;
+}
+
+.song-section {
+	margin: 3ex 0;	
+}
+
+.song-verse {
+}
+
+.song-chorus {
+	padding-left: 1em;
+	font-style: italic;
+}
+
+.song-chorus-recall {
+	padding-left: 1em;
+	font-style: italic;
+	font-weight: bold;
+	font-size: 120%;
+}
+
+.song-comment {
+	font-style: italic;
+	font-weight: bold;
+	margin: 0 0;	
+}
+
+.song-chorus-comment {
+}
+
+.song-line {
+}
+
+.song-chords {
+   line-height: 0.8em;
+   color: #888;
+}
+
+.song-line-with-chords {
+	position: relative;
+	white-space: pre;
+}
+
+.song-line-with-chords > .song-chord {
+	position: relative;
+	top: -1em;
+}
+
+
+.song-title {
+	font-weight: bold;
+	font-size: 140%;
+}
+
+.song-subtitle {
+	font-style: italic;
+}
+
+.song-author {
+	font-style: italic;
+}
+
+.song-artist {
+	font-style: italic;
+}
+
+.song-compositor {
+	font-style: italic;
+}
+
+.song-album {
+	font-style: italic;
+}
+
+.song-year {
+	font-style: italic;
+}
+
+
+

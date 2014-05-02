@@ -1,0 +1,12 @@
+@import url("song.css");
+
+.song-chord {
+	position: absolute;
+	top: -1em;
+	display: none;
+}
+
+.song-line-with-chords {
+	line-height: inherit;
+	position: relative;
+}
