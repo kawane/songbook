@@ -14,12 +14,22 @@ import java.util.function.Function;
  */
 public class Database {
 
+    static {
+        try {
+            // The newInstance() call is a work around for some broken Java implementations
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
+        } catch (Exception ex) {
+            // handle the error
+        }
+    }
+
     public static final String getMySQLAccess() {
         final String mysqlAccess = System.getProperty("mysql.access");
         return mysqlAccess == null ? "localhost:3306/songbook?user=root" : mysqlAccess;
     }
 
     public static Connection getConnection() throws SQLException {
+
         return DriverManager.getConnection("jdbc:mysql://" +  getMySQLAccess());
     }
 

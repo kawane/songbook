@@ -3,6 +3,12 @@
     <output-path>$PROJECT_DIR$/out/artifacts</output-path>
     <root id="archive" name="songbook.war">
       <element id="artifact" artifact-name="songbook:war exploded" />
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="lib">
+          <element id="file-copy" path="$PROJECT_DIR$/libs/jackson/jackson-core-2.2.3.jar" />
+          <element id="library" level="project" name="Jackson 2.2.3" />
+        </element>
+      </element>
     </root>
   </artifact>
 </component>

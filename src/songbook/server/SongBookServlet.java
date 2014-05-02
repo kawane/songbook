@@ -1,5 +1,9 @@
 package songbook.server;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.json.WriterBasedJsonGenerator;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -17,50 +21,66 @@ import java.sql.Statement;
 public class SongBookServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("text/html");
+        // Executes request using a JsonGenerator
+        JsonUtils.executeWithGenerator(response, (generator) -> {
 
-        final PrintWriter out = response.getWriter();
-        out.println("<html>");
-        out.println("<head><title>Songbook</title></head>");
-        out.println("<body>");
-
-        final String servletPath = request.getServletPath();
-        final String requestURI = request.getRequestURI();
-        if (servletPath.equals(requestURI)) {
-            Database.executeWithConnection((connection, statement) -> {
-                statement.execute("SELECT id, name FROM Songs");
-                final ResultSet resultSet = statement.getResultSet();
-
-                out.println("<ul>");
-                while (resultSet.next()) {
-                    out.println("<li><a href='" + servletPath + "/" + resultSet.getString(1) + "'>" + resultSet.getString(2) + "</a></li>");
-                }
-                out.println("</ul>");
-            });
-
-        } else {
-            // presents the request song
-            final String songId = requestURI.substring(servletPath.length() + 1);
-            if (Database.isValidId(songId)) {
+            final String servletPath = request.getServletPath();
+            final String requestURI = request.getRequestURI();
+            if (servletPath.equals(requestURI)) {
                 Database.executeWithConnection((connection, statement) -> {
-                    statement.execute("SELECT name, author, contents FROM Songs WHERE id='" + songId + "'");
-
+                    // TODO renames table column 'name' to 'title'
+                    // TODO what to do with an author list
+                    statement.execute("SELECT id, name, author FROM Songs");
                     final ResultSet resultSet = statement.getResultSet();
-                    if (resultSet.next()) {
-                        // one song found, prints it.
-                        out.println("<h2>" + resultSet.getString(1) + "</h2>");
-                        out.println("<i>" + resultSet.getString(2) + "</i>");
-                        out.println("<pre>" + resultSet.getString(3) + "</pre>");
-                    } else {
-                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+
+                    // uses the generator to create the JSON result
+                    generator.writeStartArray();
+                    while (resultSet.next()) {
+                        generator.writeStartObject();
+                        generator.writeStringField("id", resultSet.getString(1));
+
+                        generator.writeStringField("title", resultSet.getString(2));
+
+                        generator.writeFieldName("authors");
+                        generator.writeStartArray();
+                        generator.writeString(resultSet.getString(3));
+                        generator.writeEndArray();
+                        generator.writeEndObject();
                     }
+                    generator.writeEndArray();
                 });
+
             } else {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                // presents the request song
+                final String songId = requestURI.substring(servletPath.length() + 1);
+                if (Database.isValidId(songId)) {
+                    Database.executeWithConnection((connection, statement) -> {
+                        statement.execute("SELECT name, author, contents FROM Songs WHERE id='" + songId + "'");
+
+                        final ResultSet resultSet = statement.getResultSet();
+                        if (resultSet.next()) {
+                            // one song found, prints it.
+                            generator.writeStartObject();
+                            generator.writeStringField("id", songId);
+
+                            generator.writeStringField("title", resultSet.getString(1));
+
+                            generator.writeFieldName("authors");
+                            generator.writeStartArray();
+                            generator.writeString(resultSet.getString(2));
+                            generator.writeEndArray();
+
+                            generator.writeStringField("contents", resultSet.getString(3));
+                            generator.writeEndObject();
+                        } else {
+                            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        }
+                    });
+                } else {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                }
             }
-        }
-        out.println("</body>");
-        out.println("</html>");
+        });
     }
 
     @Override
