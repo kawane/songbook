@@ -8,12 +8,12 @@ import org.intellij.lang.annotations.Language;
 public class Templates {
 
     @Language("HTML")
-    public static String getHeader() {
+    public static String getHeader(String title) {
         return
                 "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "<head>\n" +
-                "    <title>${title}</title>\n" +
+                "    <title>"+ title +"</title>\n" +
                 "    <meta charset=\"utf-8\">\n" +
                 "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
                 "    <!-- Bootstrap -->\n" +
@@ -82,7 +82,7 @@ public class Templates {
 
     @Language("HTML")
     public static String getIndex() {
-        return  getHeader() +
+        return  getHeader("My SongBook") +
                 getNavigation() +
                 "<div id=\"content\" class=\"row\">\n" +
                 "  <div id=\"song-list\"></div>\n" +
