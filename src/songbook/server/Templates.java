@@ -70,10 +70,11 @@ public class Templates {
                 "<script src=\"http://code.jquery.com/jquery.js\"></script>\n" +
                 "<!-- Include all compiled plugins (below), or include individual files as needed -->\n" +
                 "<script src=\"//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js\"></script>\n" +
-                "<script src=\"js/songbook.js\"></script>\n" +
-                "<script type=\"text/javascript\">\n"+
-                "   " + functionToCall +"\n"+
-                "</script>\n" +
+                "<script src=\"/js/songbook.js\"></script>\n" +
+                (functionToCall == null ? "" :
+                    "<script type=\"text/javascript\">\n"+
+                    "   " + functionToCall +"\n"+
+                    "</script>\n" ) +
                 "</body>\n" +
                 "</html>\n"
                 ;
@@ -81,13 +82,26 @@ public class Templates {
 
 
     @Language("HTML")
-    public static String getIndex() {
+    public static String getSongIndex() {
         return  getHeader("My SongBook") +
                 getNavigation() +
                 "<div id=\"content\" class=\"row\">\n" +
                 "  <div id=\"song-list\"></div>\n" +
                 "</div>" +
-                getFooter("songbook.retrieveAndListSongs('song-list');")
+                getFooter("songbook.retrieveAndShowListOfSongs('song-list');")
                 ;
     }
+    
+
+    @Language("HTML")
+    public static String getSongView(String songId, String title) {
+        return  getHeader(title + " - My SongBook") +
+                getNavigation() +
+                "<div id=\"song\" class=\"song-content\">\n" +
+                "</div>\n" +
+                getFooter("songbook.retrieveAndShowSong(" + songId +", 'song');")
+                ;
+    }
+    
+
 }
