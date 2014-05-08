@@ -40,7 +40,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Jackson 2.2.3" level="project" />
+    <orderEntry type="library" name="Jackson 2.3.3" level="project" />
   </component>
 </module>
 

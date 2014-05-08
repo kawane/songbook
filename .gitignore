@@ -12,7 +12,7 @@ out
 .idea/tasks.xml
 
 # Package Files #
-*.jar
+# *.jar
 *.war
 *.ear
 

@@ -6,7 +6,7 @@
       <element id="directory" name="WEB-INF">
         <element id="directory" name="lib">
           <element id="file-copy" path="$PROJECT_DIR$/libs/jackson/jackson-core-2.2.3.jar" />
-          <element id="library" level="project" name="Jackson 2.2.3" />
+          <element id="library" level="project" name="Jackson 2.3.3" />
         </element>
       </element>
     </root>
