@@ -8,8 +8,9 @@
           <element id="module-output" name="songbook" />
         </element>
         <element id="directory" name="lib">
-          <element id="file-copy" path="$PROJECT_DIR$/libs/mysql-connector-java-5.1.30/mysql-connector-java-5.1.30-bin.jar" />
+          <element id="file-copy" path="$PROJECT_DIR$/libs/mysql-connector-java-5.1.30-bin.jar" />
           <element id="library" level="project" name="Jackson 2.3.3" />
+          <element id="library" level="project" name="lucene-4.8.0" />
         </element>
       </element>
     </root>
