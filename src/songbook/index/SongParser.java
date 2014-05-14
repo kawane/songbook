@@ -6,47 +6,55 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by laurent on 09/05/2014.
  */
 public class SongParser {
 
-
     protected ParserInput input;
 
-    public void parse(Reader reader) throws IOException {
+    public static final Map<String, String> aliases = new HashMap<>();
+
+    static {
+        aliases.put("t", "title");
+        aliases.put("c", "comment");
+    }
+
+    public Song parse(Reader reader) throws IOException {
         input = new ParserInput(reader);
         char c = input.peek();
         StringBuilder sb = new StringBuilder();
+        Song song = new Song();
         while (c != ParserInput.EOS) {
             if (c == '{') {
                 // directive
-                Directive directive = parseDirective();
-                System.out.printf("%s at %d\n", directive.toString(), sb.length());
+                song.directives.add(new Song.PositionnedData<>(parseDirective(), sb.length()));
             } else if (c == '[') {
                 // chord
-                String chord = parseChord();
-                System.out.printf("Chord %s at %d\n", chord, sb.length());
+                song.chords.add(new Song.PositionnedData<>(parseChord(), sb.length()));
             } else {
                 sb.append(c);
                 input.skip(1);
             }
             c = input.peek();
         }
-        System.out.println(sb.toString());
+        song.lyrics = sb.toString();
+        return song;
     }
 
-    protected String parseChord() throws IOException {
+    protected Chord parseChord() throws IOException {
         input.skip(1);
         StringBuilder sb = new StringBuilder();
         while (true) {
             char c = input.peek();
             input.skip(1);
             if (c == ParserInput.EOS) {
-                return "";
+                return new Chord("");
             } else if (c == ']') {
-                return sb.toString();
+                return new Chord(sb.toString());
             } else {
                 sb.append(c);
             }
@@ -73,7 +81,11 @@ public class SongParser {
                 } else {
                     value = sb.toString();
                 }
-
+                name = name.toLowerCase();
+                String alias = aliases.get(name);
+                if (alias != null) {
+                    name = alias;
+                }
                 return new Directive(name, value);
             } else {
                 sb.append(c);

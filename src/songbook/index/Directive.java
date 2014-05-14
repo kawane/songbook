@@ -5,9 +5,9 @@ package songbook.index;
  */
 public class Directive {
 
-    public final String name;
+    public String name;
 
-    public final String value;
+    public String value;
 
     public Directive(String name, String value) {
         this.name = name;
