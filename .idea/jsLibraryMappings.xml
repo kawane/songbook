@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="JavaScriptLibraryMappings">
-    <file url="file://$PROJECT_DIR$/data/songs" libraries="{node-DefinitelyTyped}" />
     <file url="file://$PROJECT_DIR$/web" libraries="{HTML, HTML5 / EcmaScript 5}" />
     <excludedPredefinedLibrary name="HTML" />
     <excludedPredefinedLibrary name="HTML5 / EcmaScript 5" />

@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact build-on-make="true" name="songbook">
+    <output-path>$PROJECT_DIR$/out/artifacts/songbook</output-path>
+    <root id="root">
+      <element id="directory" name="jar">
+        <element id="artifact" artifact-name="songbook:jar" />
+      </element>
+      <element id="directory" name="data">
+        <element id="dir-copy" path="$PROJECT_DIR$/data" />
+      </element>
+      <element id="directory" name="web">
+        <element id="dir-copy" path="$PROJECT_DIR$/web" />
+      </element>
+    </root>
+  </artifact>
+</component>

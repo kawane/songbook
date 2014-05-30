@@ -16,12 +16,25 @@ import java.util.stream.Stream.Builder;
  */
 public class Database {
 
-    private final static String SONG_EXTENSION = ".cho";
-    private final static String SONGS_DIRECTORY = "data/songs";
+    public final static String DEFAULT_DATA_ROOT = "data";
 
-    public static Stream<Song> getAllSongs() {
+    private final static String SONG_EXTENSION = ".cho";
+    private final static String SONGS_DIRECTORY = "songs";
+
+    private final Path dataRoot;
+
+    public Database() {
+        dataRoot = getDataRoot();
+    }
+
+    private Path getDataRoot() {
+        final String dataRoot = System.getenv("DATA_ROOT");
+        return Paths.get(dataRoot == null ? DEFAULT_DATA_ROOT : dataRoot);
+    }
+
+    public Stream<Song> getAllSongs() {
         final Builder songs = Stream.builder();
-        final File[] files = Paths.get(SONGS_DIRECTORY).toFile().listFiles();
+        final File[] files = dataRoot.resolve(SONGS_DIRECTORY).toFile().listFiles();
         if ( files != null ) {
             for (File file : files) {
                 if ( file.getName().endsWith(".cho") ) {
@@ -33,8 +46,8 @@ public class Database {
         return songs.build();
     }
 
-    public static Song getSong(String id) throws IOException {
-        final Path songPath = Paths.get(SONGS_DIRECTORY, id+SONG_EXTENSION);
+    public Song getSong(String id) throws IOException {
+        final Path songPath = dataRoot.resolve(SONGS_DIRECTORY).resolve(id+SONG_EXTENSION);
         final File file = songPath.toFile();
         if ( file.exists() == false ) return null;
 
@@ -42,16 +55,7 @@ public class Database {
         return parser.parse(id, new FileReader(file));
     }
 
-    public static boolean isValidId(String id) {
-        if (id==null || id.length() == 0) return false;
-        if (Character.isJavaIdentifierStart(id.charAt(0)) == false ) return false;
-        for (int i=1; i<id.length(); i+=1) {
-            if (Character.isJavaIdentifierPart(id.charAt(i)) == false) return false;
-        }
-        return true;
-    }
-
-    public static String removeExtension(String fileName) {
+    public String removeExtension(String fileName) {
         final int index = fileName.indexOf(".");
         if ( index <= 0 ) return fileName;
         return fileName.substring(0, index);
