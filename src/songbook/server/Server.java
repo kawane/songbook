@@ -32,6 +32,7 @@ public class Server extends Verticle {
         if (path.equals("/songs")) {
             // lists all songs
             final Stream<Song> allSongs = database.getAllSongs();
+            response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
             response.end(Templates.getSongIndex(allSongs));
 
         } else if (path.startsWith("/songs/")) {
@@ -41,6 +42,7 @@ public class Server extends Verticle {
             try {
                 final Song song = database.getSong(id);
                 if ( song != null ) {
+                    response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
                     final Buffer buffer = new Buffer();
                     buffer.appendString(Templates.getSongView(song));
                     response.end(buffer);
