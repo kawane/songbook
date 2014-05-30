@@ -83,7 +83,7 @@ public class IndexDatabase {
     private static void addSong(IndexWriter w, Path songPath) throws IOException {
         BufferedReader reader = Files.newBufferedReader(songPath, Charset.forName("UTF-8"));
         try {
-            Song song = new SongParser().parse(reader);
+            Song song = new SongParser().parse(songPath.getFileName().toString(), reader);
             Document doc = new Document();
             song.directives.forEach(dir -> {
                 if (dir.data.value != null) {
