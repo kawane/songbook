@@ -1,6 +1,7 @@
 package songbook.server;
 
 import songbook.index.Song;
+import songbook.index.SongIndex;
 import songbook.index.SongParser;
 
 import java.io.File;
@@ -8,8 +9,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.stream.Stream;
-import java.util.stream.Stream.Builder;
 
 /**
  * Created by j5r on 26/04/2014.
@@ -32,18 +31,18 @@ public class Database {
         return Paths.get(dataRoot == null ? DEFAULT_DATA_ROOT : dataRoot);
     }
 
-    public Stream<Song> getAllSongs() {
-        final Builder songs = Stream.builder();
+    public SongIndex getAllSongIndex() {
+        final SongIndex index = new SongIndex();
         final File[] files = dataRoot.resolve(SONGS_DIRECTORY).toFile().listFiles();
         if ( files != null ) {
             for (File file : files) {
                 if ( file.getName().endsWith(".cho") ) {
                     final String id = removeExtension(file.getName());
-                    songs.add(new Song(id));
+                    index.addSong(id, id, null);
                 }
             }
         }
-        return songs.build();
+        return index;
     }
 
     public Song getSong(String id) throws IOException {

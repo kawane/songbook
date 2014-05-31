@@ -2,9 +2,9 @@ package songbook.server;
 
 import org.intellij.lang.annotations.Language;
 import songbook.index.Song;
+import songbook.index.SongIndex;
 
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by j5r on 01/05/2014.
@@ -86,17 +86,17 @@ public class Templates {
 
 
     @Language("HTML")
-    public static String getSongIndex(Stream<Song> songs) {
+    public static String showSongIndex(SongIndex songs) {
         return  getHeader("My SongBook") +
                 getNavigation() +
                 "<div id='content' class='row'>\n" +
                     "<div id='song-list' class='list-group'>\n" +
-                    songs.map(song -> {
-                                final String title = song.findTitle();
-                                return "<a class='list-group-item' href='/songs/"+ song.id +"'>\n" +
-                                    "<h4 class='list-group-item-heading'>" + (title ==null ? song.id : title) + "</h4>\n" +
+                    songs.getSongs().map(id -> {
+                                final String title = songs.getTitle(id);
+                                return "<a class='list-group-item' href='/songs/"+ id +"'>\n" +
+                                    "<h4 class='list-group-item-heading'>" + (title ==null ? id : title) + "</h4>\n" +
                                     "<p class='list-group-item-text'>" +
-                                        song.findAuthors().collect(Collectors.joining(", ")) +
+                                        songs.getAuthors(id).collect(Collectors.joining(", ")) +
                                     "</p>" +
                                 "</a>\n";
                             }
@@ -109,7 +109,7 @@ public class Templates {
     
 
     @Language("HTML")
-    public static String getSongView(Song song) {
+    public static String showSong(Song song) {
         final String title = song.findTitle();
         return  getHeader(title + " - My SongBook") +
                 getNavigation() +

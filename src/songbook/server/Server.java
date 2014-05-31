@@ -8,11 +8,11 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.HttpServerResponse;
 import org.vertx.java.platform.Verticle;
 import songbook.index.Song;
+import songbook.index.SongIndex;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.stream.Stream;
 
 public class Server extends Verticle {
 
@@ -31,9 +31,9 @@ public class Server extends Verticle {
         final HttpServerResponse response = request.response();
         if (path.equals("/songs")) {
             // lists all songs
-            final Stream<Song> allSongs = database.getAllSongs();
+            SongIndex allSongs = database.getAllSongIndex();
             response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-            response.end(Templates.getSongIndex(allSongs));
+            response.end(Templates.showSongIndex(allSongs));
 
         } else if (path.startsWith("/songs/")) {
             // shows chosen song
@@ -44,7 +44,7 @@ public class Server extends Verticle {
                 if ( song != null ) {
                     response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
                     final Buffer buffer = new Buffer();
-                    buffer.appendString(Templates.getSongView(song));
+                    buffer.appendString(Templates.showSong(song));
                     response.end(buffer);
                 } else {
                     response.setStatusCode(404);
