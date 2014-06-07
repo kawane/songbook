@@ -1,12 +1,13 @@
 package songbook.server;
 
-import songbook.index.Song;
+import org.vertx.java.core.Vertx;
 import songbook.index.SongIndex;
-import songbook.index.SongParser;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -17,12 +18,16 @@ public class Database {
 
     public final static String DEFAULT_DATA_ROOT = "data";
 
-    private final static String SONG_EXTENSION = ".cho";
+    private final static String SONG_EXTENSION = ".html";
     private final static String SONGS_DIRECTORY = "songs";
+    public static final Charset UTF8_CHARSET = Charset.forName("utf-8");
 
     private final Path dataRoot;
 
-    public Database() {
+    private final Vertx vertx;
+
+    public Database(Vertx vertx) {
+        this.vertx = vertx;
         dataRoot = getDataRoot();
     }
 
@@ -36,7 +41,7 @@ public class Database {
         final File[] files = dataRoot.resolve(SONGS_DIRECTORY).toFile().listFiles();
         if ( files != null ) {
             for (File file : files) {
-                if ( file.getName().endsWith(".cho") ) {
+                if ( file.getName().endsWith(".html") ) {
                     final String id = removeExtension(file.getName());
                     index.addSong(id, id, null);
                 }
@@ -45,13 +50,18 @@ public class Database {
         return index;
     }
 
-    public Song getSong(String id) throws IOException {
-        final Path songPath = dataRoot.resolve(SONGS_DIRECTORY).resolve(id+SONG_EXTENSION);
-        final File file = songPath.toFile();
-        if ( file.exists() == false ) return null;
 
-        final SongParser parser = new SongParser();
-        return parser.parse(id, new FileReader(file));
+    public String readHtmlSong(String id) throws IOException {
+        final Path songPath = dataRoot.resolve(SONGS_DIRECTORY).resolve(id+SONG_EXTENSION);
+        Reader reader = Files.newBufferedReader(songPath);
+        StringBuilder sb = new StringBuilder();
+        char[] buf = new char[8192];
+        int read = reader.read(buf);
+        while (read != -1) {
+            sb.append(buf, 0, read);
+            read = reader.read(buf);
+        }
+        return sb.toString();
     }
 
     public String removeExtension(String fileName) {

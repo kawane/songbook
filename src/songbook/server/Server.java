@@ -1,13 +1,12 @@
 package songbook.server;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
-import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpHeaders;
 import org.vertx.java.core.http.HttpServer;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.HttpServerResponse;
+import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
-import songbook.index.Song;
 import songbook.index.SongIndex;
 
 import java.io.IOException;
@@ -29,6 +28,7 @@ public class Server extends Verticle {
     private void handler(HttpServerRequest request) {
         final String path = request.path();
         final HttpServerResponse response = request.response();
+        Logger log = container.logger();
         if (path.equals("/songs")) {
             // lists all songs
             SongIndex allSongs = database.getAllSongIndex();
@@ -39,21 +39,18 @@ public class Server extends Verticle {
             // shows chosen song
             final String subPath = path.substring(SONG_PATH.length());
             final String id = QueryStringDecoder.decodeComponent(subPath);
+            response.setChunked(true);
+            response.write(Templates.getHeader(id + " - My SongBook"));
+            response.write(Templates.getNavigation());
             try {
-                final Song song = database.getSong(id);
-                if ( song != null ) {
-                    response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-                    final Buffer buffer = new Buffer();
-                    buffer.appendString(Templates.showSong(song));
-                    response.end(buffer);
-                } else {
-                    response.setStatusCode(404);
-                }
+                response.write(database.readHtmlSong(id));
             } catch (IOException e) {
+                response.write("Error loading song");
+                log.error("Failed to read", e);
                 response.setStatusCode(404);
-            } finally {
-                response.close();
             }
+            response.write(Templates.getFooter(null));
+            response.end();
         } else {
             final String fileName = path.equals("/") ? "index.html" : path;
             final Path localFilePath = Paths.get(webRoot.toString(), fileName).normalize();
@@ -74,7 +71,7 @@ public class Server extends Verticle {
     @Override
     public void start() {
         webRoot = getWebRoot();
-        database = new Database();
+        database = new Database(vertx);
 
         final HttpServer httpServer = vertx.createHttpServer();
         httpServer.requestHandler(this::handler);

@@ -4,6 +4,8 @@ import org.intellij.lang.annotations.Language;
 import songbook.index.Song;
 import songbook.index.SongIndex;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.stream.Collectors;
 
 /**
@@ -93,7 +95,7 @@ public class Templates {
                     "<div id='song-list' class='list-group'>\n" +
                     songs.getSongs().map(id -> {
                                 final String title = songs.getTitle(id);
-                                return "<a class='list-group-item' href='/songs/"+ id +"'>\n" +
+                                return "<a class='list-group-item' href=\"/songs/"+ encodeUrl(id) +"\">\n" +
                                     "<h4 class='list-group-item-heading'>" + (title ==null ? id : title) + "</h4>\n" +
                                     "<p class='list-group-item-text'>" +
                                         songs.getAuthors(id).collect(Collectors.joining(", ")) +
@@ -106,7 +108,17 @@ public class Templates {
                 getFooter(null)
                 ;
     }
-    
+
+    private static String encodeUrl(String id) {
+        try {
+            return URLEncoder.encode(id, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            // Do nothing but logging
+            e.printStackTrace();
+        }
+        return id;
+    }
+
 
     @Language("HTML")
     public static String showSong(Song song) {

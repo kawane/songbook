@@ -10,7 +10,9 @@
       <root url="jar://$PROJECT_DIR$/libs/vert.x-2.1/lib/vertx-hazelcast-2.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/libs/vert.x-2.1/lib/vertx-platform-2.1.jar!/" />
     </CLASSES>
-    <JAVADOC />
+    <JAVADOC>
+      <root url="file://$PROJECT_DIR$/libs/vert.x-2.1/api-docs/java/api" />
+    </JAVADOC>
     <SOURCES>
       <root url="jar://$USER_HOME$/.ideaLibSources/vertx-core-2.1-sources.jar!/" />
     </SOURCES>

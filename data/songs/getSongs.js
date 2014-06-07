@@ -8,7 +8,7 @@ var options = {
     host: "songbookchord.appspot.com",
     port: 80,
     path: "/rest/song/",
-    headers: { "Accept": "text/plain" }
+    headers: { "Accept": "text/html" }
 };
 
 function get(options, callbackdata) {
@@ -26,9 +26,9 @@ function get(options, callbackdata) {
 get(options, function (data) {
     var songs = JSON.parse(data);
     songs.forEach(function (song) {
-        options.path = "/rest/song/" + song.Id;
+        options.path = "/rest/song/" + song.Id + "?noheader=true";
         get(options, function (songData) {
-            fs.writeFile(song.Title + ".cho", songData, { encoding: "utf-8" });
+            fs.writeFile(song.Title + ".html", songData, { encoding: "utf-8" });
         });
     });
 });
