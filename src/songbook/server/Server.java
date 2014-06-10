@@ -9,7 +9,6 @@ import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 import songbook.index.SongIndex;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -17,7 +16,7 @@ public class Server extends Verticle {
 
     public final static int DEFAULT_PORT = 8080;
     public final static String DEFAULT_HOST = "localhost";
-    public final static String DEFAULT_WEB_ROOT = "web";
+    public final static String DEFAULT_WEB_ROOT = "./web";
 
     public static final String SONG_PATH = "/songs/";
 
@@ -42,18 +41,22 @@ public class Server extends Verticle {
             response.setChunked(true);
             response.write(Templates.getHeader(id + " - My SongBook"));
             response.write(Templates.getNavigation());
-            try {
-                response.write(database.readHtmlSong(id));
-            } catch (IOException e) {
-                response.write("Error loading song");
-                log.error("Failed to read", e);
-                response.setStatusCode(404);
-            }
-            response.write(Templates.getFooter(null));
-            response.end();
+            database.readHtmlSong(id, (e) -> {
+                if (e.succeeded()) {
+                    response.write(e.result());
+                    log.trace("Serve Song " + id);
+                } else {
+                    response.write("Error loading song " + id);
+                    log.error("Failed to read song " + id, e.cause());
+                    response.setStatusCode(404);
+                }
+                response.write(Templates.getFooter(null));
+                response.end();
+            });
         } else {
             final String fileName = path.equals("/") ? "index.html" : path;
-            final Path localFilePath = Paths.get(webRoot.toString(), fileName).normalize();
+            final Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
+            log.info("GET " + localFilePath);
             String type = "text/plain";
             if (fileName.endsWith(".js")) {
                 type = "application/javascript";

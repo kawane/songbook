@@ -1,13 +1,14 @@
 package songbook.server;
 
+import org.vertx.java.core.AsyncResult;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
+import org.vertx.java.core.impl.DefaultFutureResult;
+import org.vertx.java.core.shareddata.ConcurrentSharedMap;
 import songbook.index.SongIndex;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -51,17 +52,30 @@ public class Database {
     }
 
 
-    public String readHtmlSong(String id) throws IOException {
-        final Path songPath = dataRoot.resolve(SONGS_DIRECTORY).resolve(id+SONG_EXTENSION);
-        Reader reader = Files.newBufferedReader(songPath);
-        StringBuilder sb = new StringBuilder();
-        char[] buf = new char[8192];
-        int read = reader.read(buf);
-        while (read != -1) {
-            sb.append(buf, 0, read);
-            read = reader.read(buf);
+    public void readHtmlSong(String id, Handler<AsyncResult<String>> handler) {
+        DefaultFutureResult<String> event = new DefaultFutureResult<>();
+        event.setHandler(handler);
+        try {
+            ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
+            String song = songs.get(id);
+            if (song != null) {
+                event.setResult(song);
+            } else {
+                final Path songPath = dataRoot.resolve(SONGS_DIRECTORY).resolve(id + SONG_EXTENSION).toAbsolutePath();
+                vertx.fileSystem().readFile(songPath.toString(), (e) -> {
+                    if (e.succeeded()) {
+                        String songFromFile = e.result().toString();
+                        songs.put(id, songFromFile);
+                        event.setResult(songFromFile);
+                    } else {
+                        event.setFailure(e.cause());
+                    }
+                });
+
+            }
+        } catch (Throwable e) {
+            event.setFailure(e);
         }
-        return sb.toString();
     }
 
     public String removeExtension(String fileName) {
