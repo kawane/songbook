@@ -28,18 +28,20 @@
 .song-comment {
 	font-style: italic;
 	font-weight: bold;
-	margin: 0 0;	
+    margin: 0 0;
 }
 
 .song-chorus-comment {
 }
 
 .song-line {
+    white-space: pre;
 }
 
 .song-chords {
-   line-height: 0.8em;
-   color: #888;
+    line-height: 0.8em;
+    color: #888;
+    white-space: pre;
 }
 
 .song-line-with-chords {
