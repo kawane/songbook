@@ -36,6 +36,8 @@ public class Server extends Verticle {
 
         } else if (path.startsWith("/songs/")) {
             // shows chosen song
+            response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+
             final String subPath = path.substring(SONG_PATH.length());
             final String id = QueryStringDecoder.decodeComponent(subPath);
             response.setChunked(true);
