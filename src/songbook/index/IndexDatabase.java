@@ -2,8 +2,6 @@ package songbook.index;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -17,18 +15,25 @@ import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
+import org.xml.sax.SAXException;
 
-import java.io.BufferedReader;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
  * Created by laurent on 08/05/2014.
  */
 public class IndexDatabase {
+
+    public final static IndexEntityType[] INDEX_ENTITY_TYPES = {
+            new IndexEntityType("lyrics", "song", false),
+            new IndexEntityType("title", "song-title", true),
+            new IndexEntityType("author", "song-author", true),
+            new IndexEntityType("album", "song-album", true),
+    };
+
 
     public static void main(String[] args) throws IOException, ParseException {
         // 0. Specify the analyzer for tokenizing text.
@@ -41,11 +46,16 @@ public class IndexDatabase {
         IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
 
         IndexWriter w = new IndexWriter(index, config);
+        HtmlIndexer songIndexer = new HtmlIndexer(INDEX_ENTITY_TYPES);
         Files.walk(Paths.get("data/songs/")).forEach(filePath -> {
-            if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".cho")) {
+            if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".html")) {
                 try {
-                    addSong(w, filePath);
+                    songIndexer.indexSong(w, filePath);
                 } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ParserConfigurationException e) {
+                    e.printStackTrace();
+                } catch (SAXException e) {
                     e.printStackTrace();
                 }
             }
@@ -53,11 +63,11 @@ public class IndexDatabase {
         w.close();
 
         // 2. query
-        String querystr = args.length > 0 ? args[0] : "feeling";
+        String querystr = args.length > 0 ? args[0] : "\"Jack Johnson\"";
 
         // the "title" arg specifies the default field to use
         // when no field is explicitly specified in the query.
-        Query q = new QueryParser(Version.LUCENE_48, "lyrics", analyzer).parse(querystr);
+        Query q = new QueryParser(Version.LUCENE_48, "author", analyzer).parse(querystr);
 
         // 3. search
         int hitsPerPage = 10;
@@ -80,25 +90,4 @@ public class IndexDatabase {
         reader.close();
     }
 
-    private static void addSong(IndexWriter w, Path songPath) throws IOException {
-        BufferedReader reader = Files.newBufferedReader(songPath, Charset.forName("UTF-8"));
-        try {
-            Song song = new SongParser().parse(songPath.getFileName().toString(), reader);
-            Document doc = new Document();
-            song.directives.forEach(dir -> {
-                if (dir.data.value != null) {
-                    doc.add(new TextField(dir.data.name, dir.data.value, Field.Store.YES));
-                }
-            });
-
-            doc.add(new TextField("lyrics", song.lyrics, Field.Store.NO));
-            w.addDocument(doc);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            reader.close();
-        }
-
-    }
 }
