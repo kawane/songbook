@@ -3,7 +3,7 @@ songbook
 
 Song book web site in Java using http://vertx.io/ and http://lucene.apache.org/. 
 
-![IntellijIDEA](https://github.com/llgcode/songbook/raw/master/data/intellij-banner.png)
+![IntellijIDEA](https://github.com/llgcode/songbook/raw/master/data/intellij-banner.png)<br>
 thanks to Elena.
 
 
