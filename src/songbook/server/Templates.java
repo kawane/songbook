@@ -48,11 +48,14 @@ public class Templates {
                         "    <!-- Collect the nav links, forms, and other content for toggling -->\n" +
                         "    <div class='collapse navbar-collapse' id='bs-navbar-collapse'>\n" +
                         "        <ul class='nav navbar-nav'>\n" +
-                        "            <!--<li><a class='' href='/rest/song/" + "'>View</a></li>-->\n" +
+                        "            <!--<li><a class='' href='/rest/song/'>View</a></li>-->\n" +
                         "        </ul>\n" +
                         "\n" +
                         "        <ul class='nav navbar-right'>\n" +
                         "            <!--<li><a href='{{.LoginURL}}'>Sign in</a></li>-->\n" +
+                        "        </ul>\n" +
+                        "        <ul class='nav navbar-right'>\n" +
+                        "            <a href=\"http://www.jetbrains.com/idea/features/javascript.html\" style=\"display:block; background:#fff url(http://www.jetbrains.com/idea/opensource/img/all/banners/idea210x60_white.gif) no-repeat 0 0; border:solid 1px #0d3a9e; margin:0;padding:0;text-decoration:none;text-indent:0;letter-spacing:-0.001em; width:208px; height:58px\" alt=\"Java IDE with advanced HTML/CSS/JS editor for hardcore web-developers\" title=\"Java IDE with advanced HTML/CSS/JS editor for hardcore web-developers\"><span style=\"margin: -3px 0 0 41px;padding: 0;float: left;font-size: 10px;cursor:pointer;  background-image:none;border:0;color: #0d3a9e; font-family: trebuchet ms,arial,sans-serif;font-weight: normal;text-align:left;\">Developed with</span><span style=\"margin:33px 0 0 5px;padding:0 0 2px 0; line-height:11px;font-size:9px;word-spacing:-2;cursor:pointer;  background-image:none;border:0;display:block;width:210px; color:#0d3a9e; font-family:tahoma,arial,sans-serif;font-weight: normal;text-align:left;\">Java IDE with advanced HTML/CSS/JS<br/>editor for hardcore web-developers</span></a>\n" +
                         "        </ul>\n" +
                         "        <ul class='nav navbar-right'>\n" +
                         "            <li><a href='https://github.com/llgcode/songbook'>Participate in Development</a></li>\n" +
