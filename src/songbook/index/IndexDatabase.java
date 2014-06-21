@@ -34,14 +34,16 @@ public class IndexDatabase {
             new IndexEntityType("album", "song-album", true),
     };
 
+    private StandardAnalyzer analyzer;
+    private Directory index;
 
-    public static void main(String[] args) throws IOException, ParseException {
+    public IndexDatabase() throws IOException {
         // 0. Specify the analyzer for tokenizing text.
         //    The same analyzer should be used for indexing and searching
-        StandardAnalyzer analyzer = new StandardAnalyzer(Version.LUCENE_48);
+        analyzer = new StandardAnalyzer(Version.LUCENE_48);
 
         // 1. create the index
-        Directory index = new RAMDirectory();
+        index = new RAMDirectory();
 
         IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
 
@@ -61,6 +63,21 @@ public class IndexDatabase {
             }
         });
         w.close();
+    }
+
+    public StandardAnalyzer getAnalyzer() {
+        return analyzer;
+    }
+
+    public Directory getIndex() {
+        return index;
+    }
+
+    public static void main(String[] args) throws IOException, ParseException {
+        IndexDatabase indexDatabase = new IndexDatabase();
+        StandardAnalyzer analyzer = indexDatabase.getAnalyzer();
+        Directory index = indexDatabase.getIndex();
+
 
         // 2. query
         String querystr = args.length > 0 ? args[0] : "\"Jack Johnson\"";
@@ -89,5 +106,8 @@ public class IndexDatabase {
         // is no need to access the documents any more.
         reader.close();
     }
+
+
+
 
 }
