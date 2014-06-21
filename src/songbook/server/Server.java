@@ -3,8 +3,8 @@ package songbook.server;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.vertx.java.core.http.HttpHeaders;
 import org.vertx.java.core.http.HttpServer;
-import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.HttpServerResponse;
+import org.vertx.java.core.http.RouteMatcher;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 import songbook.index.SongIndex;
@@ -24,22 +24,36 @@ public class Server extends Verticle {
 
     private Database database;
 
-    private void handler(HttpServerRequest request) {
-        final String path = request.path();
-        final HttpServerResponse response = request.response();
+    @Override
+    public void start() {
+        webRoot = getWebRoot();
+        database = new Database(vertx);
+
+        final HttpServer httpServer = vertx.createHttpServer();
+        RouteMatcher routeMatcher = new RouteMatcher();
         Logger log = container.logger();
-        if (path.equals("/songs")) {
-            // lists all songs
+
+        routeMatcher.get("/search/:query", (req) -> {
+            // Serve all songs
+            HttpServerResponse response = req.response();
+            String query = req.params().get("query");
+
+        });
+
+        routeMatcher.get("/songs", (req) -> {
+            // Serve all songs
+            HttpServerResponse response = req.response();
             SongIndex allSongs = database.getAllSongIndex();
             response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
             response.end(Templates.showSongIndex(allSongs));
+        });
 
-        } else if (path.startsWith("/songs/")) {
-            // shows chosen song
+        routeMatcher.get("/songs/:id", (req) -> {
+            // Serve song
+            HttpServerResponse response = req.response();
             response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
-            final String subPath = path.substring(SONG_PATH.length());
-            final String id = QueryStringDecoder.decodeComponent(subPath);
+            String id = QueryStringDecoder.decodeComponent(req.params().get("id"));
             response.setChunked(true);
             response.write(Templates.getHeader(id + " - My SongBook"));
             response.write(Templates.getNavigation());
@@ -55,9 +69,14 @@ public class Server extends Verticle {
                 response.write(Templates.getFooter(null));
                 response.end();
             });
-        } else {
-            final String fileName = path.equals("/") ? "index.html" : path;
-            final Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
+        });
+
+        routeMatcher.noMatch((req) -> {
+            // Serve Files
+            HttpServerResponse response = req.response();
+            String path = req.path();
+            String fileName = path.equals("/") ? "index.html" : path;
+            Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
             log.info("GET " + localFilePath);
             String type = "text/plain";
             if (fileName.endsWith(".js")) {
@@ -67,19 +86,13 @@ public class Server extends Verticle {
             } else if (fileName.endsWith(".html")) {
                 type = "text/html";
             }
+
             response.putHeader(HttpHeaders.CONTENT_TYPE, type);
             response.sendFile(localFilePath.toString());
-        }
-    }
+        });
 
 
-    @Override
-    public void start() {
-        webRoot = getWebRoot();
-        database = new Database(vertx);
-
-        final HttpServer httpServer = vertx.createHttpServer();
-        httpServer.requestHandler(this::handler);
+        httpServer.requestHandler(routeMatcher);
         httpServer.listen(getPort(), getHost());
     }
 
