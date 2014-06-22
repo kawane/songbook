@@ -1,6 +1,8 @@
 package songbook.index;
 
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexWriter;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -40,6 +42,7 @@ public class HtmlIndexer extends DefaultHandler {
 
     public void indexSong(IndexWriter indexWriter, Path songPath) throws ParserConfigurationException, SAXException, IOException {
         this.document = new Document();
+        this.document.add(new StringField("id", removeExtension(songPath.getFileName().toString()), Field.Store.YES));
 
         SAXParser parser = factory.newSAXParser();
 
@@ -52,6 +55,11 @@ public class HtmlIndexer extends DefaultHandler {
         }
     }
 
+    public String removeExtension(String fileName) {
+        final int index = fileName.indexOf(".");
+        if ( index <= 0 ) return fileName;
+        return fileName.substring(0, index);
+    }
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attrs) throws SAXException {

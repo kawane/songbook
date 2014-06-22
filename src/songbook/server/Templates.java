@@ -1,5 +1,6 @@
 package songbook.server;
 
+import org.apache.lucene.document.Document;
 import org.intellij.lang.annotations.Language;
 import songbook.index.Song;
 import songbook.index.SongIndex;
@@ -7,6 +8,7 @@ import songbook.index.SongIndex;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by j5r on 01/05/2014.
@@ -111,6 +113,34 @@ public class Templates {
                 getFooter(null)
                 ;
     }
+
+
+    @Language("HTML")
+    public static String startResult() {
+        return  "<div id='content' class='row'>\n" +
+                "<div id='song-list' class='list-group'>\n";
+    }
+
+    @Language("HTML")
+    public static String endResult() {
+        return  "</div>\n</div>";
+    }
+
+
+    @Language("HTML")
+    public static String showDocument(Document document) {
+        String id = document.get("id");
+        String title = document.get("title");
+        return  "<a class='list-group-item' href=\"/songs/"+ encodeUrl(id) +"\">\n" +
+                "<h4 class='list-group-item-heading'>" + (title ==null ? id : title) + "</h4>\n" +
+                "<p class='list-group-item-text'>" +
+                Stream.of(document.getValues("author")).collect(Collectors.joining(", "))+
+                "</p>" +
+                "</a>\n";
+
+    }
+
+
 
     private static String encodeUrl(String id) {
         try {
