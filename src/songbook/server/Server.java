@@ -4,7 +4,11 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.http.*;
+import org.vertx.java.core.http.HttpHeaders;
+import org.vertx.java.core.http.HttpServer;
+import org.vertx.java.core.http.HttpServerRequest;
+import org.vertx.java.core.http.HttpServerResponse;
+import org.vertx.java.core.http.RouteMatcher;
 import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.shareddata.ConcurrentSharedMap;
@@ -49,6 +53,8 @@ public class Server extends Verticle {
             Handler<HttpServerRequest> searchHandler = (req) -> {
                 // Serve all songs
                 HttpServerResponse response = req.response();
+                response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+
                 String query = req.params().get("query");
                 response.setChunked(true);
                 response.write(Templates.getHeader(query + " - My SongBook"));
