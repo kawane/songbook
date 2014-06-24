@@ -1,21 +1,23 @@
 package songbook.server;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.http.HttpHeaders;
-import org.vertx.java.core.http.HttpServer;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.http.HttpServerResponse;
-import org.vertx.java.core.http.RouteMatcher;
+import org.vertx.java.core.http.*;
 import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.shareddata.ConcurrentSharedMap;
 import org.vertx.java.platform.Verticle;
+import songbook.index.HtmlIndexer;
 import songbook.index.IndexDatabase;
+import songbook.index.SongUtil;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -57,7 +59,11 @@ public class Server extends Verticle {
 
                 String query = req.params().get("query");
                 response.setChunked(true);
-                response.write(Templates.getHeader(query + " - My SongBook"));
+                String title = "My SongBook";
+                if (query != null && !query.isEmpty()) {
+                    title = query + " - " + title;
+                }
+                response.write(Templates.getHeader(title));
                 response.write(Templates.getNavigation());
                 try {
                     indexDatabase.search(query, req);
@@ -73,7 +79,7 @@ public class Server extends Verticle {
             };
             routeMatcher.get("/search/:query", searchHandler);
             routeMatcher.get("/search", searchHandler);
-            routeMatcher.get("/songs", searchHandler);
+            routeMatcher.get("/", searchHandler);
 
             routeMatcher.get("/songs/:id", (req) -> {
                 // Serve song
@@ -95,6 +101,74 @@ public class Server extends Verticle {
                     }
                     response.write(Templates.getFooter(null));
                     response.end();
+                });
+            });
+
+            routeMatcher.post("/songs", (req) -> {
+                HttpServerResponse response = req.response();
+                req.bodyHandler((body) -> {
+                    String songData = body.toString();
+                    Document document;
+                    try {
+                        HtmlIndexer songIndexer = new HtmlIndexer();
+                        document = songIndexer.indexSong(songData);
+
+                        Path filePath = Files.createTempFile(dataRoot.resolve("songs"), "", ".html").toAbsolutePath();
+                        String id = SongUtil.getId(filePath.getFileName().toString());
+                        document.add(new StringField("id", id, Field.Store.YES));
+                        vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
+                            if (ar.succeeded()) {
+                                response.end(id);
+                            } else {
+                                log.error("Failed to create song", ar.cause());
+                                response.setStatusCode(500);
+                                response.end();
+                                try {
+                                    Files.deleteIfExists(filePath);
+                                } catch (IOException e) {
+                                    log.warn("Can't delete file", e);
+                                }
+                            }
+                        });
+                    } catch (Exception e) {
+                        log.error("Error indexing song", e);
+                        response.setStatusCode(500);
+                        response.end();
+                    }
+                });
+            });
+
+            routeMatcher.put("/songs/:id", (req) -> {
+                HttpServerResponse response = req.response();
+                String id = req.params().get("id");
+                Path filePath = dataRoot.resolve("songs").resolve(id).toAbsolutePath();
+                req.bodyHandler((body) -> {
+                    String songData = body.toString();
+                    Document document;
+                    try {
+                        HtmlIndexer songIndexer = new HtmlIndexer();
+                        document = songIndexer.indexSong(songData);
+                        document.add(new StringField("id", id, Field.Store.YES));
+
+                        vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
+                            if (ar.succeeded()) {
+                                response.end(id);
+                            } else {
+                                log.error("Failed to create song", ar.cause());
+                                response.setStatusCode(500);
+                                response.end();
+                                try {
+                                    Files.deleteIfExists(filePath);
+                                } catch (IOException e) {
+                                    log.warn("Can't delete file", e);
+                                }
+                            }
+                        });
+                    } catch (Exception e) {
+                        log.error("Error indexing song", e);
+                        response.setStatusCode(500);
+                        response.end();
+                    }
                 });
             });
 

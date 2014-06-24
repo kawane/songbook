@@ -1,18 +1,16 @@
 package songbook.index;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.index.IndexWriter;
 import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -25,6 +23,13 @@ import java.util.List;
  */
 public class HtmlIndexer extends DefaultHandler {
 
+    public final static IndexEntityType[] INDEX_ENTITY_TYPES = {
+            new IndexEntityType("lyrics", "song", false),
+            new IndexEntityType("title", "song-title", true),
+            new IndexEntityType("author", "song-author", true),
+            new IndexEntityType("album", "song-album", true),
+    };
+
     /** Create a SaxParser factory */
     protected final SAXParserFactory factory = SAXParserFactory.newInstance();
 
@@ -36,30 +41,32 @@ public class HtmlIndexer extends DefaultHandler {
 
     protected Document document;
 
+    public HtmlIndexer() {
+        this(INDEX_ENTITY_TYPES);
+    }
+
     public HtmlIndexer(IndexEntityType[] indexEntityTypes) {
         this.indexEntityTypes = indexEntityTypes;
     }
 
-    public void indexSong(IndexWriter indexWriter, Path songPath) throws ParserConfigurationException, SAXException, IOException {
+    public Document indexSong(Path songPath) throws ParserConfigurationException, SAXException, IOException {
         this.document = new Document();
-        this.document.add(new StringField("id", removeExtension(songPath.getFileName().toString()), Field.Store.YES));
-
-        SAXParser parser = factory.newSAXParser();
-
         InputStream in = Files.newInputStream(songPath);
         try {
-            parser.parse(in, this);
+            factory.newSAXParser().parse(in, this);
         } finally {
             in.close();
-            indexWriter.addDocument(document);
         }
+        return document;
     }
 
-    public String removeExtension(String fileName) {
-        final int index = fileName.indexOf(".");
-        if ( index <= 0 ) return fileName;
-        return fileName.substring(0, index);
+    public Document indexSong(String songData) throws ParserConfigurationException, SAXException, IOException {
+        this.document = new Document();
+        factory.newSAXParser().parse(new InputSource(new StringReader(songData)), this);
+        return document;
     }
+
+
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attrs) throws SAXException {

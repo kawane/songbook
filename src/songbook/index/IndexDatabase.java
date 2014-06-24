@@ -2,6 +2,8 @@ package songbook.index;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -29,13 +31,6 @@ public class IndexDatabase {
 
     public final static String SONG_EXTENSION = ".html";
 
-    public final static IndexEntityType[] INDEX_ENTITY_TYPES = {
-            new IndexEntityType("lyrics", "song", false),
-            new IndexEntityType("title", "song-title", true),
-            new IndexEntityType("author", "song-author", true),
-            new IndexEntityType("album", "song-album", true),
-    };
-
     private StandardAnalyzer analyzer;
 
     private Directory index;
@@ -47,17 +42,25 @@ public class IndexDatabase {
 
         // 1. create the index
         index = new RAMDirectory();
+    }
 
+    public void addOrUpdateDocument(Document document) throws IOException {
+        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
+        IndexWriter w = new IndexWriter(index, config);
+        w.addDocument(document);
+        w.close();
     }
 
     public void analyzeSongs(Path songsFolder) throws IOException {
         IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
         IndexWriter w = new IndexWriter(index, config);
-        HtmlIndexer songIndexer = new HtmlIndexer(INDEX_ENTITY_TYPES);
+        HtmlIndexer songIndexer = new HtmlIndexer();
         Files.walk(songsFolder).forEach(filePath -> {
             if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".html")) {
                 try {
-                    songIndexer.indexSong(w, filePath);
+                    Document document = songIndexer.indexSong(filePath);
+                    document.add(new StringField("id", SongUtil.getId(filePath.getFileName().toString()), Field.Store.YES));
+                    w.addDocument(document);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (ParserConfigurationException e) {
