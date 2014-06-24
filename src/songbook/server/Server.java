@@ -104,6 +104,7 @@ public class Server extends Verticle {
                 });
             });
 
+            // TODO protect creation and modification by a key
             routeMatcher.post("/songs", (req) -> {
                 HttpServerResponse response = req.response();
                 req.bodyHandler((body) -> {
