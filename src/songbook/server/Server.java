@@ -104,6 +104,7 @@ public class Server extends Verticle {
                 });
             });
 
+            // TODO protect creation and modification by a key
             routeMatcher.post("/songs", (req) -> {
                 HttpServerResponse response = req.response();
                 req.bodyHandler((body) -> {
@@ -113,9 +114,12 @@ public class Server extends Verticle {
                         HtmlIndexer songIndexer = new HtmlIndexer();
                         document = songIndexer.indexSong(songData);
 
+
                         Path filePath = Files.createTempFile(dataRoot.resolve("songs"), "", ".html").toAbsolutePath();
                         String id = SongUtil.getId(filePath.getFileName().toString());
                         document.add(new StringField("id", id, Field.Store.YES));
+                        indexDatabase.addOrUpdateDocument(document);
+
                         vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
                             if (ar.succeeded()) {
                                 response.end(id);
@@ -149,6 +153,7 @@ public class Server extends Verticle {
                         HtmlIndexer songIndexer = new HtmlIndexer();
                         document = songIndexer.indexSong(songData);
                         document.add(new StringField("id", id, Field.Store.YES));
+                        indexDatabase.addOrUpdateDocument(document);
 
                         vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
                             if (ar.succeeded()) {
