@@ -62,14 +62,14 @@ public class Templates {
                         "        <ul class='nav navbar-right'>\n" +
                         "            <li><a href='https://github.com/llgcode/songbook'>Participate in Development</a></li>\n" +
                         "        </ul>\n" +
-                        "        <!--<form class='navbar-form navbar-left' role='search'>\n" +
+                        "        <form onSubmit='return songbook.search(this[\"query\"].value)' class='navbar-form navbar-left' >\n" +
                         "          <div class='form-group'>\n" +
-                        "            <input type='text' class='form-control' placeholder='Search'>\n" +
+                        "            <input id='query' type='text' class='form-control' placeholder='Search'>\n" +
                         "          </div>\n" +
                         "          <button type='submit' class='btn btn-default'>Submit</button>\n" +
-                        "        </form>-->\n" +
+                        "        </form>\n" +
                         "\n" +
-                        "    </div><!-- /.navbar-collapse -->\n" +
+                        "    </div>\n" +
                         "</nav>\n"
                 ;
     }
@@ -141,8 +141,6 @@ public class Templates {
                 "</a>\n";
 
     }
-
-
 
     private static String encodeUrl(String id) {
         try {

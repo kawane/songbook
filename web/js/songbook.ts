@@ -106,4 +106,9 @@ module songbook {
         };
         req.send();
     }
+
+    export function search(query: string) {
+        window.location = "/search/" + query;
+        return false;
+    }
 }

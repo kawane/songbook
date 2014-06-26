@@ -24,3 +24,7 @@
     margin-left: auto;
     margin-right: auto;
 }
+
+.navbar-search .input-prepend {
+    margin-bottom: 0;
+}
