@@ -11,7 +11,7 @@ It aims to be easily installed on a server, including for not technical users. S
 * with Docker on a Linux server (kawane/songbook) (TODO post image+doc),
 * on any server with Java 8 (TODO doc),
 
-OpenShift is a really simple solution to get started, check this doc/Install_On_OpenShift.md#head.
+OpenShift is a really simple solution to get started, check [this](doc/Install_On_OpenShift.md).
 
 Not supported:
 

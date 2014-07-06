@@ -10,4 +10,4 @@ TODO:
 * Add doc to run the cartridge
 
 
-Now your server is up and running, check the Getting_Started.md#head to add your songs.
+Now your server is up and running, check the [Getting Started](Getting_Started.md) to add your songs.
