@@ -1,8 +1,10 @@
 songbook
 ========
 
-Songbook is a extremely simple server that allows to store and edit songs chords and lyrics on our own server. 
-It helps setting you free of web site full of distracting animations to focus on the song. 
+Songbook is an extremely simple server that allows you to store and edit songs with chords and lyrics on your own server.
+It helps setting you free of web site full of distracting animations to focus on the song.
+
+It's meant be to as simple as possible, there is no user management, no rights, no 
 
 It aims to be easily installed on a server, including for not technical users. Songbook can be easily installed
  
@@ -15,20 +17,35 @@ OpenShift is a really simple solution to get started, check [this](doc/Install_O
 
 Not supported:
 
-* AMS Amazon (TODO Check if Java 8 is supported).
-* Heroku (TODO Check if Java 8 is supported).
-* Cloudbees (TODO Check if Java 8 is supported).
+- AMS Amazon (TODO Check if Java 8 is supported).
+- Heroku (TODO Check if Java 8 is supported).
+- Cloudbees (TODO Check if Java 8 is supported).
 
 
-
-
-OpenShift and Google App Engine provides some free solutions 
+OpenShift and Google App Engine provides some free solutions to test, they are sufficient for Songbook needs. 
 
 
 Features
 --------
 
+The first Songbook version will include this features:
 
+- [x] Store songs with lyrics, chords and meta information.
+- [ ] Add and edit song:
+  - [x] Server side add and update.
+  - [ ] Client side editor.
+- [ ] Handle two access types: viewer and editor:
+  - [ ] One time access administration page on install.
+  - [ ] Parametrized key for accesses.
+- [x] Full text search on all songs.
+- [x] Supports for computers, smart phones and tablets.
+- [ ] Auto scroll for song.
+
+Here are some feature for the future (partial):
+- [ ] Appearance customization.
+- [ ] Collections of songs (stored locally in the navigator with exchange capabilities).
+- [ ] Present guitar tabs and piano chords.
+- [ ] ...
 
 
 Dependencies
