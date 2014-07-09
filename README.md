@@ -1,10 +1,10 @@
-songbook
+Songbook
 ========
 
 Songbook is an extremely simple server that allows you to store and edit songs with chords and lyrics on your own server.
 It helps setting you free of web site full of distracting animations to focus on the song.
 
-It's meant be to as simple as possible, there is no user management, no rights, no 
+It's fast and simple. There is no user management, no administration, only a minimal access control. 
 
 It aims to be easily installed on a server, including for not technical users. Songbook can be easily installed
  
