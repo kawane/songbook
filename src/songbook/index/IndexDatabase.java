@@ -10,7 +10,11 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
@@ -74,7 +78,7 @@ public class IndexDatabase {
     }
 
 
-    public void search(String querystr, HttpServerRequest request) throws ParseException, IOException {
+    public void search(String key, String querystr, HttpServerRequest request) throws ParseException, IOException {
         HttpServerResponse response = request.response();
         response.setChunked(true);
 
@@ -101,7 +105,7 @@ public class IndexDatabase {
         for (int i = 0; i < hits.length; ++i) {
             int docId = hits[i].doc;
             Document d = searcher.doc(docId);
-            response.write(Templates.showDocument(d));
+            response.write(Templates.showDocument(key, d));
         }
         response.write(Templates.endResult());
 

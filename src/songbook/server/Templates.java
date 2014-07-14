@@ -2,8 +2,6 @@ package songbook.server;
 
 import org.apache.lucene.document.Document;
 import org.intellij.lang.annotations.Language;
-import songbook.index.Song;
-import songbook.index.SongIndex;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -16,7 +14,7 @@ import java.util.stream.Stream;
 public class Templates {
 
     @Language("HTML")
-    public static String getHeader(String title) {
+    public static String getHeader(String key, String title) {
         return
                 "<!DOCTYPE html>\n" +
                 "<html>\n" +
@@ -27,15 +25,15 @@ public class Templates {
                 "    <!-- Bootstrap -->\n" +
                 "    <!-- Latest compiled and minified CSS -->\n" +
                 "    <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css'>\n" +
-                "    <link href='/css/main.css' rel='stylesheet' media='screen'>\n" +
-                "    <link href='/css/song.css' rel='stylesheet' media='screen'>\n" +
+                "    <link href='"+ internalLink(key, "/css/main.css") +"' rel='stylesheet' media='screen'>\n" +
+                "    <link href='"+ internalLink(key, "/css/song.css") +"' rel='stylesheet' media='screen'>\n" +
                 "</head>\n" +
                 "<body>\n"
                 ;
     }
 
     @Language("HTML")
-    public static String getNavigation() {
+    public static String getNavigation(String key) {
         return
                 "<nav class='navbar navbar-default' role='navigation'>\n" +
                         "    <div class='navbar-header'>\n" +
@@ -45,7 +43,7 @@ public class Templates {
                         "            <span class='icon-bar'></span>\n" +
                         "            <span class='icon-bar'></span>\n" +
                         "        </button>\n" +
-                        "        <a class='navbar-brand' href='/'>My SongBook</a>\n" +
+                        "        <a class='navbar-brand' href='"+ internalLink(key, "/") +"'>My SongBook</a>\n" +
                         "    </div>\n" +
                         "    <!-- Collect the nav links, forms, and other content for toggling -->\n" +
                         "    <div class='collapse navbar-collapse' id='bs-navbar-collapse'>\n" +
@@ -62,7 +60,7 @@ public class Templates {
                         "        <ul class='nav navbar-right'>\n" +
                         "            <li><a href='https://github.com/llgcode/songbook'>Participate in Development</a></li>\n" +
                         "        </ul>\n" +
-                        "        <form onSubmit='return songbook.search(this[\"query\"].value)' class='navbar-form navbar-left' >\n" +
+                        "        <form onSubmit='return songbook.search(\""+ key +"\", this[\"query\"].value)' class='navbar-form navbar-left' >\n" +
                         "          <div class='form-group'>\n" +
                         "            <input id='query' type='text' class='form-control' placeholder='Search'>\n" +
                         "          </div>\n" +
@@ -75,7 +73,7 @@ public class Templates {
     }
 
     @Language("HTML")
-    public static String getFooter(String functionToCall) {
+    public static String getFooter(String key, String functionToCall) {
         return
                 "<!-- IntelliJ banner -->\n" +
                 "<div id='intellij-banner'><a href='http://www.jetbrains.com/idea/features/javascript.html' style='display:block; background:#fff url(http://www.jetbrains.com/idea/opensource/img/all/banners/idea468x60_white.gif) no-repeat 0 7px; border:solid 1px #0d3a9e; margin:0;padding:0;text-decoration:none;text-indent:0;letter-spacing:-0.001em; width:466px; height:58px' alt='Java IDE with advanced HTML/CSS/JS editor for hardcore web-developers' title='Java IDE with advanced HTML/CSS/JS editor for hardcore web-developers'><span style='margin: 5px 0 0 61px;padding: 0;float: left;font-size: 12px;cursor:pointer;  background-image:none;border:0;color: #0d3a9e; font-family: trebuchet ms,arial,sans-serif;font-weight: normal;text-align:left;'>Developed with</span><span style='margin:0 0 0 205px;padding:18px 0 2px 0; line-height:13px;font-size:11px;cursor:pointer;  background-image:none;border:0;display:block; width:255px; color:#0d3a9e; font-family: trebuchet ms,arial,sans-serif;font-weight: normal;text-align:left;'>Java IDE with advanced HTML/CSS/JS<br/>editor for hardcore web-developers</span></a></div>\n" +
@@ -83,7 +81,7 @@ public class Templates {
                 "<script src='http://code.jquery.com/jquery.js'></script>\n" +
                 "<!-- Include all compiled plugins (below), or include individual files as needed -->\n" +
                 "<script src='//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js'></script>\n" +
-                "<script src='/js/songbook.js'></script>\n" +
+                "<script src='"+ internalLink(key, "/js/songbook.js") +"'></script>\n" +
                 (functionToCall == null ? "" :
                     "<script type='text/javascript'>\n"+
                     "   " + functionToCall +"\n"+
@@ -92,30 +90,6 @@ public class Templates {
                 "</html>\n"
                 ;
     }
-
-
-    @Language("HTML")
-    public static String showSongIndex(SongIndex songs) {
-        return  getHeader("My SongBook") +
-                getNavigation() +
-                "<div id='content' class='row'>\n" +
-                    "<div id='song-list' class='list-group'>\n" +
-                    songs.getSongs().map(id -> {
-                                final String title = songs.getTitle(id);
-                                return "<a class='list-group-item' href=\"/songs/"+ encodeUrl(id) +"\">\n" +
-                                    "<h4 class='list-group-item-heading'>" + (title ==null ? id : title) + "</h4>\n" +
-                                    "<p class='list-group-item-text'>" +
-                                        songs.getAuthors(id).collect(Collectors.joining(", ")) +
-                                    "</p>" +
-                                "</a>\n";
-                            }
-                    ).collect(Collectors.joining()) +
-                    "</div>\n" +
-                "</div>" +
-                getFooter(null)
-                ;
-    }
-
 
     @Language("HTML")
     public static String startResult() {
@@ -130,16 +104,20 @@ public class Templates {
 
 
     @Language("HTML")
-    public static String showDocument(Document document) {
+    public static String showDocument(String key, Document document) {
         String id = document.get("id");
         String title = document.get("title");
-        return  "<a class='list-group-item' href=\"/songs/"+ encodeUrl(id) +"\">\n" +
+        return  "<a class='list-group-item' href='"+ internalLink(key, "/songs/"+ encodeUrl(id)) +"'>\n" +
                 "<h4 class='list-group-item-heading'>" + (title ==null ? id : title) + "</h4>\n" +
                 "<p class='list-group-item-text'>" +
                 Stream.of(document.getValues("author")).collect(Collectors.joining(", "))+
                 "</p>" +
                 "</a>\n";
 
+    }
+
+    private static String internalLink(String key, String link) {
+        return link + "?key="+key;
     }
 
     private static String encodeUrl(String id) {
@@ -151,25 +129,5 @@ public class Templates {
         }
         return id;
     }
-
-
-    @Language("HTML")
-    public static String showSong(Song song) {
-        final String title = song.findTitle();
-        return  getHeader(title + " - My SongBook") +
-                getNavigation() +
-                "<div id='song' class='song-content'>\n" +
-                    "<div class='song'>\n" +
-                        "<div class='song-title'>"+ title +"</div>\n" +
-                        song.findAuthors().map(author ->
-                            "<div class='song-author'>"+ author +"</div>\n"
-                        ).collect(Collectors.joining()) +
-                        "<pre>"+ song.lyrics +"</pre>\n" +
-                    "</div>\n" +
-                "</div>\n" +
-                getFooter(null)
-            ;
-    }
-    
 
 }

@@ -7,7 +7,11 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.http.*;
+import org.vertx.java.core.http.HttpHeaders;
+import org.vertx.java.core.http.HttpServer;
+import org.vertx.java.core.http.HttpServerRequest;
+import org.vertx.java.core.http.HttpServerResponse;
+import org.vertx.java.core.http.RouteMatcher;
 import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.shareddata.ConcurrentSharedMap;
@@ -20,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class Server extends Verticle {
 
@@ -31,14 +36,22 @@ public class Server extends Verticle {
 
     public final static String DEFAULT_DATA_ROOT = "data";
 
+    private Logger logger;
+
     private Path webRoot;
 
     private Path dataRoot;
 
     private IndexDatabase indexDatabase;
 
+    private String administratorKey = null;
+
+    private String userKey = null;
+
     @Override
     public void start() {
+        logger = getContainer().logger();
+        readKeys();
         try {
             webRoot = getWebRoot();
 
@@ -52,21 +65,26 @@ public class Server extends Verticle {
             RouteMatcher routeMatcher = new RouteMatcher();
             Logger log = container.logger();
 
-            Handler<HttpServerRequest> searchHandler = (req) -> {
+            Handler<HttpServerRequest> searchHandler = (request) -> {
+                if (checkDeniedAccess(request, false)) return;
+
+
                 // Serve all songs
-                HttpServerResponse response = req.response();
+                HttpServerResponse response = request.response();
                 response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
-                String query = req.params().get("query");
+                String query = request.params().get("query");
                 response.setChunked(true);
                 String title = "My SongBook";
                 if (query != null && !query.isEmpty()) {
                     title = query + " - " + title;
                 }
-                response.write(Templates.getHeader(title));
-                response.write(Templates.getNavigation());
+
+                String key = getRequestKey(request);
+                response.write(Templates.getHeader(key, title));
+                response.write(Templates.getNavigation(key));
                 try {
-                    indexDatabase.search(query, req);
+                    indexDatabase.search(key, query, request);
                 } catch (ParseException e) {
                     e.printStackTrace();
                     response.write("Wrong Query Syntax");
@@ -74,22 +92,26 @@ public class Server extends Verticle {
                     e.printStackTrace();
                     response.write("Internal Error");
                 }
-                response.write(Templates.getFooter(null));
+                response.write(Templates.getFooter(key, null));
                 response.end();
             };
             routeMatcher.get("/search/:query", searchHandler);
             routeMatcher.get("/search", searchHandler);
             routeMatcher.get("/", searchHandler);
 
-            routeMatcher.get("/songs/:id", (req) -> {
+            routeMatcher.get("/songs/:id", (request) -> {
+                if (checkDeniedAccess(request, false)) return;
+
                 // Serve song
-                HttpServerResponse response = req.response();
+                HttpServerResponse response = request.response();
                 response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
-                String id = QueryStringDecoder.decodeComponent(req.params().get("id"));
+                String id = QueryStringDecoder.decodeComponent(request.params().get("id"));
                 response.setChunked(true);
-                response.write(Templates.getHeader(id + " - My SongBook"));
-                response.write(Templates.getNavigation());
+
+                String key = getRequestKey(request);
+                response.write(Templates.getHeader(key, id + " - My SongBook"));
+                response.write(Templates.getNavigation(key));
                 readHtmlSong(id, (e) -> {
                     if (e.succeeded()) {
                         response.write(e.result());
@@ -99,15 +121,16 @@ public class Server extends Verticle {
                         log.error("Failed to read song " + id, e.cause());
                         response.setStatusCode(404);
                     }
-                    response.write(Templates.getFooter(null));
+                    response.write(Templates.getFooter(key, "songbook.installEditionModeActivation()"));
                     response.end();
                 });
             });
 
-            // TODO protect creation and modification by a key
-            routeMatcher.post("/songs", (req) -> {
-                HttpServerResponse response = req.response();
-                req.bodyHandler((body) -> {
+            routeMatcher.post("/songs", (request) -> {
+                if (checkDeniedAccess(request, true)) return;
+
+                HttpServerResponse response = request.response();
+                request.bodyHandler((body) -> {
                     String songData = body.toString();
                     Document document;
                     try {
@@ -142,11 +165,13 @@ public class Server extends Verticle {
                 });
             });
 
-            routeMatcher.put("/songs/:id", (req) -> {
-                HttpServerResponse response = req.response();
-                String id = req.params().get("id");
+            routeMatcher.put("/songs/:id", (request) -> {
+                if (checkDeniedAccess(request, true)) return;
+
+                HttpServerResponse response = request.response();
+                String id = request.params().get("id");
                 Path filePath = dataRoot.resolve("songs").resolve(id).toAbsolutePath();
-                req.bodyHandler((body) -> {
+                request.bodyHandler((body) -> {
                     String songData = body.toString();
                     Document document;
                     try {
@@ -177,10 +202,12 @@ public class Server extends Verticle {
                 });
             });
 
-            routeMatcher.noMatch((req) -> {
+            routeMatcher.noMatch((request) -> {
+                if (checkDeniedAccess(request, false)) return;
+
                 // Serve Files
-                HttpServerResponse response = req.response();
-                String path = req.path();
+                HttpServerResponse response = request.response();
+                String path = request.path();
                 String fileName = path.equals("/") ? "index.html" : path;
                 Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
                 log.info("GET " + localFilePath);
@@ -258,4 +285,72 @@ public class Server extends Verticle {
         final String host = System.getenv("HOST");
         return host == null ? DEFAULT_HOST : host;
     }
+
+    /** Searches for keys on server to initialize administratorKey and userKey. */
+    private void readKeys() {
+        try {
+            final Path administratorKeyPath = getDataRoot().resolve("administrator.key");
+            if (Files.exists(administratorKeyPath)) {
+                final List<String> allLines = Files.readAllLines(administratorKeyPath);
+                if (allLines.isEmpty() == false) {
+                    administratorKey = allLines.get(allLines.size() - 1);
+                }
+            }
+        } catch (IOException e) {
+            logger.error("Could not read administrator key", e);
+        }
+
+        try {
+            final Path userKeyPath = getDataRoot().resolve("user.key");
+            if (Files.exists(userKeyPath)) {
+                final List<String> allLines = Files.readAllLines(userKeyPath);
+                if (allLines.isEmpty() == false) {
+                    userKey = allLines.get(allLines.size() - 1);
+                }
+            }
+        } catch (IOException e) {
+            logger.error("Could not read user key", e);
+        }
+    }
+
+    /** Extracts key from query */
+    private String getRequestKey(HttpServerRequest request) {
+        final String query = request.query();
+        if (query != null) {
+            final String attribute = "key=";
+            final int keyIndex = query.indexOf(attribute);
+            if (keyIndex >= 0) {
+                final int andIndex = query.indexOf('&', keyIndex);
+                return query.substring(keyIndex+attribute.length(), andIndex >= 0 ? andIndex : query.length());
+            }
+        }
+        return null;
+    }
+
+    /** Checks if key allows to be administrator */
+    private boolean isAdministrator(String requestKey) {
+        return administratorKey == null || administratorKey.equals(requestKey);
+    }
+
+    /** Checks if key allows to be user */
+    private boolean isUser(String requestKey) {
+        return userKey== null || userKey.equals(requestKey);
+    }
+
+    /** Checks if request need to be denied, returns true if access is denied. */
+    private boolean checkDeniedAccess(HttpServerRequest request, boolean needAdmin) {
+        String key = getRequestKey(request);
+        if (isAdministrator(key)) return false;
+        if (isUser(key) && needAdmin==false) return false;
+
+        forbiddenAccess(request);
+        return true;
+    }
+
+    private void forbiddenAccess(HttpServerRequest request) {
+        HttpServerResponse response = request.response();
+        response.setStatusCode(403);
+        response.end("Access Forbidden '" + request.path() + "'");
+    }
+
 }
