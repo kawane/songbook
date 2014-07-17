@@ -21,6 +21,8 @@ import songbook.index.IndexDatabase;
 import songbook.index.SongUtil;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -102,7 +104,7 @@ public class Server extends Verticle {
             routeMatcher.get("/songs/:id", (request) -> {
                 if (checkDeniedAccess(request, false)) return;
 
-                // Serve song
+                // Serves song
                 HttpServerResponse response = request.response();
                 response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
@@ -137,7 +139,6 @@ public class Server extends Verticle {
                         HtmlIndexer songIndexer = new HtmlIndexer();
                         document = songIndexer.indexSong(songData);
 
-
                         Path filePath = Files.createTempFile(dataRoot.resolve("songs"), "", ".html").toAbsolutePath();
                         String id = SongUtil.getId(filePath.getFileName().toString());
                         document.add(new StringField("id", id, Field.Store.YES));
@@ -170,14 +171,15 @@ public class Server extends Verticle {
 
                 HttpServerResponse response = request.response();
                 String id = request.params().get("id");
-                Path filePath = dataRoot.resolve("songs").resolve(id).toAbsolutePath();
+                String fileName = decodeUrl(id) + ".html";
+                Path filePath = dataRoot.resolve("songs").resolve(fileName).toAbsolutePath();
                 request.bodyHandler((body) -> {
                     String songData = body.toString();
                     Document document;
                     try {
                         HtmlIndexer songIndexer = new HtmlIndexer();
                         document = songIndexer.indexSong(songData);
-                        document.add(new StringField("id", id, Field.Store.YES));
+                        document.add(new StringField("id", SongUtil.getId(filePath.getFileName().toString()), Field.Store.YES));
                         indexDatabase.addOrUpdateDocument(document);
 
                         vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
@@ -203,7 +205,7 @@ public class Server extends Verticle {
             });
 
             routeMatcher.noMatch((request) -> {
-                if (checkDeniedAccess(request, false)) return;
+                //if (checkDeniedAccess(request, false)) return;
 
                 // Serve Files
                 HttpServerResponse response = request.response();
@@ -353,4 +355,14 @@ public class Server extends Verticle {
         response.end("Access Forbidden '" + request.path() + "'");
     }
 
+
+    private static String decodeUrl(String id) {
+        try {
+            return URLDecoder.decode(id, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            // Do nothing but logging
+            e.printStackTrace();
+        }
+        return id;
+    }
 }

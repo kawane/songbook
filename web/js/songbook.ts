@@ -6,7 +6,8 @@ module songbook {
         button.className = "btn btn-default";
         button.type = "button";
         var buttonGlyph = document.createElement("span");
-        buttonGlyph.className = "glyphicon glyphicon-"+glyph;
+        buttonGlyph.classList.add("glyphicon");
+        buttonGlyph.classList.add("glyphicon-"+glyph);
         button.appendChild(buttonGlyph);
         button.addEventListener("click", ()=>{action(target, button)});
         return button;
@@ -19,17 +20,50 @@ module songbook {
         }
     }
 
+    function postSong(result:(event: Event) => any) {
+        // retrieves id from location
+        var pathname = document.location.pathname;
+        var id = pathname.substring(pathname.lastIndexOf('/')+1);
+
+        // retrieves key from location
+        // TODO handle undefined key
+        var search = document.location.search;
+        var keyStart = search.indexOf("key=");
+        var keyEnd = search.indexOf("&");
+        var key = search.substring(keyStart+4, keyEnd >= 0 ? keyEnd : search.length);
+
+        var request = new XMLHttpRequest();
+        request.open("put", "/songs/"+ id +"?key="+ key, true);
+
+        request.onreadystatechange = result;
+
+        var song = <HTMLElement>document.querySelector(".song");
+        request.send("<div class=\"song\">" + song.innerHTML + "</div>");
+    }
+
     function createAdministrationTools(song: HTMLElement): Node {
         var toolbar = document.createElement("div");
         toolbar.className = "";
         var editButton = createButton("pencil", song, (target, button) => {
-            // TODO change pencil and save button states
             if (target.contentEditable !== "true") {
                 target.contentEditable = "true";
+                target.classList.add("edited");
                 updateGlyph(button, "send");
+
             } else {
                 target.contentEditable = "false";
-                updateGlyph(button, "pencil");
+                target.classList.remove("edited");
+                updateGlyph(button, "refresh");
+                postSong(event => {
+                    var request = <XMLHttpRequest>event.currentTarget;
+                    if (request.readyState == 4) {
+                        if (request.status == 200) {
+                            updateGlyph(button, "pencil");
+                        } else {
+                            updateGlyph(button, "warning_sign");
+                        }
+                    }
+                })
             }
         });
         toolbar.appendChild(editButton);

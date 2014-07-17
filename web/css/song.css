@@ -6,6 +6,10 @@
 	white-space: nowrap;
 }
 
+.song.edited {
+    border: 1px solid darkgray;
+}
+
 .song-section {
 	margin: 3ex 0;	
 }
@@ -52,8 +56,13 @@
 .song-line-with-chords > .song-chord {
 	position: relative;
 	top: -1em;
-}
+    left: 0.5em;
 
+    line-height: 0.8em;
+    color: #888;
+    white-space: pre;
+
+}
 
 .song-title {
 	font-weight: bold;
