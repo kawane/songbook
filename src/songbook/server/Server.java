@@ -103,6 +103,7 @@ public class Server extends Verticle {
 
             routeMatcher.get("/songs/:id", (request) -> {
                 if (checkDeniedAccess(request, false)) return;
+                boolean admin = isAdministrator(getRequestKey(request));
 
                 // Serves song
                 HttpServerResponse response = request.response();
@@ -123,7 +124,7 @@ public class Server extends Verticle {
                         log.error("Failed to read song " + id, e.cause());
                         response.setStatusCode(404);
                     }
-                    response.write(Templates.getFooter(key, "songbook.installEditionModeActivation()"));
+                    response.write(Templates.getFooter(key, admin ? "songbook.installEditionModeActivation()" : null));
                     response.end();
                 });
             });
