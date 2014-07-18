@@ -117,7 +117,11 @@ public class Templates {
     }
 
     private static String internalLink(String key, String link) {
-        return link + "?key="+key;
+        if (key==null || key.length()==0) {
+            return link;
+        } else {
+            return link + "?key=" + key;
+        }
     }
 
     private static String encodeUrl(String id) {
