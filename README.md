@@ -60,6 +60,7 @@ Here are some feature for the future (partial):
 ### Bugs
 
 - [ ] Index isn't updated after edit
+- [ ] Uncaught TypeError: Cannot read property 'insertBefore' of undefined (songbook.ts:79)
 
 Dependencies
 ------------
