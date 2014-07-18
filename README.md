@@ -1,6 +1,8 @@
 Songbook
 ========
 
+Visit [Songbook](http://www.minibilles.org/songbook/index.html) website. 
+
 Songbook is an extremely simple server that allows you to store and edit songs with chords and lyrics on your own server.
 It helps setting you free of web site full of distracting animations to focus on the song.
 
@@ -31,12 +33,12 @@ Features
 The first Songbook version will include this features:
 
 - [x] Store songs with lyrics, chords and meta information.
-- [ ] Add and edit song:
+- [x] Add and edit song:
   - [x] Server side add and update.
-  - [ ] Client side editor.
-- [ ] Handle two access types: viewer and editor:
+  - [x] Client side editor.
+- [x] Handle two access types: viewer and editor:
   - [ ] One time access administration page on install.
-  - [ ] Parametrized key for accesses.
+  - [x] Parametrized key for accesses.
 - [x] Full text search on all songs.
 - [x] Supports for computers, smart phones and tablets.
 - [ ] Auto scroll for song.
@@ -48,8 +50,19 @@ Here are some feature for the future (partial):
 - [ ] ...
 
 
+### TODO
+
+- [ ] Remove edition for non-admins.
+- [ ] Add action to add a song.
+- [ ] Work on song edition, content editable isn't sufficient, needs chord identification.
+- [ ] Save index on hardrive.
+
+### Bugs
+
+- [ ] Index isn't updated after edit
+
 Dependencies
-============
+------------
 
 Songbook is a Java 8 application. 
 
