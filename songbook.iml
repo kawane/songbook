@@ -10,6 +10,7 @@
     <orderEntry type="library" name="lucene-4.8.0" level="project" />
     <orderEntry type="library" name="IntelliLang" level="project" />
     <orderEntry type="library" name="Vert.x 2.1" level="project" />
+    <orderEntry type="library" name="JSoup 1.7.3" level="project" />
   </component>
 </module>
 

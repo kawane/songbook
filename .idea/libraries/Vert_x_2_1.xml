@@ -15,13 +15,8 @@
     </JAVADOC>
     <SOURCES>
       <root url="jar://$USER_HOME$/.ideaLibSources/vertx-core-2.1-sources.jar!/" />
-      <root url="jar://$USER_HOME$/.ideaLibSources/vertx-hazelcast-2.1-sources.jar!/" />
-      <root url="jar://$USER_HOME$/.ideaLibSources/vertx-platform-2.1-sources.jar!/" />
-      <root url="jar://$USER_HOME$/.ideaLibSources/netty-all-4.0.19.Final-sources.jar!/" />
       <root url="jar://$USER_HOME$/.ideaLibSources/jackson-core-2.2.2-sources.jar!/" />
-      <root url="jar://$USER_HOME$/.ideaLibSources/jackson-annotations-2.2.2-sources.jar!/" />
       <root url="jar://$USER_HOME$/.ideaLibSources/jackson-databind-2.2.2-sources.jar!/" />
-      <root url="jar://$USER_HOME$/.ideaLibSources/hazelcast-3.2.1-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

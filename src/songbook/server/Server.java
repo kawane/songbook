@@ -197,6 +197,7 @@ public class Server extends Verticle {
                             }
                         });
                     } catch (Exception e) {
+                        // TODO write error to client
                         log.error("Error indexing song", e);
                         response.setStatusCode(500);
                         response.end();

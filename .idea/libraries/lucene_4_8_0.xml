@@ -8,7 +8,6 @@
     <JAVADOC />
     <SOURCES>
       <root url="jar://$USER_HOME$/.ideaLibSources/lucene-core-4.8.0-sources.jar!/" />
-      <root url="jar://$USER_HOME$/.ideaLibSources/lucene-queryparser-4.8.0-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

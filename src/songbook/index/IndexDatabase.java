@@ -20,10 +20,8 @@ import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.HttpServerResponse;
-import org.xml.sax.SAXException;
 import songbook.server.Templates;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -66,10 +64,6 @@ public class IndexDatabase {
                     document.add(new StringField("id", SongUtil.getId(filePath.getFileName().toString()), Field.Store.YES));
                     w.addDocument(document);
                 } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ParserConfigurationException e) {
-                    e.printStackTrace();
-                } catch (SAXException e) {
                     e.printStackTrace();
                 }
             }
