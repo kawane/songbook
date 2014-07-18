@@ -61,6 +61,7 @@ Here are some feature for the future (partial):
 
 - [ ] Index isn't updated after edit
 - [ ] Uncaught TypeError: Cannot read property 'insertBefore' of undefined (songbook.ts:79)
+- [ ] 'key=null' appears
 
 Dependencies
 ------------
