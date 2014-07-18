@@ -49,19 +49,10 @@ Here are some feature for the future (partial):
 - [ ] Present guitar tabs and piano chords.
 - [ ] ...
 
-
 ### TODO
 
-- [ ] Remove edition for non-admins.
 - [ ] Add action to add a song.
-- [ ] Work on song edition, content editable isn't sufficient, needs chord identification.
 - [ ] Save index on hardrive.
-
-### Bugs
-
-- [ ] Index isn't updated after edit
-- [ ] Uncaught TypeError: Cannot read property 'insertBefore' of undefined (songbook.ts:79)
-- [ ] 'key=null' appears
 
 Dependencies
 ------------
