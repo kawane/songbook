@@ -73,10 +73,12 @@ module songbook {
 
     export function installEditionModeActivation() {
         var allSongs = <HTMLElement[]><any>document.querySelectorAll(".song");
-        for (var song in  allSongs) {
+        // TODO what the hell with JS loops ?????
+        for (var song in allSongs) {
             var songNode = allSongs[song];
             var parentNode = songNode.parentElement;
-            parentNode.insertBefore(createAdministrationTools(songNode), songNode);
+            // loop ends with 'length' for song
+            if (parentNode) parentNode.insertBefore(createAdministrationTools(songNode), songNode);
         }
     }
 
