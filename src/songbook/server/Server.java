@@ -176,12 +176,16 @@ public class Server extends Verticle {
                 Path filePath = dataRoot.resolve("songs").resolve(fileName).toAbsolutePath();
                 request.bodyHandler((body) -> {
                     String songData = body.toString();
-                    Document document;
                     try {
+                        // indexes updated song
                         HtmlIndexer songIndexer = new HtmlIndexer();
-                        document = songIndexer.indexSong(songData);
+                        Document document = songIndexer.indexSong(songData);
                         document.add(new StringField("id", SongUtil.getId(filePath.getFileName().toString()), Field.Store.YES));
                         indexDatabase.addOrUpdateDocument(document);
+
+                        // removes song from vert.x cache.
+                        ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
+                        songs.remove(id);
 
                         vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
                             if (ar.succeeded()) {

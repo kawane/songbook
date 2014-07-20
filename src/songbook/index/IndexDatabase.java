@@ -8,6 +8,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
@@ -46,10 +47,12 @@ public class IndexDatabase {
         index = new RAMDirectory();
     }
 
-    public void addOrUpdateDocument(Document document) throws IOException {
+    public void addOrUpdateDocument(Document document) throws IOException, ParseException {
+        Term term = new Term("id", document.get("id"));
         IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
         IndexWriter w = new IndexWriter(index, config);
-        w.addDocument(document);
+        w.updateDocument(term, document);
+        //w.addDocument(document);
         w.close();
     }
 
