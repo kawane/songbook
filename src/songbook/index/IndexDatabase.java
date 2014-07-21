@@ -15,6 +15,10 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortField.Type;
+import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
@@ -84,19 +88,21 @@ public class IndexDatabase {
         int hitsPerPage = 50;
         IndexReader reader = DirectoryReader.open(index);
         IndexSearcher searcher = new IndexSearcher(reader);
-        TopScoreDocCollector collector = TopScoreDocCollector.create(hitsPerPage, true);
-        Query q;
+
+        ScoreDoc[] hits;
         if (querystr == null || querystr.isEmpty()) {
-            q = new MatchAllDocsQuery();
+            Query query = new MatchAllDocsQuery();
+            TopFieldDocs topFieldDocs = searcher.search(query, hitsPerPage, new Sort(new SortField("id", Type.STRING)));
+            hits = topFieldDocs.scoreDocs;
         } else {
             // the "lyrics" arg specifies the default field to use
             // when no field is explicitly specified in the query.
-            q = new QueryParser(Version.LUCENE_48, "lyrics", analyzer).parse(querystr);
+            Query query = new QueryParser(Version.LUCENE_48, "lyrics", analyzer).parse(querystr);
+            TopScoreDocCollector collector = TopScoreDocCollector.create(hitsPerPage, true);
+            searcher.search(query, collector);
+            hits = collector.topDocs().scoreDocs;
         }
 
-        searcher.search(q, collector);
-
-        ScoreDoc[] hits = collector.topDocs().scoreDocs;
         // 4. display results
         response.write(Templates.startResult());
         for (int i = 0; i < hits.length; ++i) {

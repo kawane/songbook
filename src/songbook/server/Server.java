@@ -70,7 +70,6 @@ public class Server extends Verticle {
             Handler<HttpServerRequest> searchHandler = (request) -> {
                 if (checkDeniedAccess(request, false)) return;
 
-
                 // Serve all songs
                 HttpServerResponse response = request.response();
                 response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
