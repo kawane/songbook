@@ -66,7 +66,7 @@ Songbook uses these third party libraries:
 * [Apache Lucene](http://lucene.apache.org/) for indexes and searches.
 
 
-![IntelliJIDEA](https://github.com/llgcode/songbook/raw/master/data/intellij-banner.png)<br>
+![IntelliJIDEA](https://github.com/llgcode/songbook/raw/master/doc/intellij-banner.png)<br>
 [IntelliJ IDEA](http://www.jetbrains.com/idea/)<br>
 
 thanks to Elena.
