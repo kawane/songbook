@@ -8,6 +8,8 @@ It helps setting you free of web site full of distracting animations to focus on
 
 It's fast and simple. There is no user management, no administration, only a minimal access control. 
 
+Get documentation with the [Getting Started](doc/Getting_Started.md).
+
 It aims to be easily installed on a server, including for not technical users. Songbook can be easily installed
  
 * on OpenShift with the songbook cartridge (TODO cartridge+doc),
