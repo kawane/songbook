@@ -56,6 +56,14 @@ public class Server extends Verticle {
         logger = getContainer().logger();
         webRoot = getWebRoot();
         dataRoot = getDataRoot();
+
+        try {
+            if (Files.exists(dataRoot) == false) Files.createDirectories(dataRoot);
+        } catch (IOException e) {
+            logger.error("Cannot start server data root isn't accessible.", e);
+            return;
+        }
+
         readKeys();
 
         // creates server
