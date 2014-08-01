@@ -9,8 +9,8 @@ Get your server
 First you must get your own server working.
 Check one of this methods to start your server:
 
-* [OpenShift](doc/Install_On_OpenShift.md)
-* [Docker](doc/Install_With_Docker.md)
+* [OpenShift](Install_On_OpenShift.md)
+* [Docker](Install_With_Docker.md)
 * ...
 
 
