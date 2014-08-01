@@ -47,20 +47,10 @@ public class Templates {
                         "    </div>\n" +
                         "    <!-- Collect the nav links, forms, and other content for toggling -->\n" +
                         "    <div class='collapse navbar-collapse' id='bs-navbar-collapse'>\n" +
-                        "        <ul class='nav navbar-nav'>\n" +
-                        "            <!--<li><a class='' href='/rest/song/'>View</a></li>-->\n" +
+                        "        <ul class='nav navbar-nav' id='tools'>\n" +
                         "        </ul>\n" +
                         "\n" +
-                        "        <ul class='nav navbar-right'>\n" +
-                        "            <!--<li><a href='{{.LoginURL}}'>Sign in</a></li>-->\n" +
-                        "        </ul>\n" +
-                        "        <ul class='nav navbar-right'>\n" +
-                        "            <a href=\"http://www.jetbrains.com/idea/features/javascript.html\" style=\"display:block; background:#fff url(http://www.jetbrains.com/idea/opensource/img/all/banners/idea210x60_white.gif) no-repeat 0 0; border:solid 1px #0d3a9e; margin:0;padding:0;text-decoration:none;text-indent:0;letter-spacing:-0.001em; width:208px; height:58px\" alt=\"Java IDE with advanced HTML/CSS/JS editor for hardcore web-developers\" title=\"Java IDE with advanced HTML/CSS/JS editor for hardcore web-developers\"><span style=\"margin: -3px 0 0 41px;padding: 0;float: left;font-size: 10px;cursor:pointer;  background-image:none;border:0;color: #0d3a9e; font-family: trebuchet ms,arial,sans-serif;font-weight: normal;text-align:left;\">Developed with</span><span style=\"margin:33px 0 0 5px;padding:0 0 2px 0; line-height:11px;font-size:9px;word-spacing:-2;cursor:pointer;  background-image:none;border:0;display:block;width:210px; color:#0d3a9e; font-family:tahoma,arial,sans-serif;font-weight: normal;text-align:left;\">Java IDE with advanced HTML/CSS/JS<br/>editor for hardcore web-developers</span></a>\n" +
-                        "        </ul>\n" +
-                        "        <ul class='nav navbar-right'>\n" +
-                        "            <li><a href='https://github.com/llgcode/songbook'>Participate in Development</a></li>\n" +
-                        "        </ul>\n" +
-                        "        <form onSubmit='return songbook.search(\""+ key +"\", this[\"query\"].value)' class='navbar-form navbar-left' >\n" +
+                        "        <form id='search' onSubmit='return songbook.search(\""+ key +"\", this[\"query\"].value)' class='navbar-form navbar-left' >\n" +
                         "          <div class='form-group'>\n" +
                         "            <input id='query' type='text' class='form-control' placeholder='Search'>\n" +
                         "          </div>\n" +
@@ -75,8 +65,6 @@ public class Templates {
     @Language("HTML")
     public static String getFooter(String key, String functionToCall) {
         return
-                "<!-- IntelliJ banner -->\n" +
-                "<div id='intellij-banner'><a href='http://www.jetbrains.com/idea/features/javascript.html' style='display:block; background:#fff url(http://www.jetbrains.com/idea/opensource/img/all/banners/idea468x60_white.gif) no-repeat 0 7px; border:solid 1px #0d3a9e; margin:0;padding:0;text-decoration:none;text-indent:0;letter-spacing:-0.001em; width:466px; height:58px' alt='Java IDE with advanced HTML/CSS/JS editor for hardcore web-developers' title='Java IDE with advanced HTML/CSS/JS editor for hardcore web-developers'><span style='margin: 5px 0 0 61px;padding: 0;float: left;font-size: 12px;cursor:pointer;  background-image:none;border:0;color: #0d3a9e; font-family: trebuchet ms,arial,sans-serif;font-weight: normal;text-align:left;'>Developed with</span><span style='margin:0 0 0 205px;padding:18px 0 2px 0; line-height:13px;font-size:11px;cursor:pointer;  background-image:none;border:0;display:block; width:255px; color:#0d3a9e; font-family: trebuchet ms,arial,sans-serif;font-weight: normal;text-align:left;'>Java IDE with advanced HTML/CSS/JS<br/>editor for hardcore web-developers</span></a></div>\n" +
                 "<!-- JavaScript plugins (requires jQuery) -->\n" +
                 "<script src='http://code.jquery.com/jquery.js'></script>\n" +
                 "<!-- Include all compiled plugins (below), or include individual files as needed -->\n" +
@@ -114,6 +102,13 @@ public class Templates {
                 "</p>" +
                 "</a>\n";
 
+    }
+
+    @Language("HTML")
+    public static String showAdminKey(String key) {
+        return  "" +
+                "" +
+                "";
     }
 
     private static String internalLink(String key, String link) {

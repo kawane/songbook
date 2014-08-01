@@ -1,10 +1,14 @@
 
 module songbook {
 
+    function createListItem(inner:Node):HTMLElement {
+        var li = document.createElement("li");
+        if (inner != null) li.appendChild(inner);
+        return li;
+    }
+
     function createButton(glyph: String, target:HTMLElement, action: (target:HTMLElement, button: HTMLElement) => any) {
-        var button = document.createElement("button");
-        button.className = "btn btn-default";
-        button.type = "button";
+        var button = document.createElement("a");
         var buttonGlyph = document.createElement("span");
         buttonGlyph.classList.add("glyphicon");
         buttonGlyph.classList.add("glyphicon-"+glyph);
@@ -41,10 +45,8 @@ module songbook {
         request.send("<div class=\"song\">" + song.innerHTML + "</div>");
     }
 
-    function createAdministrationTools(song: HTMLElement): Node {
-        var toolbar = document.createElement("div");
-        toolbar.className = "";
-        var editButton = createButton("pencil", song, (target, button) => {
+    function createEditButton(song: HTMLElement): Node {
+        return createButton("pencil", song, (target, button) => {
             if (target.contentEditable !== "true") {
                 target.contentEditable = "true";
                 target.classList.add("edited");
@@ -66,20 +68,13 @@ module songbook {
                 })
             }
         });
-        toolbar.appendChild(editButton);
-
-        return toolbar;
     }
 
     export function installEditionModeActivation() {
-        var allSongs = <HTMLElement[]><any>document.querySelectorAll(".song");
-        // TODO what the hell with JS loops ?????
-        for (var song in allSongs) {
-            var songNode = allSongs[song];
-            var parentNode = songNode.parentElement;
-            // loop ends with 'length' for song
-            if (parentNode) parentNode.insertBefore(createAdministrationTools(songNode), songNode);
-        }
+        var tools = <HTMLElement><any>document.getElementById("tools");
+
+        var song = <HTMLElement><any>document.querySelector(".song");
+        if (song!=null) tools.appendChild(createListItem(createEditButton(song)));
     }
 
     export function search(key: string, query: string) {
