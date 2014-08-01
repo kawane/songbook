@@ -12,8 +12,9 @@ Check one of this methods to start your server:
 * [OpenShift](doc/Install_On_OpenShift.md)
 * TODO ...
 
-Songbook
---------
+
+Write access
+------------
 
 Now that your server is up, this section presents you how to add and edit songs.
 
@@ -25,4 +26,14 @@ An alert is presented then until the site is accessed using the newly generated 
 Remember to store the key by bookmarking the address.
 If you wan't to share write access with someone, just send the URL with the key.
 
+Accessing your server with the admin key adds to the navigation several buttons:
+
+* A pen to Edit a song.
+* A plus to add a new song.
+* A minus to remove a song.
+
+Edition
+-------
+
+The edition is under-construction, check the issue #5.
 
