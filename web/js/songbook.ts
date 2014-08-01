@@ -70,8 +70,16 @@ module songbook {
         });
     }
 
+    function createAddButton(): Node {
+        return createButton("plus", null, (target, button) => {
+            // TODO
+        });
+    }
+
     export function installEditionModeActivation() {
         var tools = <HTMLElement><any>document.getElementById("tools");
+
+        tools.appendChild(createListItem(createAddButton()));
 
         var song = <HTMLElement><any>document.querySelector(".song");
         if (song!=null) tools.appendChild(createListItem(createEditButton(song)));
