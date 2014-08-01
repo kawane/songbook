@@ -35,5 +35,5 @@ Accessing your server with the admin key adds to the navigation several buttons:
 Edition
 -------
 
-The edition is under-construction, check the issue #5.
+The edition is under-construction, check the issue #5 .
 
