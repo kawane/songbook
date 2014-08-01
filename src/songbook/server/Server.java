@@ -34,7 +34,7 @@ public class Server extends Verticle {
 
     public final static String DEFAULT_HOST = "localhost";
 
-    public final static String DEFAULT_WEB_ROOT = "./web";
+    public final static String DEFAULT_WEB_ROOT = "web";
 
     public final static String DEFAULT_DATA_ROOT = "data";
 
@@ -53,19 +53,18 @@ public class Server extends Verticle {
     @Override
     public void start() {
         logger = getContainer().logger();
+        webRoot = getWebRoot();
+        dataRoot = getDataRoot();
         readKeys();
         try {
-            webRoot = getWebRoot();
 
-            dataRoot = getDataRoot();
-
-            indexDatabase = new IndexDatabase(dataRoot.resolve("index"));
-
-            indexDatabase.analyzeSongs(dataRoot.resolve("songs"));
+            long start = System.currentTimeMillis();
+            indexDatabase = new IndexDatabase(dataRoot.resolve("index"), dataRoot.resolve("songs"));
+            long end = System.currentTimeMillis();
+            logger.info("Opened index in " + (end -start) +" milliseconds.");
 
             HttpServer httpServer = vertx.createHttpServer();
             RouteMatcher routeMatcher = new RouteMatcher();
-            Logger log = container.logger();
 
             Handler<HttpServerRequest> searchHandler = (request) -> {
                 if (checkDeniedAccess(request, false)) return;
@@ -117,10 +116,10 @@ public class Server extends Verticle {
                 readHtmlSong(id, (e) -> {
                     if (e.succeeded()) {
                         response.write(e.result());
-                        log.trace("Serve Song " + id);
+                        logger.trace("Serve Song " + id);
                     } else {
                         response.write("Error loading song " + id);
-                        log.error("Failed to read song " + id, e.cause());
+                        logger.error("Failed to read song " + id, e.cause());
                         response.setStatusCode(404);
                     }
                     response.write(Templates.getFooter(key, admin ? "songbook.installEditionModeActivation()" : null));
@@ -148,18 +147,18 @@ public class Server extends Verticle {
                             if (ar.succeeded()) {
                                 response.end(id);
                             } else {
-                                log.error("Failed to create song", ar.cause());
+                                logger.error("Failed to create song", ar.cause());
                                 response.setStatusCode(500);
                                 response.end();
                                 try {
                                     Files.deleteIfExists(filePath);
                                 } catch (IOException e) {
-                                    log.warn("Can't delete file", e);
+                                    logger.warn("Can't delete file", e);
                                 }
                             }
                         });
                     } catch (Exception e) {
-                        log.error("Error indexing song", e);
+                        logger.error("Error indexing song", e);
                         response.setStatusCode(500);
                         response.end();
                     }
@@ -191,19 +190,19 @@ public class Server extends Verticle {
                             if (ar.succeeded()) {
                                 response.end(id);
                             } else {
-                                log.error("Failed to create song", ar.cause());
+                                logger.error("Failed to create song", ar.cause());
                                 response.setStatusCode(500);
                                 response.end();
                                 try {
                                     Files.deleteIfExists(filePath);
                                 } catch (IOException e) {
-                                    log.warn("Can't delete file", e);
+                                    logger.warn("Can't delete file", e);
                                 }
                             }
                         });
                     } catch (Exception e) {
                         // TODO write error to client
-                        log.error("Error indexing song", e);
+                        logger.error("Error indexing song", e);
                         response.setStatusCode(500);
                         response.end();
                     }
@@ -218,7 +217,7 @@ public class Server extends Verticle {
                 String path = request.path();
                 String fileName = path.equals("/") ? "index.html" : path;
                 Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
-                log.info("GET " + localFilePath);
+                logger.info("GET " + localFilePath);
                 String type = "text/plain";
                 if (fileName.endsWith(".js")) {
                     type = "application/javascript";

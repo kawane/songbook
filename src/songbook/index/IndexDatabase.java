@@ -21,7 +21,7 @@ import org.apache.lucene.search.SortField.Type;
 import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Version;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.HttpServerResponse;
@@ -38,17 +38,21 @@ public class IndexDatabase {
 
     public final static String SONG_EXTENSION = ".html";
 
+    private final Path songsFolder;
+
     private StandardAnalyzer analyzer;
 
     private Directory index;
 
-    public IndexDatabase(Path indexFolder) throws IOException {
-        // 0. Specify the analyzer for tokenizing text.
-        //    The same analyzer should be used for indexing and searching
-        analyzer = new StandardAnalyzer(Version.LUCENE_48);
+    public IndexDatabase(Path indexFolder, Path songsFolder) throws IOException {
+        this.songsFolder = songsFolder;
 
-        // 1. create the index
-        index = new RAMDirectory();
+        analyzer = new StandardAnalyzer(Version.LUCENE_48);
+        index = new NIOFSDirectory(indexFolder.toFile());
+        if (DirectoryReader.indexExists(index) == false) {
+            // index is empty, analyze songs
+            analyzeSongs();
+        }
     }
 
     public void addOrUpdateDocument(Document document) throws IOException, ParseException {
@@ -56,11 +60,11 @@ public class IndexDatabase {
         IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
         IndexWriter w = new IndexWriter(index, config);
         w.updateDocument(term, document);
-        //w.addDocument(document);
         w.close();
     }
 
-    public void analyzeSongs(Path songsFolder) throws IOException {
+    private int analyzeSongs() throws IOException {
+        int[] count = { 0 };
         IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
         IndexWriter w = new IndexWriter(index, config);
         HtmlIndexer songIndexer = new HtmlIndexer();
@@ -70,12 +74,15 @@ public class IndexDatabase {
                     Document document = songIndexer.indexSong(filePath);
                     document.add(new StringField("id", SongUtil.getId(filePath.getFileName().toString()), Field.Store.YES));
                     w.addDocument(document);
+
+                    count[0] += 1;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
         w.close();
+        return count[0];
     }
 
 
@@ -83,8 +90,6 @@ public class IndexDatabase {
         HttpServerResponse response = request.response();
         response.setChunked(true);
 
-
-        // 3. search
         int hitsPerPage = 50;
         IndexReader reader = DirectoryReader.open(index);
         IndexSearcher searcher = new IndexSearcher(reader);
@@ -103,7 +108,6 @@ public class IndexDatabase {
             hits = collector.topDocs().scoreDocs;
         }
 
-        // 4. display results
         response.write(Templates.startResult());
         for (int i = 0; i < hits.length; ++i) {
             int docId = hits[i].doc;
