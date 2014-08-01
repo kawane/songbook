@@ -62,6 +62,15 @@ public class Templates {
                 ;
     }
 
+
+    @Language("HTML")
+    public static String getKeyCreationAlert(String newKey, String path) {
+        return "<div class=\"alert alert-success\" role=\"alert\">"+
+                    "New administration key created. Remember to <a href=\""+ internalLink(newKey, path) +"\"> bookmark this link</a>." +
+                    "This alert will disappear when the administration key will be used the first time." +
+                "</div>\n";
+    }
+
     @Language("HTML")
     public static String getFooter(String key, String functionToCall) {
         return

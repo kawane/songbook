@@ -47,7 +47,7 @@ public class Server extends Verticle {
 
     private IndexDatabase indexDatabase;
 
-    private boolean keyJustCreated = false;
+    private boolean showKeyCreationAlert = false;
     private String administratorKey = null;
     private String userKey = null;
 
@@ -236,6 +236,7 @@ public class Server extends Verticle {
                 String key = getRequestKey(request);
                 response.write(Templates.getHeader(key, id + " - My SongBook"));
                 response.write(Templates.getNavigation(key));
+                if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
                 readHtmlSong(id, (e) -> {
                     if (e.succeeded()) {
                         response.write(e.result());
@@ -254,6 +255,7 @@ public class Server extends Verticle {
     private Handler<HttpServerRequest> createSearchHandler() {
         return (request) -> {
                 if (checkDeniedAccess(request, false)) return;
+                boolean admin = isAdministrator(getRequestKey(request));
 
                 // Serve all songs
                 HttpServerResponse response = request.response();
@@ -269,6 +271,8 @@ public class Server extends Verticle {
                 String key = getRequestKey(request);
                 response.write(Templates.getHeader(key, title));
                 response.write(Templates.getNavigation(key));
+                if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
+
                 try {
                     indexDatabase.search(key, query, request);
                 } catch (ParseException e) {
@@ -278,7 +282,7 @@ public class Server extends Verticle {
                     e.printStackTrace();
                     response.write("Internal Error");
                 }
-                response.write(Templates.getFooter(key, null));
+                response.write(Templates.getFooter(key, admin ? "songbook.installEditionModeActivation()" : null));
                 response.end();
             };
     }
@@ -370,7 +374,7 @@ public class Server extends Verticle {
             try {
                 final Path administratorKeyPath = getDataRoot().resolve("administrator.key");
                 Files.write(administratorKeyPath, Collections.singleton(administratorKey));
-                keyJustCreated = true;
+                showKeyCreationAlert = true;
             } catch (IOException e) {
                 logger.error("Could not write administrator key", e);
             }
@@ -380,7 +384,7 @@ public class Server extends Verticle {
             try {
                 final Path userKeyPath = getDataRoot().resolve("user.key");
                 Files.write(userKeyPath, Collections.singleton(userKey));
-                keyJustCreated = true;
+                showKeyCreationAlert = true;
             } catch (IOException e) {
                 logger.error("Could not write user key", e);
             }
@@ -414,7 +418,11 @@ public class Server extends Verticle {
     /** Checks if request need to be denied, returns true if access is denied. */
     private boolean checkDeniedAccess(HttpServerRequest request, boolean needAdmin) {
         String key = getRequestKey(request);
-        if (isAdministrator(key)) return false;
+        if (isAdministrator(key)) {
+            // gets administrator key, remove alert (if present)
+            showKeyCreationAlert = false;
+            return false;
+        }
         if (isUser(key) && needAdmin==false) return false;
 
         forbiddenAccess(request);
