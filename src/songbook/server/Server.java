@@ -111,30 +111,6 @@ public class Server extends Verticle {
         return routeMatcher;
     }
 
-    private Handler<HttpServerRequest> createGetAdminHandler() {
-        return (request) -> {
-            if (checkDeniedAccess(request, true)) return;
-
-            // Serve Files
-            HttpServerResponse response = request.response();
-            String path = request.path();
-            String fileName = path.equals("/") ? "index.html" : path;
-            Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
-            logger.info("GET " + localFilePath);
-            String type = "text/plain";
-            if (fileName.endsWith(".js")) {
-                type = "application/javascript";
-            } else if (fileName.endsWith(".css")) {
-                type = "text/css";
-            } else if (fileName.endsWith(".html")) {
-                type = "text/html";
-            }
-
-            response.putHeader(HttpHeaders.CONTENT_TYPE, type);
-            response.sendFile(localFilePath.toString());
-        };
-    }
-
     private Handler<HttpServerRequest> createGetFileHandler() {
         return (request) -> {
             //if (checkDeniedAccess(request, false)) return;
