@@ -10,7 +10,8 @@ First you must get your own server working.
 Check one of this methods to start your server:
 
 * [OpenShift](doc/Install_On_OpenShift.md)
-* TODO ...
+* [Docker](doc/Install_With_Docker.md)
+* ...
 
 
 Write access
