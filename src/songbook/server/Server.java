@@ -26,6 +26,7 @@ import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 
 public class Server extends Verticle {
@@ -46,8 +47,8 @@ public class Server extends Verticle {
 
     private IndexDatabase indexDatabase;
 
+    private boolean keyJustCreated = false;
     private String administratorKey = null;
-
     private String userKey = null;
 
     @Override
@@ -56,17 +57,218 @@ public class Server extends Verticle {
         webRoot = getWebRoot();
         dataRoot = getDataRoot();
         readKeys();
-        try {
 
+        // creates server
+        HttpServer httpServer = vertx.createHttpServer();
+
+        if (administratorKey == null) {
+            // creates administrator key when it's null
+            // TODO generate the key
+            administratorKey = "12345";
+            logger.info("Created administrator key: '"+ administratorKey +"'.");
+            writeKeys();
+        }
+
+        // initializes index.
+        try {
             long start = System.currentTimeMillis();
             indexDatabase = new IndexDatabase(dataRoot.resolve("index"), dataRoot.resolve("songs"));
             long end = System.currentTimeMillis();
-            logger.info("Opened index in " + (end -start) +" milliseconds.");
+            logger.info("Opened index in " + (end - start) + " milliseconds.");
 
-            HttpServer httpServer = vertx.createHttpServer();
-            RouteMatcher routeMatcher = new RouteMatcher();
+        } catch (IOException e) {
+            logger.error("Can't initialize index in "+ dataRoot.resolve("index"));
+        }
 
-            Handler<HttpServerRequest> searchHandler = (request) -> {
+        //installs matcher to server song
+        RouteMatcher routeMatcher = createSongServerRoutMatcher();
+        httpServer.requestHandler(routeMatcher);
+
+        httpServer.listen(getPort(), getHost());
+    }
+
+    private RouteMatcher createSongServerRoutMatcher() {
+        RouteMatcher routeMatcher = new RouteMatcher();
+        Handler<HttpServerRequest> searchHandler = createSearchHandler();
+        routeMatcher.get("/search/:query", searchHandler);
+        routeMatcher.get("/search", searchHandler);
+        routeMatcher.get("/", searchHandler);
+
+        routeMatcher.get("/songs/:id", createGetSongHandler());
+        routeMatcher.post("/songs", getPostSongHandler());
+
+        routeMatcher.put("/songs/:id", getPutSongHandler());
+
+        routeMatcher.noMatch(createGetFileHandler());
+        return routeMatcher;
+    }
+
+    private Handler<HttpServerRequest> createGetAdminHandler() {
+        return (request) -> {
+            if (checkDeniedAccess(request, true)) return;
+
+            // Serve Files
+            HttpServerResponse response = request.response();
+            String path = request.path();
+            String fileName = path.equals("/") ? "index.html" : path;
+            Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
+            logger.info("GET " + localFilePath);
+            String type = "text/plain";
+            if (fileName.endsWith(".js")) {
+                type = "application/javascript";
+            } else if (fileName.endsWith(".css")) {
+                type = "text/css";
+            } else if (fileName.endsWith(".html")) {
+                type = "text/html";
+            }
+
+            response.putHeader(HttpHeaders.CONTENT_TYPE, type);
+            response.sendFile(localFilePath.toString());
+        };
+    }
+
+    private Handler<HttpServerRequest> createGetFileHandler() {
+        return (request) -> {
+            //if (checkDeniedAccess(request, false)) return;
+
+            // Serve Files
+            HttpServerResponse response = request.response();
+            String path = request.path();
+            String fileName = path.equals("/") ? "index.html" : path;
+            Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
+            logger.info("GET " + localFilePath);
+            String type = "text/plain";
+            if (fileName.endsWith(".js")) {
+                type = "application/javascript";
+            } else if (fileName.endsWith(".css")) {
+                type = "text/css";
+            } else if (fileName.endsWith(".html")) {
+                type = "text/html";
+            }
+
+            response.putHeader(HttpHeaders.CONTENT_TYPE, type);
+            response.sendFile(localFilePath.toString());
+        };
+    }
+
+    private Handler<HttpServerRequest> getPutSongHandler() {
+        return (request) -> {
+            if (checkDeniedAccess(request, true)) return;
+
+            HttpServerResponse response = request.response();
+            String id = request.params().get("id");
+            String fileName = decodeUrl(id) + ".html";
+            Path filePath = dataRoot.resolve("songs").resolve(fileName).toAbsolutePath();
+            request.bodyHandler((body) -> {
+                String songData = body.toString();
+                try {
+                    // indexes updated song
+                    HtmlIndexer songIndexer = new HtmlIndexer();
+                    Document document = songIndexer.indexSong(songData);
+                    String songId = SongUtil.getId(filePath.getFileName().toString());
+                    document.add(new StringField("id", songId, Field.Store.YES));
+                    indexDatabase.addOrUpdateDocument(document);
+
+                    // removes song from vert.x cache.
+                    ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
+                    songs.remove(songId);
+
+                    vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
+                        if (ar.succeeded()) {
+                            response.end(id);
+                        } else {
+                            logger.error("Failed to create song", ar.cause());
+                            response.setStatusCode(500);
+                            response.end();
+                            try {
+                                Files.deleteIfExists(filePath);
+                            } catch (IOException e) {
+                                logger.warn("Can't delete file", e);
+                            }
+                        }
+                    });
+                } catch (Exception e) {
+                    // TODO write error to client
+                    logger.error("Error indexing song", e);
+                    response.setStatusCode(500);
+                    response.end();
+                }
+            });
+        };
+    }
+
+    private Handler<HttpServerRequest> getPostSongHandler() {
+        return (request) -> {
+            if (checkDeniedAccess(request, true)) return;
+
+            HttpServerResponse response = request.response();
+            request.bodyHandler((body) -> {
+                String songData = body.toString();
+                Document document;
+                try {
+                    HtmlIndexer songIndexer = new HtmlIndexer();
+                    document = songIndexer.indexSong(songData);
+
+                    Path filePath = Files.createTempFile(dataRoot.resolve("songs"), "", ".html").toAbsolutePath();
+                    String id = SongUtil.getId(filePath.getFileName().toString());
+                    document.add(new StringField("id", id, Field.Store.YES));
+                    indexDatabase.addOrUpdateDocument(document);
+
+                    vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
+                        if (ar.succeeded()) {
+                            response.end(id);
+                        } else {
+                            logger.error("Failed to create song", ar.cause());
+                            response.setStatusCode(500);
+                            response.end();
+                            try {
+                                Files.deleteIfExists(filePath);
+                            } catch (IOException e) {
+                                logger.warn("Can't delete file", e);
+                            }
+                        }
+                    });
+                } catch (Exception e) {
+                    logger.error("Error indexing song", e);
+                    response.setStatusCode(500);
+                    response.end();
+                }
+            });
+        };
+    }
+
+    private Handler<HttpServerRequest> createGetSongHandler() {
+        return (request) -> {
+                if (checkDeniedAccess(request, false)) return;
+                boolean admin = isAdministrator(getRequestKey(request));
+
+                // Serves song
+                HttpServerResponse response = request.response();
+                response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+
+                String id = QueryStringDecoder.decodeComponent(request.params().get("id"));
+                response.setChunked(true);
+
+                String key = getRequestKey(request);
+                response.write(Templates.getHeader(key, id + " - My SongBook"));
+                response.write(Templates.getNavigation(key));
+                readHtmlSong(id, (e) -> {
+                    if (e.succeeded()) {
+                        response.write(e.result());
+                        logger.trace("Serve Song " + id);
+                    } else {
+                        response.write("Error loading song " + id);
+                        logger.error("Failed to read song " + id, e.cause());
+                        response.setStatusCode(404);
+                    }
+                    response.write(Templates.getFooter(key, admin ? "songbook.installEditionModeActivation()" : null));
+                    response.end();
+                });
+            };
+    }
+
+    private Handler<HttpServerRequest> createSearchHandler() {
+        return (request) -> {
                 if (checkDeniedAccess(request, false)) return;
 
                 // Serve all songs
@@ -95,148 +297,6 @@ public class Server extends Verticle {
                 response.write(Templates.getFooter(key, null));
                 response.end();
             };
-            routeMatcher.get("/search/:query", searchHandler);
-            routeMatcher.get("/search", searchHandler);
-            routeMatcher.get("/", searchHandler);
-
-            routeMatcher.get("/songs/:id", (request) -> {
-                if (checkDeniedAccess(request, false)) return;
-                boolean admin = isAdministrator(getRequestKey(request));
-
-                // Serves song
-                HttpServerResponse response = request.response();
-                response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-
-                String id = QueryStringDecoder.decodeComponent(request.params().get("id"));
-                response.setChunked(true);
-
-                String key = getRequestKey(request);
-                response.write(Templates.getHeader(key, id + " - My SongBook"));
-                response.write(Templates.getNavigation(key));
-                readHtmlSong(id, (e) -> {
-                    if (e.succeeded()) {
-                        response.write(e.result());
-                        logger.trace("Serve Song " + id);
-                    } else {
-                        response.write("Error loading song " + id);
-                        logger.error("Failed to read song " + id, e.cause());
-                        response.setStatusCode(404);
-                    }
-                    response.write(Templates.getFooter(key, admin ? "songbook.installEditionModeActivation()" : null));
-                    response.end();
-                });
-            });
-
-            routeMatcher.post("/songs", (request) -> {
-                if (checkDeniedAccess(request, true)) return;
-
-                HttpServerResponse response = request.response();
-                request.bodyHandler((body) -> {
-                    String songData = body.toString();
-                    Document document;
-                    try {
-                        HtmlIndexer songIndexer = new HtmlIndexer();
-                        document = songIndexer.indexSong(songData);
-
-                        Path filePath = Files.createTempFile(dataRoot.resolve("songs"), "", ".html").toAbsolutePath();
-                        String id = SongUtil.getId(filePath.getFileName().toString());
-                        document.add(new StringField("id", id, Field.Store.YES));
-                        indexDatabase.addOrUpdateDocument(document);
-
-                        vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
-                            if (ar.succeeded()) {
-                                response.end(id);
-                            } else {
-                                logger.error("Failed to create song", ar.cause());
-                                response.setStatusCode(500);
-                                response.end();
-                                try {
-                                    Files.deleteIfExists(filePath);
-                                } catch (IOException e) {
-                                    logger.warn("Can't delete file", e);
-                                }
-                            }
-                        });
-                    } catch (Exception e) {
-                        logger.error("Error indexing song", e);
-                        response.setStatusCode(500);
-                        response.end();
-                    }
-                });
-            });
-
-            routeMatcher.put("/songs/:id", (request) -> {
-                if (checkDeniedAccess(request, true)) return;
-
-                HttpServerResponse response = request.response();
-                String id = request.params().get("id");
-                String fileName = decodeUrl(id) + ".html";
-                Path filePath = dataRoot.resolve("songs").resolve(fileName).toAbsolutePath();
-                request.bodyHandler((body) -> {
-                    String songData = body.toString();
-                    try {
-                        // indexes updated song
-                        HtmlIndexer songIndexer = new HtmlIndexer();
-                        Document document = songIndexer.indexSong(songData);
-                        String songId = SongUtil.getId(filePath.getFileName().toString());
-                        document.add(new StringField("id", songId, Field.Store.YES));
-                        indexDatabase.addOrUpdateDocument(document);
-
-                        // removes song from vert.x cache.
-                        ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
-                        songs.remove(songId);
-
-                        vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
-                            if (ar.succeeded()) {
-                                response.end(id);
-                            } else {
-                                logger.error("Failed to create song", ar.cause());
-                                response.setStatusCode(500);
-                                response.end();
-                                try {
-                                    Files.deleteIfExists(filePath);
-                                } catch (IOException e) {
-                                    logger.warn("Can't delete file", e);
-                                }
-                            }
-                        });
-                    } catch (Exception e) {
-                        // TODO write error to client
-                        logger.error("Error indexing song", e);
-                        response.setStatusCode(500);
-                        response.end();
-                    }
-                });
-            });
-
-            routeMatcher.noMatch((request) -> {
-                //if (checkDeniedAccess(request, false)) return;
-
-                // Serve Files
-                HttpServerResponse response = request.response();
-                String path = request.path();
-                String fileName = path.equals("/") ? "index.html" : path;
-                Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
-                logger.info("GET " + localFilePath);
-                String type = "text/plain";
-                if (fileName.endsWith(".js")) {
-                    type = "application/javascript";
-                } else if (fileName.endsWith(".css")) {
-                    type = "text/css";
-                } else if (fileName.endsWith(".html")) {
-                    type = "text/html";
-                }
-
-                response.putHeader(HttpHeaders.CONTENT_TYPE, type);
-                response.sendFile(localFilePath.toString());
-            });
-
-
-            httpServer.requestHandler(routeMatcher);
-            httpServer.listen(getPort(), getHost());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void readHtmlSong(String id, Handler<AsyncResult<String>> handler) {
@@ -317,6 +377,29 @@ public class Server extends Verticle {
             }
         } catch (IOException e) {
             logger.error("Could not read user key", e);
+        }
+    }
+
+    /** Writes administratorKey and userKey to file system. */
+    private void writeKeys() {
+        if (administratorKey != null) {
+            try {
+                final Path administratorKeyPath = getDataRoot().resolve("administrator.key");
+                Files.write(administratorKeyPath, Collections.singleton(administratorKey));
+                keyJustCreated = true;
+            } catch (IOException e) {
+                logger.error("Could not write administrator key", e);
+            }
+        }
+
+        if (userKey != null) {
+            try {
+                final Path userKeyPath = getDataRoot().resolve("user.key");
+                Files.write(userKeyPath, Collections.singleton(userKey));
+                keyJustCreated = true;
+            } catch (IOException e) {
+                logger.error("Could not write user key", e);
+            }
         }
     }
 
