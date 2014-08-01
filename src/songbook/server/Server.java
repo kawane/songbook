@@ -22,10 +22,13 @@ import songbook.index.SongUtil;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.List;
 
@@ -71,8 +74,15 @@ public class Server extends Verticle {
 
         if (administratorKey == null) {
             // creates administrator key when it's null
-            // TODO generate the key
-            administratorKey = "12345";
+            long timestamp = System.currentTimeMillis();
+            String timestampString = Long.toHexString(timestamp);
+            try {
+                MessageDigest digest = MessageDigest.getInstance("MD5");
+                digest.update(timestampString.getBytes(), 0, timestampString.length());
+                administratorKey =  new BigInteger(1, digest.digest()).toString(16);
+            } catch (NoSuchAlgorithmException e) {
+                administratorKey = timestampString;
+            }
             logger.info("Created administrator key: '"+ administratorKey +"'.");
             writeKeys();
         }
