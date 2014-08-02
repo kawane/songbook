@@ -14,9 +14,9 @@ For Windows or MacOS X, just go to Oracle Java download [page](http://www.oracle
 For linux, it depends on your distribution. 
 Here are some tutorials for some distributions:
 
-* Ubuntu (here)[http://ubuntuhandbook.org/index.php/2013/07/install-oracle-java-6-7-8-on-ubuntu-13-10/] or (here)[http://www.devsniper.com/install-jdk-8-on-ubuntu/].
-* Debian (here)[http://linuxg.net/how-to-install-the-oracle-java-8-on-debian-wheezy-and-debian-jessie-via-repository/] or (here)[http://tutorialforlinux.com/2014/03/26/how-to-install-oracle-jdk-8-on-debian-squeeze-6-32-64bit-easy-guide/].
-* Fedora, CentOS and RHEL (here)[http://tecadmin.net/install-java-8-on-centos-rhel-and-fedora/] or (here)[http://tutorialforlinux.com/2014/03/16/how-to-install-oracle-jdk-8-on-fedora-16-17-18-19-20-21-3264bit-linux-easy-guide/].
+* Ubuntu [here](http://ubuntuhandbook.org/index.php/2013/07/install-oracle-java-6-7-8-on-ubuntu-13-10/) or [here](http://www.devsniper.com/install-jdk-8-on-ubuntu/).
+* Debian [here](http://linuxg.net/how-to-install-the-oracle-java-8-on-debian-wheezy-and-debian-jessie-via-repository/) or [here](http://tutorialforlinux.com/2014/03/26/how-to-install-oracle-jdk-8-on-debian-squeeze-6-32-64bit-easy-guide/).
+* Fedora, CentOS and RHEL [here](http://tecadmin.net/install-java-8-on-centos-rhel-and-fedora/) or [here](http://tutorialforlinux.com/2014/03/16/how-to-install-oracle-jdk-8-on-fedora-16-17-18-19-20-21-3264bit-linux-easy-guide/).
 
  
 Linux

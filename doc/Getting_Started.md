@@ -11,6 +11,7 @@ Check one of this methods to start your server:
 
 * [OpenShift](Install_On_OpenShift.md)
 * [Docker](Install_With_Docker.md)
+* [Do It Yourself](Install_DIY.md)
 * ...
 
 

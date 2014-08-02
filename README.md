@@ -37,8 +37,9 @@ The first Songbook version will include this features:
   - [x] Server side add and update.
   - [ ] Client side editor with formatting.
   - [ ] Client side add song.
+  - [ ] Client side remove song.
 - [x] Handle two access types: viewer and editor:
-  - [ ] One time access administration page on install.
+  - [x] One time access administration page on install.
   - [x] Parametrized key for accesses.
 - [x] Full text search on all songs.
 - [x] Supports for computers, smart phones and tablets.
