@@ -12,12 +12,10 @@ Get documentation with the [Getting Started](doc/Getting_Started.md).
 
 It aims to be easily installed on a server, including for not technical users. Songbook can be easily installed
  
-* on OpenShift with the songbook cartridge (TODO cartridge+doc),
+* on OpenShift with the songbook cartridge (TODO cartridge+doc) [Here](doc/Install_On_OpenShift.md),
+* with Docker on a Linux server (kawane/songbook) [Here](doc/Install_With_Docker.md) ,
+* on any server with Java 8 [Here](doc/Install_DIY.md),
 * Google App Engine (TODO archive+doc)
-* with Docker on a Linux server (kawane/songbook) (TODO post image+doc),
-* on any server with Java 8 (TODO doc),
-
-OpenShift is a really simple solution to get started, check [this](doc/Install_On_OpenShift.md).
 
 Not supported:
 
