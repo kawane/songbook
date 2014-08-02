@@ -42,6 +42,9 @@ public class Server extends Verticle {
 
     public final static String DEFAULT_DATA_ROOT = "data";
 
+    public static final String ADMINISTRATOR_KEY_PATH = "administrator.key";
+    public static final String ADMINISTRATOR_ACTIVATED_PATH = "administrator.activated";
+
     private Logger logger;
 
     private Path webRoot;
@@ -72,20 +75,8 @@ public class Server extends Verticle {
         // creates server
         HttpServer httpServer = vertx.createHttpServer();
 
-        if (administratorKey == null) {
-            // creates administrator key when it's null
-            long timestamp = System.currentTimeMillis();
-            String timestampString = Long.toHexString(timestamp);
-            try {
-                MessageDigest digest = MessageDigest.getInstance("MD5");
-                digest.update(timestampString.getBytes(), 0, timestampString.length());
-                administratorKey =  new BigInteger(1, digest.digest()).toString(16);
-            } catch (NoSuchAlgorithmException e) {
-                administratorKey = timestampString;
-            }
-            logger.info("Created administrator key: '"+ administratorKey +"'.");
-            writeKeys();
-        }
+        // creates admin key if needed
+        if (administratorKey == null)  createAdminKey();
 
         // initializes index.
         try {
@@ -103,6 +94,21 @@ public class Server extends Verticle {
         httpServer.requestHandler(routeMatcher);
 
         httpServer.listen(getPort(), getHost());
+    }
+
+    private void createAdminKey() {
+        // creates administrator key when it's null
+        long timestamp = System.currentTimeMillis();
+        String timestampString = Long.toHexString(timestamp);
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            digest.update(timestampString.getBytes(), 0, timestampString.length());
+            administratorKey =  new BigInteger(1, digest.digest()).toString(16);
+        } catch (NoSuchAlgorithmException e) {
+            administratorKey = timestampString;
+        }
+        logger.info("Created administrator key: '"+ administratorKey +"'.");
+        writeKeys();
     }
 
     private RouteMatcher createSongServerRoutMatcher() {
@@ -354,11 +360,13 @@ public class Server extends Verticle {
     /** Searches for keys on server to initialize administratorKey and userKey. */
     private void readKeys() {
         try {
-            final Path administratorKeyPath = getDataRoot().resolve("administrator.key");
+            final Path administratorKeyPath = getDataRoot().resolve(ADMINISTRATOR_KEY_PATH);
             if (Files.exists(administratorKeyPath)) {
                 final List<String> allLines = Files.readAllLines(administratorKeyPath);
                 if (allLines.isEmpty() == false) {
                     administratorKey = allLines.get(allLines.size() - 1);
+
+                    showKeyCreationAlert = Files.exists(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH)) == false;
                 }
             }
         } catch (IOException e) {
@@ -382,9 +390,14 @@ public class Server extends Verticle {
     private void writeKeys() {
         if (administratorKey != null) {
             try {
-                final Path administratorKeyPath = getDataRoot().resolve("administrator.key");
+                final Path administratorKeyPath = getDataRoot().resolve(ADMINISTRATOR_KEY_PATH);
                 Files.write(administratorKeyPath, Collections.singleton(administratorKey));
                 showKeyCreationAlert = true;
+
+                final Path administratorActivatedPath = getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH);
+                if (Files.exists(administratorActivatedPath)) {
+                    Files.delete(administratorActivatedPath);
+                }
             } catch (IOException e) {
                 logger.error("Could not write administrator key", e);
             }
@@ -430,7 +443,14 @@ public class Server extends Verticle {
         String key = getRequestKey(request);
         if (isAdministrator(key)) {
             // gets administrator key, remove alert (if present)
-            showKeyCreationAlert = false;
+            if (showKeyCreationAlert) {
+                showKeyCreationAlert = false;
+                try {
+                    Files.createFile(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
+                } catch (IOException e) {
+                    logger.error("Can't create file '"+ ADMINISTRATOR_ACTIVATED_PATH +"'", e);
+                }
+            }
             return false;
         }
         if (isUser(key) && needAdmin==false) return false;
