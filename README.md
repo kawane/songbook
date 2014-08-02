@@ -51,11 +51,6 @@ Here are some feature for the future (partial):
 - [ ] Present guitar tabs and piano chords.
 - [ ] ...
 
-### TODO
-
-- [ ] Add action to add a song.
-- [ ] Save index on hardrive.
-
 Dependencies
 ------------
 
