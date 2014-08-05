@@ -40,7 +40,7 @@ rm -f vert.x-2.1.2.tar.gz
 Download and unzip Songbook.
 
 ```Shell
-wget https://github.com/llgcode/songbook/release/download/0.2.0/songbook.zip
+wget https://github.com/kawane/songbook/release/download/0.2.0/songbook.zip
 unzip songbook.zip
 rm -f songbook.zip
 ```
@@ -77,7 +77,7 @@ rm -f vert.x-2.1.2.zip
 Download and unzip Songbook.
 
 ```Shell
-curl -O https://github.com/llgcode/songbook/release/download/0.2.0/songbook.zip
+curl -O https://github.com/kawane/songbook/release/download/0.2.0/songbook.zip
 unzip songbook.zip
 rm -f songbook.zip
 ```

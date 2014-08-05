@@ -23,7 +23,7 @@ Now that your server is up, this section presents you how to add and edit songs.
 Songbook write access is granted when giving a key as a URL parameter. 
 The key is generated when the server is run the first time.
 An alert is presented then until the site is accessed using the newly generated key.
-![AdminKeyAlert](https://github.com/llgcode/songbook/raw/master/doc/img/adminKeyAlert.png) 
+![AdminKeyAlert](https://github.com/kawane/songbook/raw/master/doc/img/adminKeyAlert.png) 
 
 Remember to store the key by bookmarking the address.
 If you wan't to share write access with someone, just send the URL with the key.
