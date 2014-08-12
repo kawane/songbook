@@ -93,7 +93,10 @@ public class Server extends Verticle {
         RouteMatcher routeMatcher = createSongServerRoutMatcher();
         httpServer.requestHandler(routeMatcher);
 
-        httpServer.listen(getPort(), getHost());
+        final int port = getPort();
+        final String host = getHost();
+        logger.info("Starting server on '"+ host +":"+ port +"'.");
+        httpServer.listen(port, host);
     }
 
     private void createAdminKey() {
