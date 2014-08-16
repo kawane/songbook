@@ -76,13 +76,22 @@ module songbook {
         });
     }
 
+    function createRemoveButton(): Node {
+        return createButton("minus", null, (target, button) => {
+            // TODO
+        });
+    }
+
     export function installEditionModeActivation() {
         var tools = <HTMLElement><any>document.getElementById("tools");
 
         tools.appendChild(createListItem(createAddButton()));
 
         var song = <HTMLElement><any>document.querySelector(".song");
-        if (song!=null) tools.appendChild(createListItem(createEditButton(song)));
+        if (song!=null) {
+            tools.appendChild(createListItem(createRemoveButton()));
+            tools.appendChild(createListItem(createEditButton(song)));
+        }
     }
 
     export function search(key: string, query: string) {
