@@ -47,15 +47,45 @@ module songbook {
 
     function createEditButton(song: HTMLElement): Node {
         return createButton("pencil", song, (target, button) => {
-            if (target.contentEditable !== "true") {
-                target.contentEditable = "true";
+
+            var edited = target.attributes["edited"];
+
+
+            if (edited === undefined || edited === true) {
+                target.attributes["edited"] = false;
                 target.classList.add("edited");
                 updateGlyph(button, "send");
 
+                var title = <HTMLElement>target.querySelector(".song-title");
+                title.contentEditable = "true";
+
+                var authors = target.querySelectorAll(".song-author");
+                for (var index in authors) {
+                    var author = <HTMLElement>authors[index];
+                    author.contentEditable = "true";
+                }
+
+                var verse = <HTMLElement>target.querySelector(".song-verse");
+                verse.contentEditable = "true";
+
             } else {
-                target.contentEditable = "false";
+                target.attributes["edited"] = true;
                 target.classList.remove("edited");
                 updateGlyph(button, "refresh");
+
+
+                var title = <HTMLElement>target.querySelector(".song-title");
+                title.contentEditable = "false";
+
+                var authors = target.querySelectorAll(".song-author");
+                for (var index in authors) {
+                    var author = <HTMLElement>authors[index];
+                    author.contentEditable = "false";
+                }
+
+                var verse = <HTMLElement>target.querySelector(".song-verse");
+                verse.contentEditable = "false";
+
                 postSong(event => {
                     var request = <XMLHttpRequest>event.currentTarget;
                     if (request.readyState == 4) {
