@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 public class Templates {
 
     @Language("HTML")
-    public static String getHeader(String key, String title) {
+    public static String getHeader(String title) {
         return
                 "<!DOCTYPE html>\n" +
                 "<html>\n" +
@@ -25,8 +25,8 @@ public class Templates {
                 "    <!-- Bootstrap -->\n" +
                 "    <!-- Latest compiled and minified CSS -->\n" +
                 "    <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css'>\n" +
-                "    <link href='"+ internalLink(key, "/css/main.css") +"' rel='stylesheet' media='screen'>\n" +
-                "    <link href='"+ internalLink(key, "/css/song.css") +"' rel='stylesheet' media='screen'>\n" +
+                "    <link href='/css/main.css' rel='stylesheet' media='screen'>\n" +
+                "    <link href='/css/song.css' rel='stylesheet' media='screen'>\n" +
                 "</head>\n" +
                 "<body>\n"
                 ;
@@ -50,9 +50,9 @@ public class Templates {
                         "        <ul class='nav navbar-nav' id='tools'>\n" +
                         "        </ul>\n" +
                         "\n" +
-                        "        <form id='search' onSubmit='return songbook.search(\""+ key +"\", this[\"query\"].value)' class='navbar-form navbar-left' >\n" +
+                        "        <form id='search' class='navbar-form navbar-left' >\n" +
                         "          <div class='form-group'>\n" +
-                        "            <input id='query' type='text' class='form-control' placeholder='Search'>\n" +
+                        "            <input id='querySearch' type='text' class='form-control' placeholder='Search'>\n" +
                         "          </div>\n" +
                         "          <button type='submit' class='btn btn-default'>Submit</button>\n" +
                         "        </form>\n" +
@@ -72,17 +72,14 @@ public class Templates {
     }
 
     @Language("HTML")
-    public static String getFooter(String key, String functionToCall) {
+    public static String getFooter() {
         return
                 "<!-- JavaScript plugins (requires jQuery) -->\n" +
                 "<script src='http://code.jquery.com/jquery.js'></script>\n" +
                 "<!-- Include all compiled plugins (below), or include individual files as needed -->\n" +
-                "<script src='//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js'></script>\n" +
-                "<script src='"+ internalLink(key, "/js/songbook.js") +"'></script>\n" +
-                (functionToCall == null ? "" :
-                    "<script type='text/javascript'>\n"+
-                    "   " + functionToCall +"\n"+
-                    "</script>\n" ) +
+                "<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js\"></script>\n" +
+                "<script src='/js/require.js' data-main='/js/main'></script>\n" +
+
                 "</body>\n" +
                 "</html>\n"
                 ;

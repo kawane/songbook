@@ -118,6 +118,7 @@ public class Server extends Verticle {
         RouteMatcher routeMatcher = new RouteMatcher();
         Handler<HttpServerRequest> searchHandler = createSearchHandler();
         routeMatcher.get("/search/:query", searchHandler);
+        routeMatcher.get("/search/", searchHandler);
         routeMatcher.get("/search", searchHandler);
         routeMatcher.get("/", searchHandler);
 
@@ -243,7 +244,8 @@ public class Server extends Verticle {
     private Handler<HttpServerRequest> createGetSongHandler() {
         return (request) -> {
                 if (checkDeniedAccess(request, false)) return;
-                boolean admin = isAdministrator(getRequestKey(request));
+                String key = request.params().get("key");
+                boolean admin = isAdministrator(key);
 
                 // Serves song
                 HttpServerResponse response = request.response();
@@ -252,8 +254,7 @@ public class Server extends Verticle {
                 String id = QueryStringDecoder.decodeComponent(request.params().get("id"));
                 response.setChunked(true);
 
-                String key = getRequestKey(request);
-                response.write(Templates.getHeader(key, id + " - My SongBook"));
+                response.write(Templates.getHeader(id + " - My SongBook"));
                 response.write(Templates.getNavigation(key));
                 if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
                 readHtmlSong(id, (e) -> {
@@ -265,30 +266,42 @@ public class Server extends Verticle {
                         logger.error("Failed to read song " + id, e.cause());
                         response.setStatusCode(404);
                     }
-                    response.write(Templates.getFooter(key, admin ? "songbook.installEditionModeActivation()" : null));
+                    response.write(Templates.getFooter());
                     response.end();
                 });
             };
     }
 
+    public static String decodeUriComponent(String s) {
+        if (s == null) {
+            return null;
+        }
+        try {
+            return URLDecoder.decode(s, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return s;
+    }
+
     private Handler<HttpServerRequest> createSearchHandler() {
         return (request) -> {
                 if (checkDeniedAccess(request, false)) return;
-                boolean admin = isAdministrator(getRequestKey(request));
+                String key = request.params().get("key");
+                boolean admin = isAdministrator(key);
 
                 // Serve all songs
                 HttpServerResponse response = request.response();
                 response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
-                String query = request.params().get("query");
+                String query = decodeUriComponent(request.params().get("query"));
                 response.setChunked(true);
                 String title = "My SongBook";
                 if (query != null && !query.isEmpty()) {
                     title = query + " - " + title;
                 }
 
-                String key = getRequestKey(request);
-                response.write(Templates.getHeader(key, title));
+                response.write(Templates.getHeader(title));
                 response.write(Templates.getNavigation(key));
                 if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
 
@@ -301,7 +314,7 @@ public class Server extends Verticle {
                     e.printStackTrace();
                     response.write("Internal Error");
                 }
-                response.write(Templates.getFooter(key, admin ? "songbook.installEditionModeActivation()" : null));
+                response.write(Templates.getFooter());
                 response.end();
             };
     }
@@ -417,20 +430,6 @@ public class Server extends Verticle {
         }
     }
 
-    /** Extracts key from query */
-    private String getRequestKey(HttpServerRequest request) {
-        final String query = request.query();
-        if (query != null) {
-            final String attribute = "key=";
-            final int keyIndex = query.indexOf(attribute);
-            if (keyIndex >= 0) {
-                final int andIndex = query.indexOf('&', keyIndex);
-                return query.substring(keyIndex+attribute.length(), andIndex >= 0 ? andIndex : query.length());
-            }
-        }
-        return null;
-    }
-
     /** Checks if key allows to be administrator */
     private boolean isAdministrator(String requestKey) {
         return administratorKey == null || administratorKey.equals(requestKey);
@@ -443,7 +442,7 @@ public class Server extends Verticle {
 
     /** Checks if request need to be denied, returns true if access is denied. */
     private boolean checkDeniedAccess(HttpServerRequest request, boolean needAdmin) {
-        String key = getRequestKey(request);
+        String key = request.params().get("key");
         if (isAdministrator(key)) {
             // gets administrator key, remove alert (if present)
             if (showKeyCreationAlert) {
