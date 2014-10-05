@@ -1,6 +1,6 @@
-package songbook.index;
+package songbook.chordpro;
 
-import songbook.index.Song.PositionedData;
+import songbook.chordpro.Song.PositionedData;
 
 import java.io.BufferedReader;
 import java.io.IOException;
