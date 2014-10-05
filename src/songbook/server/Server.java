@@ -110,21 +110,26 @@ public class Server extends Verticle {
         } catch (NoSuchAlgorithmException e) {
             administratorKey = timestampString;
         }
-        logger.info("Created administrator key: '"+ administratorKey +"'.");
+        logger.info("Created administrator key: '" + administratorKey + "'.");
         writeKeys();
     }
 
     private RouteMatcher createSongServerRoutMatcher() {
         RouteMatcher routeMatcher = new RouteMatcher();
         Handler<HttpServerRequest> searchHandler = createSearchHandler();
+        routeMatcher.get("/", searchHandler);
         routeMatcher.get("/search/:query", searchHandler);
         routeMatcher.get("/search", searchHandler);
-        routeMatcher.get("/", searchHandler);
 
         routeMatcher.get("/songs/:id", createGetSongHandler());
-        routeMatcher.post("/songs", getPostSongHandler());
 
-        routeMatcher.put("/songs/:id", getPutSongHandler());
+        routeMatcher.get("/new", createNewSongHandler());
+
+        // TODO Post should be merged with put as new song is generated from server.
+        //routeMatcher.post("/songs", createPostSongHandler());
+        routeMatcher.put("/songs/:id", createPutSongHandler());
+
+
 
         routeMatcher.noMatch(createGetFileHandler());
         return routeMatcher;
@@ -154,7 +159,7 @@ public class Server extends Verticle {
         };
     }
 
-    private Handler<HttpServerRequest> getPutSongHandler() {
+    private Handler<HttpServerRequest> createPutSongHandler() {
         return (request) -> {
             if (checkDeniedAccess(request, true)) return;
 
@@ -200,7 +205,7 @@ public class Server extends Verticle {
         };
     }
 
-    private Handler<HttpServerRequest> getPostSongHandler() {
+    private Handler<HttpServerRequest> createPostSongHandler() {
         return (request) -> {
             if (checkDeniedAccess(request, true)) return;
 
@@ -211,7 +216,7 @@ public class Server extends Verticle {
                 try {
                     HtmlIndexer songIndexer = new HtmlIndexer();
                     document = songIndexer.indexSong(songData);
-
+                    String title = document.get("title");
                     Path filePath = Files.createTempFile(dataRoot.resolve("songs"), "", ".html").toAbsolutePath();
                     String id = SongUtil.getId(filePath.getFileName().toString());
                     document.add(new StringField("id", id, Field.Store.YES));
@@ -265,7 +270,33 @@ public class Server extends Verticle {
                         logger.error("Failed to read song " + id, e.cause());
                         response.setStatusCode(404);
                     }
-                    response.write(Templates.getFooter(key, admin ? "songbook.installEditionModeActivation()" : null));
+                    response.write(Templates.getFooter(key, admin ? "songbook.installEditionMode(false)" : null));
+                    response.end();
+                });
+            };
+    }
+
+
+    private Handler<HttpServerRequest> createNewSongHandler() {
+        return (request) -> {
+                if (checkDeniedAccess(request, true)) return;
+                boolean admin = isAdministrator(getRequestKey(request));
+
+                // Serves song
+                HttpServerResponse response = request.response();
+                response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+
+                response.setChunked(true);
+
+                String key = getRequestKey(request);
+                response.write(Templates.getHeader(key, "New Song - My SongBook"));
+                response.write(Templates.getNavigation(key));
+                if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
+                final Path song = webRoot.resolve("js/NewSong.html");
+                vertx.fileSystem().readFile(song.toString(), (e) -> {
+                    response.write(e.result());
+                    logger.trace("Serve Song 'New Song'");
+                    response.write(Templates.getFooter(key, admin ? "songbook.installEditionMode(true)" : null));
                     response.end();
                 });
             };
@@ -301,7 +332,7 @@ public class Server extends Verticle {
                     e.printStackTrace();
                     response.write("Internal Error");
                 }
-                response.write(Templates.getFooter(key, admin ? "songbook.installEditionModeActivation()" : null));
+                response.write(Templates.getFooter(key, admin ? "songbook.installEditionMode(false)" : null));
                 response.end();
             };
     }
