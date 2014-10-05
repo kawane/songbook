@@ -24,7 +24,7 @@ module songbook {
         }
     }
 
-    function postSong(result:(event: Event) => any) {
+    function putSong(result:(event: Event) => any) {
         // retrieves id from location
         var pathname = document.location.pathname;
         var id = pathname.substring(pathname.lastIndexOf('/')+1);
@@ -86,7 +86,7 @@ module songbook {
                 var verse = <HTMLElement>target.querySelector(".song-verse");
                 verse.contentEditable = "false";
 
-                postSong(event => {
+                putSong(event => {
                     var request = <XMLHttpRequest>event.currentTarget;
                     if (request.readyState == 4) {
                         if (request.status == 200) {
