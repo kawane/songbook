@@ -32,7 +32,7 @@ module songbook {
         var id = title.innerText;
 
         var request = new XMLHttpRequest();
-        request.open("put", "/songs/"+ id +"?key="+ getKey(), true);
+        request.open("put", window.location.search, true);
 
         request.onreadystatechange = result;
 
@@ -95,6 +95,11 @@ module songbook {
                 var request = <XMLHttpRequest>event.currentTarget;
                 if (request.readyState == 4) {
                     if (request.status == 200) {
+                        var oldPathname = decodeURI(window.location.pathname)
+                        var pathname = "/songs/" + request.response;
+                        if (oldPathname !== pathname) {
+                            window.location.pathname = pathname;
+                        }
                         updateGlyph(button, "pencil");
                     } else {
                         updateGlyph(button, "warning_sign");
@@ -106,7 +111,7 @@ module songbook {
 
     function createAddButton(): Node {
         return createButton("plus", null, (target, button) => {
-            window.location.assign("/new?key=" + getKey());
+            window.location.pathname = "/new";
         });
     }
 
@@ -131,8 +136,8 @@ module songbook {
         }
     }
 
-    export function search(key: string, query: string) {
-        window.location.assign("/search/" + query + "?key=" + key);
+    export function search(query: string) {
+        window.location.pathname = "/search/" + query;
         return false;
     }
 }

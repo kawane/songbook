@@ -3,8 +3,6 @@ package songbook.server;
 import org.apache.lucene.document.Document;
 import org.intellij.lang.annotations.Language;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -50,7 +48,7 @@ public class Templates {
                         "        <ul class='nav navbar-nav' id='tools'>\n" +
                         "        </ul>\n" +
                         "\n" +
-                        "        <form id='search' onSubmit='return songbook.search(\""+ key +"\", this[\"query\"].value)' class='navbar-form navbar-left' >\n" +
+                        "        <form id='search' onSubmit='return songbook.search(this[\"query\"].value)' class='navbar-form navbar-left' >\n" +
                         "          <div class='form-group'>\n" +
                         "            <input id='query' type='text' class='form-control' placeholder='Search'>\n" +
                         "          </div>\n" +
@@ -104,7 +102,7 @@ public class Templates {
     public static String showDocument(String key, Document document) {
         String id = document.get("id");
         String title = document.get("title");
-        return  "<a class='list-group-item' href='"+ internalLink(key, "/songs/"+ encodeUrl(id)) +"'>\n" +
+        return  "<a class='list-group-item' href='"+ internalLink(key, "/songs/"+ id) +"'>\n" +
                 "<h4 class='list-group-item-heading'>" + (title ==null ? id : title) + "</h4>\n" +
                 "<p class='list-group-item-text'>" +
                 Stream.of(document.getValues("author")).collect(Collectors.joining(", "))+
@@ -127,15 +125,4 @@ public class Templates {
             return link + "?key=" + key;
         }
     }
-
-    private static String encodeUrl(String id) {
-        try {
-            return URLEncoder.encode(id, "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            // Do nothing but logging
-            e.printStackTrace();
-        }
-        return id;
-    }
-
 }
