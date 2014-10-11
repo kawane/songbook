@@ -76,6 +76,7 @@ public class Templates {
                 "<script src='http://code.jquery.com/jquery.js'></script>\n" +
                 "<!-- Include all compiled plugins (below), or include individual files as needed -->\n" +
                 "<script src='//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js'></script>\n" +
+                "<script src='//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js'></script>\n" +
                 "<script src='"+ internalLink(key, "/js/songbook.js") +"'></script>\n" +
                 (functionToCall == null ? "" :
                     "<script type='text/javascript'>\n"+
@@ -110,6 +111,14 @@ public class Templates {
                 "</a>\n";
 
     }
+
+    @Language("HTML")
+    public static String alertSongDoesntExist(String songId) {
+        return  "<div class='alert alert-warning' role='alert'>"+
+                    "Song <b>" + songId + "</b> was deleted." +
+                "</div>";
+    }
+
 
     @Language("HTML")
     public static String showAdminKey(String key) {

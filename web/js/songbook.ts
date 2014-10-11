@@ -1,6 +1,14 @@
 
 module songbook {
 
+    function getUrlParameters(): {} {
+        var result = {};
+        var search = window.location.search;
+        if (search.length <= 0) return result;
+        search.substr(1).split("&").map(p => p.split("=")).forEach(p => result[p[0]] = p[1]);
+        return result;
+    }
+
     function createListItem(inner:Node):HTMLElement {
         var li = document.createElement("li");
         if (inner != null) li.appendChild(inner);
@@ -25,32 +33,93 @@ module songbook {
         }
     }
 
-    function putSong(result:(event: Event) => any) {
-        // retrieves id from song title
-        var song = <HTMLElement>document.querySelector(".song");
-        var title = <HTMLElement>song.querySelector(".song-title");
-        var id = title.innerText;
+    /**
+     * Creates a alert.
+     * @param message message to show
+     * @param type alert type: success, info, warning, danger.
+     */
+    function createAlert(message: any, type: string, dismissible: boolean = true) {
+        var alertDiv = document.createElement("div");
+        alertDiv.classList.add("alert");
+        alertDiv.classList.add("alert-" + type);
+        if (dismissible) alertDiv.classList.add("alert-dismissible");
+        alertDiv.setAttribute("role", "alert");
 
+        if (dismissible) {
+            // adds button to close the alert
+            var button = document.createElement("button");
+            button.className = "close";
+            button.setAttribute("data-dismiss", "alert");
+
+            var span1 = document.createElement("span");
+            span1.setAttribute("aria-hidden", "true");
+            span1.innerHTML = "&times;";
+            button.appendChild(span1);
+
+            var span2 = document.createElement("span");
+            span2.className = "sr-only";
+            span2.innerText = "Close";
+            button.appendChild(span2);
+
+            alertDiv.appendChild(button);
+        }
+
+        if (message.querySelector) {
+            // message is a HTMLElement
+            alertDiv.appendChild(message);
+        } else {
+            // message is a string
+            var text = document.createElement("span");
+            text.innerText = message;
+            alertDiv.appendChild(text);
+        }
+
+        var content = <HTMLElement>document.querySelector("#content");
+        content.parentElement.insertBefore(alertDiv, content);
+    }
+
+    /**
+     * Put current song to the server.
+     * @param result handler when put is done.
+     */
+    function putSong(result:(event: Event) => any) {
         var request = new XMLHttpRequest();
         request.open("put", window.location.search, true);
 
         request.onreadystatechange = result;
+        request.onreadystatechange = result;
 
+        var song = <HTMLElement>document.querySelector(".song");
         request.send("<div class=\"song\">" + song.innerHTML + "</div>");
     }
 
-    function getKey() {
-        // retrieves key from location
-        // TODO handle undefined key
-        var search = document.location.search;
-        var keyStart = search.indexOf("key=");
-        var keyEnd = search.indexOf("&");
-        var key = search.substring(keyStart + 4, keyEnd >= 0 ? keyEnd : search.length);
-        return key;
+    /**
+     * Delete current song on the server.
+     * @param result handler when delete is done.
+     */
+    function deleteSong(result:(event: Event) => any) {
+        var request = new XMLHttpRequest();
+        request.open("delete", window.location.search, true);
+        request.onreadystatechange = result;
+        request.send();
     }
 
     function createEditButton(song: HTMLElement): HTMLElement {
         return createButton("pencil", song, switchEdition);
+    }
+
+    function createAddButton(): Node {
+        return createButton("plus", null, (target, button) => {
+            window.location.pathname = "/new";
+        });
+    }
+
+    function createRemoveButton(): Node {
+        return createButton("minus", null, (target, button) => {
+            deleteSong(event => {
+                window.location.reload();
+            });
+        });
     }
 
     function switchEdition(target:HTMLElement, button: HTMLElement) {
@@ -109,18 +178,6 @@ module songbook {
         }
     }
 
-    function createAddButton(): Node {
-        return createButton("plus", null, (target, button) => {
-            window.location.pathname = "/new";
-        });
-    }
-
-    function createRemoveButton(): Node {
-        return createButton("minus", null, (target, button) => {
-            // TODO
-        });
-    }
-
     export function installEditionMode(activate: boolean) {
         var tools = <HTMLElement><any>document.getElementById("tools");
 
@@ -140,4 +197,9 @@ module songbook {
         window.location.pathname = "/search/" + query;
         return false;
     }
+
+    // adds message if asked.
+    var parameters = getUrlParameters();
+    var message = parameters["message"];
+    if (message) createAlert(message, "info");
 }

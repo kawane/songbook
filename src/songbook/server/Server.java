@@ -124,6 +124,7 @@ public class Server extends Verticle {
 
         routeMatcher.get("/new", createNewSongHandler());
         routeMatcher.put("/songs/:id", createPutSongHandler());
+        routeMatcher.delete("/songs/:id", createDeleteSongHandler());
 
         routeMatcher.noMatch(createGetFileHandler());
         return routeMatcher;
@@ -214,6 +215,39 @@ public class Server extends Verticle {
         };
     }
 
+    private Handler<HttpServerRequest> createDeleteSongHandler() {
+        return (request) -> {
+            if (checkDeniedAccess(request, true)) return;
+
+            HttpServerResponse response = request.response();
+            try {
+
+                String id = request.params().get("id");
+                String oldTitle = decodeUrl(id);
+
+                // removes file
+                Path filePath = getSongPath(oldTitle);
+                vertx.fileSystem().delete(filePath.toString(), (ar) -> {/* do nothing */});
+
+                // removes document
+                indexDatabase.removeDocument(oldTitle);
+
+                // removes song from vert.x cache (using old title)
+                ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
+                songs.remove(oldTitle);
+
+                response.setStatusCode(200);
+                response.end();
+
+            } catch (Exception e) {
+                // TODO write error to client
+                logger.error("Error removing song", e);
+                response.setStatusCode(500);
+                response.end();
+            }
+        };
+    }
+
     private Path getSongPath(String title) {
         return dataRoot.resolve("songs").resolve(title+ IndexDatabase.SONG_EXTENSION).toAbsolutePath();
     }
@@ -239,7 +273,7 @@ public class Server extends Verticle {
                         response.write(e.result());
                         logger.trace("Serve Song " + id);
                     } else {
-                        response.write("Error loading song " + id);
+                        response.write(Templates.alertSongDoesntExist(id));
                         logger.error("Failed to read song " + id, e.cause());
                         response.setStatusCode(404);
                     }
