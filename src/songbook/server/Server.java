@@ -394,7 +394,8 @@ public class Server extends Verticle {
     }
 
     private String getHost() {
-        final String host = System.getenv("HOST");
+        String host = System.getenv("HOST");
+        if (host == null) host = System.getenv("HOSTNAME");
         return host == null ? DEFAULT_HOST : host;
     }
 
