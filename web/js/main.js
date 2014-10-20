@@ -1,12 +1,9 @@
-define(["require", "exports", "./songbook", "./utils"], function(require, exports, songbook, utils) {
+define(["require", "exports", "./songbook", "./utils"], function (require, exports, songbook, utils) {
     var queryParam = utils.getQueryParam();
-
     var key = queryParam["key"];
-
     if (key !== undefined) {
         songbook.installEditionModeActivation();
     }
-
     var searchForm = document.querySelector("#search");
     var queryInputSearch = document.querySelector("#querySearch");
     if (searchForm) {
@@ -15,7 +12,6 @@ define(["require", "exports", "./songbook", "./utils"], function(require, export
             songbook.search(key, queryInputSearch.value);
         });
     }
-
     var searchPath = "/search/";
     if (window.location.pathname.indexOf(searchPath) == 0) {
         var searchQuery = decodeURIComponent(window.location.pathname.substring(searchPath.length));
