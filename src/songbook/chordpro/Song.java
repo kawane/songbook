@@ -1,4 +1,4 @@
-package songbook.index;
+package songbook.chordpro;
 
 import java.util.ArrayList;
 import java.util.List;

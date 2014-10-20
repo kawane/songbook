@@ -5,7 +5,7 @@
       <option name="arguments" value="--sourcemap $FileName$" />
       <option name="checkSyntaxErrors" value="true" />
       <option name="description" value="Compiles .ts files into .js files" />
-      <option name="exitCodeBehavior" value="ERROR" />
+      <option name="exitCodeBehavior" value="NEVER" />
       <option name="fileExtension" value="ts" />
       <option name="immediateSync" value="true" />
       <option name="name" value="TypeScript" />
@@ -55,4 +55,3 @@
     </TaskOptions>
   </component>
 </project>
-

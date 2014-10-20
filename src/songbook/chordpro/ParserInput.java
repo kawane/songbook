@@ -1,4 +1,4 @@
-package songbook.index;
+package songbook.chordpro;
 
 import java.io.IOException;
 import java.io.Reader;

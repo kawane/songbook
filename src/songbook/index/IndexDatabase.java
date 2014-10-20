@@ -55,11 +55,19 @@ public class IndexDatabase {
         }
     }
 
-    public void addOrUpdateDocument(Document document) throws IOException, ParseException {
+    public void addOrUpdateDocument(Document document) throws IOException {
         Term term = new Term("id", document.get("id"));
         IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
         IndexWriter w = new IndexWriter(index, config);
         w.updateDocument(term, document);
+        w.close();
+    }
+
+    public void removeDocument(String id) throws IOException {
+        Term term = new Term("id", id);
+        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
+        IndexWriter w = new IndexWriter(index, config);
+        w.deleteDocuments(term);
         w.close();
     }
 

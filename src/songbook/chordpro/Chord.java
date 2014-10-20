@@ -1,4 +1,4 @@
-package songbook.index;
+package songbook.chordpro;
 
 /**
  * Created by laurent on 14/05/2014.

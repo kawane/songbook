@@ -111,6 +111,14 @@ public class Templates {
     }
 
     @Language("HTML")
+    public static String alertSongDoesntExist(String songId) {
+        return  "<div class='alert alert-warning' role='alert'>"+
+                    "Song <b>" + songId + "</b> was deleted." +
+                "</div>";
+    }
+
+
+    @Language("HTML")
     public static String showAdminKey(String key) {
         return  "" +
                 "" +
@@ -118,21 +126,15 @@ public class Templates {
     }
 
     private static String internalLink(String key, String link) {
-        if (key==null || key.length()==0) {
-            return link;
-        } else {
-            return link + "?key=" + key;
-        }
-    }
+        return link + (key!=null && key.length()>0 ? "?key=" + key : "");
+      }
 
-    private static String encodeUrl(String id) {
+    public static String encodeUrl(String id) {
         try {
             return URLEncoder.encode(id, "utf-8");
         } catch (UnsupportedEncodingException e) {
-            // Do nothing but logging
-            e.printStackTrace();
+            // Do nothing
+            return id;
         }
-        return id;
     }
-
 }
