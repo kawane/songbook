@@ -3,17 +3,17 @@
     <properties>
       <sourceFilesUrls>
         <item url="file://$PROJECT_DIR$/web/js/utils.js" />
-        <item url="file://$PROJECT_DIR$/web/js/songbook.js" />
         <item url="file://$PROJECT_DIR$/web/utils.js" />
+        <item url="file://$PROJECT_DIR$/web/js/songbook.js" />
         <item url="file://$PROJECT_DIR$/web/js/main.js" />
       </sourceFilesUrls>
     </properties>
     <CLASSES>
       <root url="file://$PROJECT_DIR$/web/js/utils.js" />
-      <root url="file://$PROJECT_DIR$/web/js/songbook.js" />
       <root url="file://$PROJECT_DIR$/web/utils.js" />
-      <root url="file://$PROJECT_DIR$/web/js/main.js" />
+      <root url="file://$PROJECT_DIR$/web/js/songbook.js" />
       <root url="file://$PROJECT_DIR$/src-node/testApi.js" />
+      <root url="file://$PROJECT_DIR$/web/js/main.js" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
