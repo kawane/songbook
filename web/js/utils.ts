@@ -25,6 +25,7 @@ export interface OnError {
 export interface RequestData {
     method: string;
     url: string;
+    headers: any;
     data?: any;
     onSuccess?: OnSuccess;
     onError?: OnError;
@@ -33,6 +34,11 @@ export interface RequestData {
 export function request(requestData: RequestData) {
     var req = new XMLHttpRequest();
     req.open(requestData.method, requestData.url, true);
+    if (requestData.headers) {
+        Object.keys(requestData.headers).forEach((headerName) => {
+            req.setRequestHeader(headerName, requestData.headers[headerName]);
+        });
+    }
     req.onreadystatechange = () => {
         if (req.readyState == 4) {
             if (req.status < 300) {

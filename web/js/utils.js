@@ -10,6 +10,11 @@ define(["require", "exports"], function (require, exports) {
     function request(requestData) {
         var req = new XMLHttpRequest();
         req.open(requestData.method, requestData.url, true);
+        if (requestData.headers) {
+            Object.keys(requestData.headers).forEach(function (headerName) {
+                req.setRequestHeader(headerName, requestData.headers[headerName]);
+            });
+        }
         req.onreadystatechange = function () {
             if (req.readyState == 4) {
                 if (req.status < 300) {

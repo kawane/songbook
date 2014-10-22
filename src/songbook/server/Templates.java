@@ -24,7 +24,7 @@ public class Templates {
                 "    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n" +
                 "    <!-- Bootstrap -->\n" +
                 "    <!-- Latest compiled and minified CSS -->\n" +
-                "    <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css'>\n" +
+                "    <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'>\n" +
                 "    <link href='/css/main.css' rel='stylesheet' media='screen'>\n" +
                 "    <link href='/css/song.css' rel='stylesheet' media='screen'>\n" +
                 "</head>\n" +

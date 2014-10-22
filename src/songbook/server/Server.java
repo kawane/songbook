@@ -95,7 +95,7 @@ public class Server extends Verticle {
         final int port = getPort();
         final String host = getHost();
         logger.info("Starting server on '"+ host +":"+ port +"'.");
-        httpServer.listen(port, host);
+        httpServer.listen(port);
     }
 
     private void createAdminKey() {
@@ -309,14 +309,14 @@ public class Server extends Verticle {
                 response.setChunked(true);
 
                 String key = getRequestKey(request);
-                response.write(Templates.getHeader(key, "New Song - My SongBook"));
+                response.write(Templates.getHeader("New Song - My SongBook"));
                 response.write(Templates.getNavigation(key));
                 if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
                 final Path song = webRoot.resolve("js/NewSong.html");
                 vertx.fileSystem().readFile(song.toString(), (e) -> {
                     response.write(e.result());
                     logger.trace("Serve Song 'New Song'");
-                    response.write(Templates.getFooter(key, admin ? "songbook.installEditionMode(true)" : null));
+                    response.write(Templates.getFooter());
                     response.end();
                 });
             };

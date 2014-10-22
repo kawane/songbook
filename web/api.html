@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Song Api</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link href='/css/main.css' rel='stylesheet' media='screen'>
+    <link href='/css/song.css' rel='stylesheet' media='screen'>
+    <style>
+        #result {
+            margin-top: 1em;
+            height: 500px;
+        }
+
+        #create-songdata, #update-songdata {
+            height: 300px;
+        }
+
+        .action-form {
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+
+    <div class="col-xs-6 col-md-2">
+        <ul id="services" class="nav nav-pills nav-stacked" role="navigation">
+            <li><a href="#search">Search</a></li>
+            <li><a href="#get">Get</a></li>
+            <li><a href="#create">Create</a></li>
+            <li><a href="#update">Update</a></li>
+            <li><a href="#delete">Delete</a></li>
+        </ul>
+    </div>
+    <div class="col-xs-12 col-md-10">
+
+        <div id="search" class="action-form">
+            <form role="form">
+                <div class="form-group">
+                    <label for="search-query">Query</label>
+                    <input class="form-control" type="text"  name="query" id="search-query"/>
+                </div>
+                <div class="form-group">
+                    <label for="search-content-type">Content Type</label>
+
+                    <select class="form-control" name="contentType" id="search-content-type">
+                        <option value="text/html">html</option>
+                        <option value="application/json">json</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-default" name="search">Search</button>
+            </form>
+        </div>
+
+        <div id="get" class="action-form">
+            <form >
+                <div class="form-group">
+                    <label for="get-id">Id</label>
+                    <input class="form-control" type="text"  name="id" id="get-id"/>
+                </div>
+
+                <button class="btn btn-default" name="get">Get</button>
+            </form>
+        </div>
+
+        <div id="create" class="action-form">
+            <form >
+                <div class="form-group">
+                    <label for="create-songdata">Song Data</label>
+                    <div id="create-songdata"></div>
+                </div>
+                <div class="form-group">
+                    <label for="create-adminkey">Admin Key</label>
+                    <input type="text" class="form-control" name="adminkey" id="create-adminkey">
+                </div>
+                <button class="btn btn-default" name="create">Create</button>
+            </form>
+        </div>
+
+        <div id="update" class="action-form">
+            <form >
+                <div class="form-group">
+                    <label for="update-id">Id</label>
+                    <input class="form-control" type="text"  name="id" id="update-id"/>
+                </div>
+                <div class="form-group">
+                    <label for="update-songdata">Song Data</label>
+                    <div id="update-songdata"></div>
+                </div>
+                <div class="form-group">
+                    <label for="update-adminkey">Admin Key</label>
+                    <input type="text" class="form-control" name="adminkey" id="update-adminkey">
+                </div>
+                <button class="btn btn-default" name="update">Update</button>
+            </form>
+        </div>
+
+        <div id="delete" class="action-form">
+            <form >
+                <div class="form-group">
+                    <label for="delete-id">Id</label>
+                    <input class="form-control" type="text"  name="id" id="delete-id"/>
+                </div>
+                <div class="form-group">
+                    <label for="delete-adminkey">Admin Key</label>
+                    <input type="text" class="form-control" name="adminkey" id="delete-adminkey">
+                </div>
+                <button class="btn btn-default" name="delete">Delete</button>
+            </form>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+</div>
+
+
+<script src='/js/require.js' data-main='/js/mainApi'></script>
+<script>
+    require.config({paths: {
+        ace: "//cdn.jsdelivr.net/ace/1.1.7/min/ace",
+        acemodehtml: "//cdn.jsdelivr.net/ace/1.1.7/min/mode-html",
+        acemodejson: "//cdn.jsdelivr.net/ace/1.1.7/min/mode-json"
+    }})
+</script>
+<script src='//cdn.jsdelivr.net/ace/1.1.7/min/ace.js'></script>
+<script src='//cdn.jsdelivr.net/ace/1.1.7/min/mode-html.js'></script>
+<script src='//cdn.jsdelivr.net/ace/1.1.7/min/mode-json.js'></script>
+</body>
+</html>

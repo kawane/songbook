@@ -2,14 +2,16 @@ define(["require", "exports", "./songbook", "./utils"], function (require, expor
     var queryParam = utils.getQueryParam();
     var key = queryParam["key"];
     if (key !== undefined) {
-        songbook.installEditionModeActivation();
+        var path = window.location.pathname;
+        var editionMode = path.substring(path.length - 4, path.length) === "/new";
+        songbook.installEditionMode(editionMode);
     }
     var searchForm = document.querySelector("#search");
     var queryInputSearch = document.querySelector("#querySearch");
     if (searchForm) {
         searchForm.addEventListener("submit", function (e) {
             e.preventDefault();
-            songbook.search(key, queryInputSearch.value);
+            songbook.search(queryInputSearch.value);
         });
     }
     var searchPath = "/search/";
@@ -18,6 +20,10 @@ define(["require", "exports", "./songbook", "./utils"], function (require, expor
         if (queryInputSearch) {
             queryInputSearch.value = searchQuery;
         }
+    }
+    var message = queryParam["message"];
+    if (message) {
+        songbook.createAlert(message, "info");
     }
 });
 //# sourceMappingURL=main.js.map
