@@ -43,7 +43,7 @@ public class Templates {
                         "            <span class='icon-bar'></span>\n" +
                         "            <span class='icon-bar'></span>\n" +
                         "        </button>\n" +
-                        "        <a class='navbar-brand' href='"+ internalLink(key, "/") +"'>My SongBook</a>\n" +
+                        "        <a class='navbar-brand' href='" + internalLink(key, "/") + "'>My SongBook</a>\n" +
                         "    </div>\n" +
                         "    <!-- Collect the nav links, forms, and other content for toggling -->\n" +
                         "    <div class='collapse navbar-collapse' id='bs-navbar-collapse'>\n" +
@@ -56,8 +56,11 @@ public class Templates {
                         "          </div>\n" +
                         "          <button type='submit' class='btn btn-default'>Submit</button>\n" +
                         "        </form>\n" +
-                        "\n" +
+                        "        <ul class=\"nav navbar-nav navbar-right\">\n" +
+                        "            <li><a href=\"/api.html\">Api</a></li>\n" +
+                        "        </ul>\n" +
                         "    </div>\n" +
+                        "   \n" +
                         "</nav>\n"
                 ;
     }

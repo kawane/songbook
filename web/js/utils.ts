@@ -25,7 +25,7 @@ export interface OnError {
 export interface RequestData {
     method: string;
     url: string;
-    headers: any;
+    headers?: any;
     data?: any;
     onSuccess?: OnSuccess;
     onError?: OnError;

@@ -1,6 +1,7 @@
 
 import utils = require("./utils");
 
+export var PathUrl = "/songs/";
 
 export function create(songUrl: string): SongApi {
     return new SongApi(songUrl);
@@ -84,8 +85,8 @@ export class SongApi {
      * @param onSuccess
      * @param onError
      */
-    update(id: string, song: string, key: string, onSuccess?: () => void, onError?: (error: string) => void) {
-        utils.request( {
+    update(id: string, song: string, key: string, onSuccess?: (result) => void, onError?: (error: string) => void) {
+        utils.request({
             method: "PUT",
             url: this.url(id) + "?key=" + key,
             data: song,
@@ -102,7 +103,7 @@ export class SongApi {
      * @param onSuccess
      * @param onError
      */
-    remove(id: string, key: string, onSuccess?: () => void, onError?: (error: string) => void) {
+    remove(id: string, key: string, onSuccess?: (result) => void, onError?: (error: string) => void) {
         utils.request( {
             method: "DELETE",
             url: this.url(id) + "?key=" + key,

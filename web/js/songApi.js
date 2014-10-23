@@ -1,4 +1,5 @@
 define(["require", "exports", "./utils"], function (require, exports, utils) {
+    exports.PathUrl = "/songs/";
     function create(songUrl) {
         return new SongApi(songUrl);
     }

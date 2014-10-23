@@ -121,6 +121,7 @@ public class Server extends Verticle {
         routeMatcher.get("/search/", searchHandler);
         routeMatcher.get("/search", searchHandler);
 
+
         routeMatcher.get("/songs/:id", createGetSongHandler());
 
         routeMatcher.get("/new", createNewSongHandler());
@@ -131,10 +132,18 @@ public class Server extends Verticle {
         return routeMatcher;
     }
 
+    private void allowCrossOrigin(HttpServerRequest request) {
+        String origin = request.headers().get("Origin");
+        if (origin != null) {
+            HttpServerResponse response = request.response();
+            response.putHeader("Access-Control-Allow-Origin", origin);
+        }
+    }
+
     private Handler<HttpServerRequest> createGetFileHandler() {
         return (request) -> {
             //if (checkDeniedAccess(request, false)) return;
-
+            allowCrossOrigin(request);
             // Serve Files
             HttpServerResponse response = request.response();
             String path = request.path();
@@ -157,8 +166,8 @@ public class Server extends Verticle {
 
     private Handler<HttpServerRequest> createPutSongHandler() {
         return (request) -> {
+            allowCrossOrigin(request);
             if (checkDeniedAccess(request, true)) return;
-
             request.bodyHandler((body) -> {
                 HttpServerResponse response = request.response();
                 String songData = body.toString();
@@ -218,6 +227,7 @@ public class Server extends Verticle {
 
     private Handler<HttpServerRequest> createDeleteSongHandler() {
         return (request) -> {
+            allowCrossOrigin(request);
             if (checkDeniedAccess(request, true)) return;
 
             HttpServerResponse response = request.response();
@@ -255,6 +265,7 @@ public class Server extends Verticle {
 
     private Handler<HttpServerRequest> createGetSongHandler() {
         return (request) -> {
+                allowCrossOrigin(request);
                 if (checkDeniedAccess(request, false)) return;
                 String key = request.params().get("key");
                 boolean admin = isAdministrator(key);
