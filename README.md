@@ -1,7 +1,7 @@
 Songbook
 ========
 
-Visit [Songbook](http://www.minibilles.org/songbook/index.html) website. 
+Visit [Songbook](http://kawane.ovh/songbook/index.html) website.
 
 Songbook is an extremely simple server that allows you to store and edit songs with chords and lyrics on your own server.
 It helps setting you free of web site full of distracting animations to focus on the song.
