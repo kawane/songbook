@@ -1,7 +1,12 @@
 # Songbook on OpenShift
 
-This tutorial presents how to get a SongBook server on OpenShift in a few minutes.
-With this tutorial, you will create an application containing a SongBook server on OpenShift servers for free.
+[OpenShift](https://openshift.redhat.com) is a service that allows to install application on their cloud platform.
+It's an open platform supported by [RedHat](https://www.redhat.com/en).
+
+This tutorial presents how to get a SongBook server on [OpenShift](https://openshift.redhat.com) in a few minutes.
+With this tutorial, you will create an application containing a SongBook server on OpenShift servers for using a free account.
+
+The [demo](http://songbookdemo.kawane.ovh) is running on OpenShift.
 
 ## Create an OpenShift account
 
