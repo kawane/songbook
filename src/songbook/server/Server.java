@@ -95,7 +95,7 @@ public class Server extends Verticle {
         final int port = getPort();
         final String host = getHost();
         logger.info("Starting server on '"+ host +":"+ port +"'.");
-        httpServer.listen(port);
+        httpServer.listen(port, host);
     }
 
     private void createAdminKey() {
