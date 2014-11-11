@@ -75,12 +75,13 @@ export function createAlert(message: any, type: string, dismissible: boolean = t
  * @param result handler when put is done.
  */
 function putSong(result:(event: Event) => any) {
-    var request = new XMLHttpRequest();
-    request.open("put", "/songs/" + window.location.search, true);
-
-    request.onreadystatechange = result;
-
     var song = <HTMLElement>document.querySelector(".song");
+    var title = <HTMLElement>song.querySelector(".song-title");
+    var id = encodeURIComponent(title.innerText);
+
+    var request = new XMLHttpRequest();
+    request.open("put", "/songs/" + id + window.location.search, true);
+    request.onreadystatechange = result;
     request.send("<div class=\"song\">" + song.innerHTML + "</div>");
 }
 

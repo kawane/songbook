@@ -70,10 +70,12 @@ define(["require", "exports"], function (require, exports) {
      * @param result handler when put is done.
      */
     function putSong(result) {
-        var request = new XMLHttpRequest();
-        request.open("put", "/songs/" + window.location.search, true);
-        request.onreadystatechange = result;
         var song = document.querySelector(".song");
+        var title = song.querySelector(".song-title");
+        var id = encodeURIComponent(title.innerText);
+        var request = new XMLHttpRequest();
+        request.open("put", "/songs/" + id + window.location.search, true);
+        request.onreadystatechange = result;
         request.send("<div class=\"song\">" + song.innerHTML + "</div>");
     }
     /**
