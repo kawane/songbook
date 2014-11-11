@@ -178,9 +178,8 @@ public class Server extends Verticle {
                     Document document = songIndexer.indexSong(songData);
 
                     // constructs song info
-                    String id = request.params().get("id");
-                    String oldTitle = decodeUrl(id);
-                    String newTitle = document.get("title");
+                    String oldTitle = getSongIdFromUrl(request.headers().get("Referer"));
+                    String newTitle = decodeUrl(request.params().get("id"));
 
                     // if title changed
                     if (newTitle.equals(oldTitle) == false) {
@@ -529,6 +528,16 @@ public class Server extends Verticle {
         HttpServerResponse response = request.response();
         response.setStatusCode(403);
         response.end("Access Forbidden '" + request.path() + "'");
+    }
+
+    public String getSongIdFromUrl(String url) {
+        if (url == null) return null;
+        String path = "/songs/";
+        int songPathIndex = url.indexOf(path);
+        if (songPathIndex < 0) return null;
+        int paramIndex = url.indexOf('?', songPathIndex);
+        int endIndex = paramIndex < 0 ? url.length() : paramIndex;
+        return decodeUrl(url.substring(songPathIndex + path.length(), endIndex));
     }
 
     public String decodeUrl(String id) {
