@@ -182,7 +182,7 @@ public class Server extends Verticle {
                     String newTitle = decodeUrl(request.params().get("id"));
 
                     // if title changed
-                    if (newTitle.equals(oldTitle) == false) {
+                    if (oldTitle != null && newTitle.equals(oldTitle) == false) {
                         Path filePath = getSongPath(oldTitle);
                         vertx.fileSystem().delete(filePath.toString(), (ar) -> {/* do nothing */});
 
