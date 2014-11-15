@@ -20,7 +20,7 @@ public class SongApi {
         this.client = client;
     }
 
-    public void requestSong(String id, Handler<HttpClientResponse> responseHandler) {
+    public void get(String id, Handler<HttpClientResponse> responseHandler) {
         HttpClientRequest request = client.get("/songs/" + id, responseHandler);
         request.end();
     }
@@ -29,7 +29,7 @@ public class SongApi {
         Vertx vertx = VertxFactory.newVertx();
 
         SongApi api = new SongApi(vertx.createHttpClient().setHost("localhost").setPort(8080));
-        api.requestSong("Adrift", (resp) -> {
+        api.get("Adrift", (resp) -> {
             resp.dataHandler((handler) -> {
                 System.out.print(handler.toString());
             });
