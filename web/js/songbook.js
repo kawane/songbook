@@ -1,4 +1,4 @@
-define(["require", "exports"], function (require, exports) {
+define(["require", "exports", "./editSong"], function (require, exports, editSong) {
     function createListItem(inner) {
         var li = document.createElement("li");
         if (inner != null)
@@ -109,29 +109,13 @@ define(["require", "exports"], function (require, exports) {
             target.attributes["edited"] = false;
             target.classList.add("edited");
             updateGlyph(button, "send");
-            var title = target.querySelector(".song-title");
-            title.contentEditable = "true";
-            var authors = target.querySelectorAll(".song-author");
-            for (var index in authors) {
-                var author = authors[index];
-                author.contentEditable = "true";
-            }
-            var verse = target.querySelector(".song-verse");
-            verse.contentEditable = "true";
+            editSong.startEdition(target);
         }
         else {
             target.attributes["edited"] = true;
             target.classList.remove("edited");
             updateGlyph(button, "refresh");
-            var title = target.querySelector(".song-title");
-            title.contentEditable = "false";
-            var authors = target.querySelectorAll(".song-author");
-            for (var index in authors) {
-                var author = authors[index];
-                author.contentEditable = "false";
-            }
-            var verse = target.querySelector(".song-verse");
-            verse.contentEditable = "false";
+            editSong.endEdition(target);
             putSong(function (event) {
                 var request = event.currentTarget;
                 if (request.readyState == 4) {

@@ -1,4 +1,7 @@
 
+
+import editSong = require("./editSong");
+
 function createListItem(inner:Node):HTMLElement {
     var li = document.createElement("li");
     if (inner != null) li.appendChild(inner);
@@ -114,44 +117,21 @@ function createRemoveButton(): Node {
     });
 }
 
-function switchEdition(target: HTMLElement, button: HTMLElement) {
-    var edited = target.attributes["edited"];
+function switchEdition(song: HTMLElement, button: HTMLElement) {
+    var edited = song.attributes["edited"];
     if (edited === undefined || edited === true) {
-        target.attributes["edited"] = false;
-        target.classList.add("edited");
+        song.attributes["edited"] = false;
+        song.classList.add("edited");
 
         updateGlyph(button, "send");
-
-        var title = <HTMLElement>target.querySelector(".song-title");
-        title.contentEditable = "true";
-
-        var authors = target.querySelectorAll(".song-author");
-        for (var index in authors) {
-            var author = <HTMLElement>authors[index];
-            author.contentEditable = "true";
-        }
-
-        var verse = <HTMLElement>target.querySelector(".song-verse");
-        verse.contentEditable = "true";
-
+        editSong.startEdition(song);
     } else {
-        target.attributes["edited"] = true;
-        target.classList.remove("edited");
+        song.attributes["edited"] = true;
+        song.classList.remove("edited");
 
         updateGlyph(button, "refresh");
 
-        var title = <HTMLElement>target.querySelector(".song-title");
-        title.contentEditable = "false";
-
-        var authors = target.querySelectorAll(".song-author");
-        for (var index in authors) {
-            var author = <HTMLElement>authors[index];
-            author.contentEditable = "false";
-        }
-
-        var verse = <HTMLElement>target.querySelector(".song-verse");
-        verse.contentEditable = "false";
-
+        editSong.endEdition(song);
         putSong(event => {
             var request = <XMLHttpRequest>event.currentTarget;
             if (request.readyState == 4) {
@@ -171,11 +151,11 @@ function switchEdition(target: HTMLElement, button: HTMLElement) {
 }
 
 export function installEditionMode(activate: boolean) {
-    var tools = <HTMLElement><any>document.getElementById("tools");
+    var tools = <HTMLElement>document.getElementById("tools");
 
     tools.appendChild(createListItem(createAddButton()));
 
-    var song = <HTMLElement><any>document.querySelector(".song");
+    var song = <HTMLElement>document.querySelector(".song");
     if (song!=null) {
         tools.appendChild(createListItem(createRemoveButton()));
         var editButton = createEditButton(song);
