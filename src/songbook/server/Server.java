@@ -96,13 +96,13 @@ public class Server extends Verticle {
     private void matchRequest(RouteMatcher routeMatcher) {
         routeMatcher.get("/", (request) -> search(request)); // Home Page
         routeMatcher.noMatch((request) -> serveFile(request));
+        routeMatcher.get("/new", (request) -> songForm(request));
 
         routeMatcher.get("/search/:query", (request) -> search(request));
         routeMatcher.get("/search/", (request) -> search(request));
         routeMatcher.get("/search", (request) -> search(request));
 
         routeMatcher.get("/songs/:id", (request) -> getSong(request));
-        routeMatcher.get("/new", (request) -> createSong(request));
         routeMatcher.put("/songs/:id", (request) -> modifySong(request));
         routeMatcher.delete("/songs/:id", (request) -> deleteSong(request));
     }
@@ -233,7 +233,7 @@ public class Server extends Verticle {
         });
     }
 
-    private void createSong(HttpServerRequest request) {
+    private void songForm(HttpServerRequest request) {
         if (checkDeniedAccess(request, true)) return;
         String key = request.params().get("key");
         boolean admin = isAdministrator(key);
@@ -247,7 +247,7 @@ public class Server extends Verticle {
         response.write(Templates.getHeader("New Song - My SongBook"));
         response.write(Templates.getNavigation(key));
         if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
-        final Path song = webRoot.resolve("js/NewSong.html");
+        final Path song = webRoot.resolve("NewSong.html");
         vertx.fileSystem().readFile(song.toString(), (e) -> {
             response.write(e.result());
             logger.trace("Serve Song 'New Song'");
