@@ -94,7 +94,9 @@ public class Server extends Verticle {
     }
 
     private void matchRequest(RouteMatcher routeMatcher) {
-        routeMatcher.get("/", (request) -> search(request));
+        routeMatcher.get("/", (request) -> search(request)); // Home Page
+        routeMatcher.noMatch((request) -> serveFile(request));
+
         routeMatcher.get("/search/:query", (request) -> search(request));
         routeMatcher.get("/search/", (request) -> search(request));
         routeMatcher.get("/search", (request) -> search(request));
@@ -103,8 +105,6 @@ public class Server extends Verticle {
         routeMatcher.get("/new", (request) -> createSong(request));
         routeMatcher.put("/songs/:id", (request) -> modifySong(request));
         routeMatcher.delete("/songs/:id", (request) -> deleteSong(request));
-
-        routeMatcher.noMatch((request) -> serveFile(request));
     }
 
     private void serveFile(HttpServerRequest request) {
@@ -170,6 +170,39 @@ public class Server extends Verticle {
         }
     }
 
+    private void search(HttpServerRequest request) {
+        if (checkDeniedAccess(request, false)) return;
+        String key = request.params().get("key");
+        boolean admin = isAdministrator(key);
+
+        // Serve all songs
+        HttpServerResponse response = request.response();
+        response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+
+        String query = QueryStringDecoder.decodeComponent(request.params().get("query"));
+        response.setChunked(true);
+        String title = "My SongBook";
+        if (query != null && !query.isEmpty()) {
+            title = query + " - " + title;
+        }
+
+        response.write(Templates.getHeader(title));
+        response.write(Templates.getNavigation(key));
+        if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
+
+        try {
+            indexDatabase.search(key, query, request);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            response.write("Wrong Query Syntax");
+        } catch (IOException e) {
+            e.printStackTrace();
+            response.write("Internal Error");
+        }
+        response.write(Templates.getFooter());
+        response.end();
+    }
+
     private void getSong(HttpServerRequest request) {
         allowCrossOrigin(request);
         if (checkDeniedAccess(request, false)) return;
@@ -195,6 +228,29 @@ public class Server extends Verticle {
                 logger.error("Failed to read song " + id, e.cause());
                 response.setStatusCode(404);
             }
+            response.write(Templates.getFooter());
+            response.end();
+        });
+    }
+
+    private void createSong(HttpServerRequest request) {
+        if (checkDeniedAccess(request, true)) return;
+        String key = request.params().get("key");
+        boolean admin = isAdministrator(key);
+
+        // Serves song
+        HttpServerResponse response = request.response();
+        response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+
+        response.setChunked(true);
+
+        response.write(Templates.getHeader("New Song - My SongBook"));
+        response.write(Templates.getNavigation(key));
+        if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
+        final Path song = webRoot.resolve("js/NewSong.html");
+        vertx.fileSystem().readFile(song.toString(), (e) -> {
+            response.write(e.result());
+            logger.trace("Serve Song 'New Song'");
             response.write(Templates.getFooter());
             response.end();
         });
@@ -289,62 +345,6 @@ public class Server extends Verticle {
             response.setStatusCode(500);
             response.end();
         }
-    }
-
-    private void createSong(HttpServerRequest request) {
-        if (checkDeniedAccess(request, true)) return;
-        String key = request.params().get("key");
-        boolean admin = isAdministrator(key);
-
-        // Serves song
-        HttpServerResponse response = request.response();
-        response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-
-        response.setChunked(true);
-
-        response.write(Templates.getHeader("New Song - My SongBook"));
-        response.write(Templates.getNavigation(key));
-        if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
-        final Path song = webRoot.resolve("js/NewSong.html");
-        vertx.fileSystem().readFile(song.toString(), (e) -> {
-            response.write(e.result());
-            logger.trace("Serve Song 'New Song'");
-            response.write(Templates.getFooter());
-            response.end();
-        });
-    }
-
-    private void search(HttpServerRequest request) {
-        if (checkDeniedAccess(request, false)) return;
-        String key = request.params().get("key");
-        boolean admin = isAdministrator(key);
-
-        // Serve all songs
-        HttpServerResponse response = request.response();
-        response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-
-        String query = QueryStringDecoder.decodeComponent(request.params().get("query"));
-        response.setChunked(true);
-        String title = "My SongBook";
-        if (query != null && !query.isEmpty()) {
-            title = query + " - " + title;
-        }
-
-        response.write(Templates.getHeader(title));
-        response.write(Templates.getNavigation(key));
-        if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
-
-        try {
-            indexDatabase.search(key, query, request);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            response.write("Wrong Query Syntax");
-        } catch (IOException e) {
-            e.printStackTrace();
-            response.write("Internal Error");
-        }
-        response.write(Templates.getFooter());
-        response.end();
     }
 
     private Path getWebRoot() {
