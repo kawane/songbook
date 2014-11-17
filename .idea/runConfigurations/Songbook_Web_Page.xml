@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Songbook Client" type="JavascriptDebugType" factoryName="JavaScript Debug" uri="http://localhost:8080/?key=1">
+  <configuration default="false" name="Songbook Web Page" type="JavascriptDebugType" factoryName="JavaScript Debug" uri="http://localhost:8080/?key=1">
     <mapping url="http://localhost:8080" local-file="$PROJECT_DIR$/web" />
     <RunnerSettings RunnerId="JavascriptDebugRunner" />
     <ConfigurationWrapper RunnerId="JavascriptDebugRunner" />

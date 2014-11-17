@@ -2,24 +2,13 @@
   <library name="Generated files" type="javaScript">
     <properties>
       <sourceFilesUrls>
-        <item url="file://$PROJECT_DIR$/web/js/utils.js" />
-        <item url="file://$PROJECT_DIR$/web/js/mainApi.js" />
         <item url="file://$PROJECT_DIR$/web/js/songbook.js" />
-        <item url="file://$PROJECT_DIR$/web/js/song.js" />
-        <item url="file://$PROJECT_DIR$/web/js/main.js" />
+        <item url="file://$PROJECT_DIR$/web/js/editSong.js" />
       </sourceFilesUrls>
     </properties>
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/web/utils.js" />
-      <root url="file://$PROJECT_DIR$/web/utils.js" />
-      <root url="file://$PROJECT_DIR$/web/js/songbooktomerge.js" />
-      <root url="file://$PROJECT_DIR$/web/js/songbooktomerge.js" />
-      <root url="file://$PROJECT_DIR$/web/js/utils.js" />
       <root url="file://$PROJECT_DIR$/web/js/songbook.js" />
-      <root url="file://$PROJECT_DIR$/web/js/mainApi.js" />
-      <root url="file://$PROJECT_DIR$/src-node/testApi.js" />
-      <root url="file://$PROJECT_DIR$/web/js/songApi.js" />
-      <root url="file://$PROJECT_DIR$/web/js/main.js" />
+      <root url="file://$PROJECT_DIR$/web/js/editSong.js" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

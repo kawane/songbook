@@ -7,11 +7,7 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.http.HttpHeaders;
-import org.vertx.java.core.http.HttpServer;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.http.HttpServerResponse;
-import org.vertx.java.core.http.RouteMatcher;
+import org.vertx.java.core.http.*;
 import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.shareddata.ConcurrentSharedMap;
@@ -20,9 +16,7 @@ import songbook.index.HtmlIndexer;
 import songbook.index.IndexDatabase;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -75,7 +69,7 @@ public class Server extends Verticle {
         HttpServer httpServer = vertx.createHttpServer();
 
         // creates admin key if needed
-        if (administratorKey == null)  createAdminKey();
+        if (administratorKey == null) createAdminKey();
 
         // initializes index.
         try {
@@ -85,287 +79,69 @@ public class Server extends Verticle {
             logger.info("Opened index in " + (end - start) + " milliseconds.");
 
         } catch (IOException e) {
-            logger.error("Can't initialize index in "+ dataRoot.resolve("index"));
+            logger.error("Can't initialize index in " + dataRoot.resolve("index"));
         }
 
         //installs matcher to server song
-        RouteMatcher routeMatcher = createSongServerRoutMatcher();
+        RouteMatcher routeMatcher = new RouteMatcher();
+        matchRequest(routeMatcher);
         httpServer.requestHandler(routeMatcher);
 
         final int port = getPort();
         final String host = getHost();
-        logger.info("Starting server on '"+ host +":"+ port +"'.");
-        httpServer.listen(port);
+        logger.info("Starting server on '" + host + ":" + port + "'.");
+        httpServer.listen(port, host);
     }
 
-    private void createAdminKey() {
-        // creates administrator key when it's null
-        long timestamp = System.currentTimeMillis();
-        String timestampString = Long.toHexString(timestamp);
-        try {
-            MessageDigest digest = MessageDigest.getInstance("MD5");
-            digest.update(timestampString.getBytes(), 0, timestampString.length());
-            administratorKey =  new BigInteger(1, digest.digest()).toString(16);
-        } catch (NoSuchAlgorithmException e) {
-            administratorKey = timestampString;
+    private void matchRequest(RouteMatcher routeMatcher) {
+        routeMatcher.get("/", (request) -> search(request)); // Home Page
+        routeMatcher.noMatch((request) -> serveFile(request));
+        routeMatcher.get("/new", (request) -> songForm(request));
+
+        routeMatcher.get("/search/:query", (request) -> search(request));
+        routeMatcher.get("/search/", (request) -> search(request));
+        routeMatcher.get("/search", (request) -> search(request));
+
+        routeMatcher.get("/songs/:id", (request) -> getSong(request));
+        routeMatcher.put("/songs/:id", (request) -> modifySong(request));
+        routeMatcher.delete("/songs/:id", (request) -> deleteSong(request));
+    }
+
+    private void serveFile(HttpServerRequest request) {
+        //if (checkDeniedAccess(request, false)) return;
+        allowCrossOrigin(request);
+        // Serve Files
+        HttpServerResponse response = request.response();
+        String path = request.path();
+        String fileName = path.equals("/") ? "index.html" : path;
+        Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
+        logger.info("GET " + localFilePath);
+        String type = "text/plain";
+        if (fileName.endsWith(".js")) {
+            type = "application/javascript";
+        } else if (fileName.endsWith(".css")) {
+            type = "text/css";
+        } else if (fileName.endsWith(".html")) {
+            type = "text/html";
         }
-        logger.info("Created administrator key: '" + administratorKey + "'.");
-        writeKeys();
-    }
 
-    private RouteMatcher createSongServerRoutMatcher() {
-        RouteMatcher routeMatcher = new RouteMatcher();
-        Handler<HttpServerRequest> searchHandler = createSearchHandler();
-        routeMatcher.get("/", searchHandler);
-        routeMatcher.get("/search/:query", searchHandler);
-        routeMatcher.get("/search/", searchHandler);
-        routeMatcher.get("/search", searchHandler);
-
-
-        routeMatcher.get("/songs/:id", createGetSongHandler());
-
-        routeMatcher.get("/new", createNewSongHandler());
-        routeMatcher.put("/songs/:id", createPutSongHandler());
-        routeMatcher.delete("/songs/:id", createDeleteSongHandler());
-
-        routeMatcher.noMatch(createGetFileHandler());
-        return routeMatcher;
-    }
-
-    private void allowCrossOrigin(HttpServerRequest request) {
-        String origin = request.headers().get("Origin");
-        if (origin != null) {
-            HttpServerResponse response = request.response();
-            response.putHeader("Access-Control-Allow-Origin", origin);
-        }
-    }
-
-    private Handler<HttpServerRequest> createGetFileHandler() {
-        return (request) -> {
-            //if (checkDeniedAccess(request, false)) return;
-            allowCrossOrigin(request);
-            // Serve Files
-            HttpServerResponse response = request.response();
-            String path = request.path();
-            String fileName = path.equals("/") ? "index.html" : path;
-            Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
-            logger.info("GET " + localFilePath);
-            String type = "text/plain";
-            if (fileName.endsWith(".js")) {
-                type = "application/javascript";
-            } else if (fileName.endsWith(".css")) {
-                type = "text/css";
-            } else if (fileName.endsWith(".html")) {
-                type = "text/html";
-            }
-
-            response.putHeader(HttpHeaders.CONTENT_TYPE, type);
-            response.sendFile(localFilePath.toString());
-        };
-    }
-
-    private Handler<HttpServerRequest> createPutSongHandler() {
-        return (request) -> {
-            allowCrossOrigin(request);
-            if (checkDeniedAccess(request, true)) return;
-            request.bodyHandler((body) -> {
-                HttpServerResponse response = request.response();
-                String songData = body.toString();
-                try {
-
-                    // indexes updated song
-                    HtmlIndexer songIndexer = new HtmlIndexer();
-                    Document document = songIndexer.indexSong(songData);
-
-                    // constructs song info
-                    String id = request.params().get("id");
-                    String oldTitle = decodeUrl(id);
-                    String newTitle = document.get("title");
-
-                    // if title changed
-                    if (newTitle.equals(oldTitle) == false) {
-                        Path filePath = getSongPath(oldTitle);
-                        vertx.fileSystem().delete(filePath.toString(), (ar) -> {/* do nothing */});
-
-                        indexDatabase.removeDocument(oldTitle);
-                    }
-
-                    // prepares new document
-                    document.add(new StringField("id", newTitle, Field.Store.YES));
-                    indexDatabase.addOrUpdateDocument(document);
-
-                    // removes song from vert.x cache (using old title)
-                    ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
-                    songs.remove(oldTitle);
-
-                    // writes file to disk
-                    Path filePath = getSongPath(newTitle);
-                    vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
-                        if (ar.succeeded()) {
-                            response.end(newTitle);
-                        } else {
-                            logger.error("Failed to update the song", ar.cause());
-                            response.setStatusCode(500);
-                            response.end();
-
-                            try {
-                                Files.deleteIfExists(filePath);
-                            } catch (IOException e) {
-                                logger.warn("Can't delete file", e);
-                            }
-                        }
-                    });
-                } catch (Exception e) {
-                    // TODO write error to client
-                    logger.error("Error indexing song", e);
-                    response.setStatusCode(500);
-                    response.end();
-                }
-            });
-        };
-    }
-
-    private Handler<HttpServerRequest> createDeleteSongHandler() {
-        return (request) -> {
-            allowCrossOrigin(request);
-            if (checkDeniedAccess(request, true)) return;
-
-            HttpServerResponse response = request.response();
-            try {
-
-                String id = request.params().get("id");
-                String oldTitle = decodeUrl(id);
-
-                // removes file
-                Path filePath = getSongPath(oldTitle);
-                vertx.fileSystem().delete(filePath.toString(), (ar) -> {/* do nothing */});
-
-                // removes document
-                indexDatabase.removeDocument(oldTitle);
-
-                // removes song from vert.x cache (using old title)
-                ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
-                songs.remove(oldTitle);
-
-                response.setStatusCode(200);
-                response.end();
-
-            } catch (Exception e) {
-                // TODO write error to client
-                logger.error("Error removing song", e);
-                response.setStatusCode(500);
-                response.end();
-            }
-        };
+        response.putHeader(HttpHeaders.CONTENT_TYPE, type);
+        response.sendFile(localFilePath.toString());
     }
 
     private Path getSongPath(String title) {
-        return dataRoot.resolve("songs").resolve(title+ IndexDatabase.SONG_EXTENSION).toAbsolutePath();
-    }
-
-    private Handler<HttpServerRequest> createGetSongHandler() {
-        return (request) -> {
-                allowCrossOrigin(request);
-                if (checkDeniedAccess(request, false)) return;
-                String key = request.params().get("key");
-                boolean admin = isAdministrator(key);
-
-                // Serves song
-                HttpServerResponse response = request.response();
-                response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-
-                String id = QueryStringDecoder.decodeComponent(request.params().get("id"));
-                response.setChunked(true);
-
-                response.write(Templates.getHeader(id + " - My SongBook"));
-                response.write(Templates.getNavigation(key));
-                if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
-                readHtmlSong(id, (e) -> {
-                    if (e.succeeded()) {
-                        response.write(e.result());
-                        logger.trace("Serve Song " + id);
-                    } else {
-                        response.write(Templates.alertSongDoesntExist(id));
-                        logger.error("Failed to read song " + id, e.cause());
-                        response.setStatusCode(404);
-                    }
-                    response.write(Templates.getFooter());
-                    response.end();
-                });
-            };
-    }
-
-    public static String decodeUriComponent(String s) {
-        if (s == null) {
-            return null;
-        }
-        try {
-            return URLDecoder.decode(s, "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        return s;
+        return dataRoot.resolve("songs").resolve(title + IndexDatabase.SONG_EXTENSION).toAbsolutePath();
     }
 
 
-    private Handler<HttpServerRequest> createNewSongHandler() {
-        return (request) -> {
-                if (checkDeniedAccess(request, true)) return;
-                boolean admin = isAdministrator(getRequestKey(request));
-
-                // Serves song
-                HttpServerResponse response = request.response();
-                response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-
-                response.setChunked(true);
-
-                String key = getRequestKey(request);
-                response.write(Templates.getHeader("New Song - My SongBook"));
-                response.write(Templates.getNavigation(key));
-                if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
-                final Path song = webRoot.resolve("js/NewSong.html");
-                vertx.fileSystem().readFile(song.toString(), (e) -> {
-                    response.write(e.result());
-                    logger.trace("Serve Song 'New Song'");
-                    response.write(Templates.getFooter());
-                    response.end();
-                });
-            };
-    }
-
-    private Handler<HttpServerRequest> createSearchHandler() {
-        return (request) -> {
-                if (checkDeniedAccess(request, false)) return;
-                String key = request.params().get("key");
-                boolean admin = isAdministrator(key);
-
-                // Serve all songs
-                HttpServerResponse response = request.response();
-                response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-
-                String query = decodeUriComponent(request.params().get("query"));
-                response.setChunked(true);
-                String title = "My SongBook";
-                if (query != null && !query.isEmpty()) {
-                    title = query + " - " + title;
-                }
-
-                response.write(Templates.getHeader(title));
-                response.write(Templates.getNavigation(key));
-                if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
-
-                try {
-                    indexDatabase.search(key, query, request);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                    response.write("Wrong Query Syntax");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    response.write("Internal Error");
-                }
-                response.write(Templates.getFooter());
-                response.end();
-            };
+    public String getSongIdFromUrl(String url) {
+        if (url == null) return null;
+        String path = "/songs/";
+        int songPathIndex = url.indexOf(path);
+        if (songPathIndex < 0) return null;
+        int paramIndex = url.indexOf('?', songPathIndex);
+        int endIndex = paramIndex < 0 ? url.length() : paramIndex;
+        return QueryStringDecoder.decodeComponent(url.substring(songPathIndex + path.length(), endIndex));
     }
 
     public void readHtmlSong(String id, Handler<AsyncResult<String>> handler) {
@@ -394,6 +170,183 @@ public class Server extends Verticle {
         }
     }
 
+    private void search(HttpServerRequest request) {
+        if (checkDeniedAccess(request, false)) return;
+        String key = request.params().get("key");
+        boolean admin = isAdministrator(key);
+
+        // Serve all songs
+        HttpServerResponse response = request.response();
+        response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+
+        String query = QueryStringDecoder.decodeComponent(request.params().get("query"));
+        response.setChunked(true);
+        String title = "My SongBook";
+        if (query != null && !query.isEmpty()) {
+            title = query + " - " + title;
+        }
+
+        response.write(Templates.getHeader(title));
+        response.write(Templates.getNavigation(key));
+        if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
+
+        try {
+            indexDatabase.search(key, query, request);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            response.write("Wrong Query Syntax");
+        } catch (IOException e) {
+            e.printStackTrace();
+            response.write("Internal Error");
+        }
+        response.write(Templates.getFooter());
+        response.end();
+    }
+
+    private void getSong(HttpServerRequest request) {
+        allowCrossOrigin(request);
+        if (checkDeniedAccess(request, false)) return;
+        String key = request.params().get("key");
+        boolean admin = isAdministrator(key);
+
+        // Serves song
+        HttpServerResponse response = request.response();
+        response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+
+        String id = QueryStringDecoder.decodeComponent(request.params().get("id"));
+        response.setChunked(true);
+
+        response.write(Templates.getHeader(id + " - My SongBook"));
+        response.write(Templates.getNavigation(key));
+        if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
+        readHtmlSong(id, (e) -> {
+            if (e.succeeded()) {
+                response.write(e.result());
+                logger.trace("Serve Song " + id);
+            } else {
+                response.write(Templates.alertSongDoesntExist(id));
+                logger.error("Failed to read song " + id, e.cause());
+                response.setStatusCode(404);
+            }
+            response.write(Templates.getFooter());
+            response.end();
+        });
+    }
+
+    private void songForm(HttpServerRequest request) {
+        if (checkDeniedAccess(request, true)) return;
+        String key = request.params().get("key");
+        boolean admin = isAdministrator(key);
+
+        // Serves song
+        HttpServerResponse response = request.response();
+        response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+
+        response.setChunked(true);
+
+        response.write(Templates.getHeader("New Song - My SongBook"));
+        response.write(Templates.getNavigation(key));
+        if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
+        final Path song = webRoot.resolve("NewSong.html");
+        vertx.fileSystem().readFile(song.toString(), (e) -> {
+            response.write(e.result());
+            logger.trace("Serve Song 'New Song'");
+            response.write(Templates.getFooter());
+            response.end();
+        });
+    }
+
+    private void modifySong(HttpServerRequest request) {
+        allowCrossOrigin(request);
+        if (checkDeniedAccess(request, true)) return;
+        request.bodyHandler((body) -> {
+            HttpServerResponse response = request.response();
+            String songData = body.toString();
+            try {
+
+                // indexes updated song
+                HtmlIndexer songIndexer = new HtmlIndexer();
+                Document document = songIndexer.indexSong(songData);
+
+                // constructs song info
+                String oldTitle = getSongIdFromUrl(request.headers().get("Referer"));
+                String newTitle = QueryStringDecoder.decodeComponent(request.params().get("id"));
+
+                // if title changed
+                if (oldTitle != null && newTitle.equals(oldTitle) == false) {
+                    Path filePath = getSongPath(oldTitle);
+                    vertx.fileSystem().delete(filePath.toString(), (ar) -> {/* do nothing */});
+
+                    indexDatabase.removeDocument(oldTitle);
+
+                    // removes song from vert.x cache (using old title)
+                    ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
+                    songs.remove(oldTitle);
+                }
+
+                // prepares new document
+                document.add(new StringField("id", newTitle, Field.Store.YES));
+                indexDatabase.addOrUpdateDocument(document);
+
+
+                // writes file to disk
+                Path filePath = getSongPath(newTitle);
+                vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
+                    if (ar.succeeded()) {
+                        response.end(newTitle);
+                    } else {
+                        logger.error("Failed to update the song", ar.cause());
+                        response.setStatusCode(500);
+                        response.end();
+
+                        try {
+                            Files.deleteIfExists(filePath);
+                        } catch (IOException e) {
+                            logger.warn("Can't delete file", e);
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                // TODO write error to client
+                logger.error("Error indexing song", e);
+                response.setStatusCode(500);
+                response.end();
+            }
+        });
+    }
+
+    private void deleteSong(HttpServerRequest request) {
+        allowCrossOrigin(request);
+        if (checkDeniedAccess(request, true)) return;
+
+        HttpServerResponse response = request.response();
+        try {
+
+            String id = request.params().get("id");
+            String oldTitle = QueryStringDecoder.decodeComponent(id);
+
+            // removes file
+            Path filePath = getSongPath(oldTitle);
+            vertx.fileSystem().delete(filePath.toString(), (ar) -> {/* do nothing */});
+
+            // removes document
+            indexDatabase.removeDocument(oldTitle);
+
+            // removes song from vert.x cache (using old title)
+            ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
+            songs.remove(oldTitle);
+
+            response.setStatusCode(200);
+            response.end();
+
+        } catch (Exception e) {
+            // TODO write error to client
+            logger.error("Error removing song", e);
+            response.setStatusCode(500);
+            response.end();
+        }
+    }
+
     private Path getWebRoot() {
         final String webRoot = System.getenv("WEB_ROOT");
         return Paths.get(webRoot == null ? DEFAULT_WEB_ROOT : webRoot);
@@ -407,7 +360,7 @@ public class Server extends Verticle {
     private int getPort() {
         final String portString = System.getenv("PORT");
         int port = DEFAULT_PORT;
-        if ( portString != null ) {
+        if (portString != null) {
             try {
                 port = Integer.parseInt(portString);
             } catch (NumberFormatException e) {
@@ -423,7 +376,35 @@ public class Server extends Verticle {
         return host == null ? DEFAULT_HOST : host;
     }
 
-    /** Searches for keys on server to initialize administratorKey and userKey. */
+
+    // Security
+
+    private void allowCrossOrigin(HttpServerRequest request) {
+        String origin = request.headers().get("Origin");
+        if (origin != null) {
+            HttpServerResponse response = request.response();
+            response.putHeader("Access-Control-Allow-Origin", origin);
+        }
+    }
+
+    private void createAdminKey() {
+        // creates administrator key when it's null
+        long timestamp = System.currentTimeMillis();
+        String timestampString = Long.toHexString(timestamp);
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            digest.update(timestampString.getBytes(), 0, timestampString.length());
+            administratorKey = new BigInteger(1, digest.digest()).toString(16);
+        } catch (NoSuchAlgorithmException e) {
+            administratorKey = timestampString;
+        }
+        logger.info("Created administrator key: '" + administratorKey + "'.");
+        writeKeys();
+    }
+
+    /**
+     * Searches for keys on server to initialize administratorKey and userKey.
+     */
     private void readKeys() {
         try {
             final Path administratorKeyPath = getDataRoot().resolve(ADMINISTRATOR_KEY_PATH);
@@ -452,7 +433,9 @@ public class Server extends Verticle {
         }
     }
 
-    /** Writes administratorKey and userKey to file system. */
+    /**
+     * Writes administratorKey and userKey to file system.
+     */
     private void writeKeys() {
         if (administratorKey != null) {
             try {
@@ -480,31 +463,23 @@ public class Server extends Verticle {
         }
     }
 
-    /** Extracts key from query */
-    private String getRequestKey(HttpServerRequest request) {
-        final String query = request.query();
-        if (query != null) {
-            final String attribute = "key=";
-            final int keyIndex = query.indexOf(attribute);
-            if (keyIndex >= 0) {
-                final int andIndex = query.indexOf('&', keyIndex);
-                return query.substring(keyIndex+attribute.length(), andIndex >= 0 ? andIndex : query.length());
-            }
-        }
-        return null;
-    }
-
-    /** Checks if key allows to be administrator */
+    /**
+     * Checks if key allows to be administrator
+     */
     private boolean isAdministrator(String requestKey) {
         return administratorKey == null || administratorKey.equals(requestKey);
     }
 
-    /** Checks if key allows to be user */
+    /**
+     * Checks if key allows to be user
+     */
     private boolean isUser(String requestKey) {
-        return userKey== null || userKey.equals(requestKey);
+        return userKey == null || userKey.equals(requestKey);
     }
 
-    /** Checks if request need to be denied, returns true if access is denied. */
+    /**
+     * Checks if request need to be denied, returns true if access is denied.
+     */
     private boolean checkDeniedAccess(HttpServerRequest request, boolean needAdmin) {
         String key = request.params().get("key");
         if (isAdministrator(key)) {
@@ -514,12 +489,12 @@ public class Server extends Verticle {
                 try {
                     Files.createFile(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
                 } catch (IOException e) {
-                    logger.error("Can't create file '"+ ADMINISTRATOR_ACTIVATED_PATH +"'", e);
+                    logger.error("Can't create file '" + ADMINISTRATOR_ACTIVATED_PATH + "'", e);
                 }
             }
             return false;
         }
-        if (isUser(key) && needAdmin==false) return false;
+        if (isUser(key) && needAdmin == false) return false;
 
         forbiddenAccess(request);
         return true;
@@ -531,13 +506,4 @@ public class Server extends Verticle {
         response.end("Access Forbidden '" + request.path() + "'");
     }
 
-    public String decodeUrl(String id) {
-        try {
-            return URLDecoder.decode(id, "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            // Do nothing but logging
-            logger.error("Decoding error", e);
-            return id;
-        }
-    }
 }

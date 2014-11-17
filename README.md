@@ -1,7 +1,7 @@
 Songbook
 ========
 
-Visit [Songbook](http://www.minibilles.org/songbook/index.html) website. 
+Visit [Songbook](http://kawane.ovh/songbook/index.html) website.
 
 Songbook is an extremely simple server that allows you to store and edit songs with chords and lyrics on your own server.
 It helps setting you free of web site full of distracting animations to focus on the song.
@@ -12,7 +12,7 @@ Get documentation with the [Getting Started](doc/Getting_Started.md).
 
 It aims to be easily installed on a server, including for not technical users. Songbook can be easily installed
  
-* on OpenShift with the songbook cartridge (TODO cartridge+doc) [Here](doc/Install_On_OpenShift.md),
+* on OpenShift with the songbook cartridge [Here](doc/Install_On_OpenShift.md),
 * with Docker on a Linux server (kawane/songbook) [Here](doc/Install_With_Docker.md) ,
 * on any server with Java 8 [Here](doc/Install_DIY.md),
 * Google App Engine (TODO archive+doc)
