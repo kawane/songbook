@@ -104,7 +104,7 @@ public class Templates {
     public static String showDocument(String key, Document document) {
         String id = document.get("id");
         String title = document.get("title");
-        return  "<a class='list-group-item' href='"+ internalLink(key, "/songs/"+ encodeUrl(id)) +"'>\n" +
+        return  "<a class='list-group-item' href='"+ internalLink(key, "/songs/"+ encodeUrl(title)) +"'>\n" +
                 "<h4 class='list-group-item-heading'>" + (title ==null ? id : title) + "</h4>\n" +
                 "<p class='list-group-item-text'>" +
                 Stream.of(document.getValues("author")).collect(Collectors.joining(", "))+
@@ -114,18 +114,10 @@ public class Templates {
     }
 
     @Language("HTML")
-    public static String alertSongDoesntExist(String songId) {
+    public static String alertSongDoesNotExist(String songId) {
         return  "<div class='alert alert-warning' role='alert'>"+
-                    "Song <b>" + songId + "</b> was deleted." +
+                    "Song <b>" + songId + "</b> was deleted or doesn't exist." +
                 "</div>";
-    }
-
-
-    @Language("HTML")
-    public static String showAdminKey(String key) {
-        return  "" +
-                "" +
-                "";
     }
 
     private static String internalLink(String key, String link) {
