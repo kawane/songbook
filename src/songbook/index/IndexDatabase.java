@@ -80,7 +80,7 @@ public class IndexDatabase {
             if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".html")) {
                 try {
                     Document document = songIndexer.indexSong(filePath);
-                    document.add(new StringField("id", SongUtil.getId(filePath.getFileName().toString()), Field.Store.YES));
+                    document.add(new StringField("id", SongUtil.getIdFromTitle(filePath.getFileName().toString()), Field.Store.YES));
                     w.addDocument(document);
 
                     count[0] += 1;
@@ -105,7 +105,7 @@ public class IndexDatabase {
         ScoreDoc[] hits;
         if (querystr == null || querystr.isEmpty()) {
             Query query = new MatchAllDocsQuery();
-            TopFieldDocs topFieldDocs = searcher.search(query, hitsPerPage, new Sort(new SortField("id", Type.STRING)));
+            TopFieldDocs topFieldDocs = searcher.search(query, hitsPerPage, new Sort(new SortField("title", Type.STRING)));
             hits = topFieldDocs.scoreDocs;
         } else {
             // the "lyrics" arg specifies the default field to use

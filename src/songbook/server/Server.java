@@ -18,10 +18,10 @@ import org.vertx.java.core.shareddata.ConcurrentSharedMap;
 import org.vertx.java.platform.Verticle;
 import songbook.index.HtmlIndexer;
 import songbook.index.IndexDatabase;
+import songbook.index.SongUtil;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -136,10 +136,8 @@ public class Server extends Verticle {
         response.sendFile(localFilePath.toString());
     }
 
-    private final static String HEXES = "0123456789abcdef";
-
     private Path getSongPath(String title) {
-        String filename = getSongIdFromTitle(title) + IndexDatabase.SONG_EXTENSION ;
+        String filename = SongUtil.getIdFromTitle(title) + IndexDatabase.SONG_EXTENSION ;
         return dataRoot.resolve("songs").resolve(filename).toAbsolutePath();
     }
 
@@ -153,26 +151,8 @@ public class Server extends Verticle {
         return QueryStringDecoder.decodeComponent(url.substring(songPathIndex + path.length(), endIndex));
     }
 
-    public String getSongIdFromTitle(String title) {
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
-            byte[] digest = messageDigest.digest(title.getBytes(StandardCharsets.UTF_8));
-
-            final StringBuilder hex = new StringBuilder( 2 * digest.length );
-            for (int i = 0; i < digest.length; i+=1) {
-                hex.append(HEXES.charAt((digest[i] & 0xF0) >> 4));
-                hex.append(HEXES.charAt((digest[i] & 0x0F)));
-            }
-
-            return hex.toString();
-        } catch (NoSuchAlgorithmException e) {
-            // shouldn't happen
-            return title;
-        }
-    }
-
     public void readHtmlSong(String title, Handler<AsyncResult<String>> handler) {
-        String id = getSongIdFromTitle(title);
+        String id = SongUtil.getIdFromTitle(title);
 
         DefaultFutureResult<String> event = new DefaultFutureResult<>();
         event.setHandler(handler);
@@ -297,14 +277,14 @@ public class Server extends Verticle {
                 // constructs song info
                 String oldTitle = getSongTitle(request.headers().get("Referer"));
                 String newTitle = QueryStringDecoder.decodeComponent(request.params().get("title"));
-                String newId = getSongIdFromTitle(newTitle);
+                String newId = SongUtil.getIdFromTitle(newTitle);
 
                 // if title changed
                 if (oldTitle != null && newTitle.equals(oldTitle) == false) {
                     Path filePath = getSongPath(oldTitle);
                     vertx.fileSystem().delete(filePath.toString(), (ar) -> {/* do nothing */});
 
-                    String oldId = getSongIdFromTitle(oldTitle);
+                    String oldId = SongUtil.getIdFromTitle(oldTitle);
                     indexDatabase.removeDocument(oldId);
 
                     // removes song from vert.x cache (using old title)
@@ -351,7 +331,7 @@ public class Server extends Verticle {
         try {
 
             String title = request.params().get("title");
-            String id = getSongIdFromTitle(title);
+            String id = SongUtil.getIdFromTitle(title);
 
             // removes file
             Path filePath = getSongPath(title);
