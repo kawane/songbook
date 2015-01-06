@@ -1,5 +1,7 @@
 package songbook.index;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -23,6 +25,15 @@ public class SongUtil {
         } catch (NoSuchAlgorithmException e) {
             // shouldn't happen
             return title;
+        }
+    }
+
+    public static String encodeUrl(String id) {
+        try {
+            return URLEncoder.encode(id, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            // do nothing
+            return id;
         }
     }
 }

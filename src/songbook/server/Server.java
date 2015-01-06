@@ -141,7 +141,12 @@ public class Server extends Verticle {
         return dataRoot.resolve("songs").resolve(filename).toAbsolutePath();
     }
 
-    public String getSongTitle(String url) {
+    public String getSongTitle(HttpServerRequest request) {
+        return QueryStringDecoder.decodeComponent(request.params().get("title"));
+    }
+
+    public String getRefererSongTitle(HttpServerRequest request) {
+        String url = request.headers().get("Referer");
         if (url == null) return null;
         String path = "/songs/";
         int songPathIndex = url.indexOf(path);
@@ -149,6 +154,7 @@ public class Server extends Verticle {
         int paramIndex = url.indexOf('?', songPathIndex);
         int endIndex = paramIndex < 0 ? url.length() : paramIndex;
         return QueryStringDecoder.decodeComponent(url.substring(songPathIndex + path.length(), endIndex));
+
     }
 
     public void readHtmlSong(String title, Handler<AsyncResult<String>> handler) {
@@ -220,19 +226,19 @@ public class Server extends Verticle {
         HttpServerResponse response = request.response();
         response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
-        String id = QueryStringDecoder.decodeComponent(request.params().get("title"));
+        String title = getSongTitle(request);
         response.setChunked(true);
 
-        response.write(Templates.getHeader(id + " - My SongBook"));
+        response.write(Templates.getHeader(title + " - My SongBook"));
         response.write(Templates.getNavigation(key));
         if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
-        readHtmlSong(id, (e) -> {
+        readHtmlSong(title, (e) -> {
             if (e.succeeded()) {
                 response.write(e.result());
-                logger.trace("Serve Song " + id);
+                logger.trace("Serve Song " + title);
             } else {
-                response.write(Templates.alertSongDoesNotExist(id));
-                logger.error("Failed to read song " + id, e.cause());
+                response.write(Templates.alertSongDoesNotExist(title));
+                logger.error("Failed to read song " + title, e.cause());
                 response.setStatusCode(404);
             }
             response.write(Templates.getFooter());
@@ -275,8 +281,8 @@ public class Server extends Verticle {
                 Document document = songIndexer.indexSong(songData);
 
                 // constructs song info
-                String oldTitle = getSongTitle(request.headers().get("Referer"));
-                String newTitle = QueryStringDecoder.decodeComponent(request.params().get("title"));
+                String oldTitle = getRefererSongTitle(request);
+                String newTitle = getSongTitle(request);
                 String newId = SongUtil.getIdFromTitle(newTitle);
 
                 // if title changed
@@ -330,7 +336,7 @@ public class Server extends Verticle {
         HttpServerResponse response = request.response();
         try {
 
-            String title = request.params().get("title");
+            String title = getSongTitle(request);
             String id = SongUtil.getIdFromTitle(title);
 
             // removes file
