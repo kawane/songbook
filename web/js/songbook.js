@@ -148,7 +148,7 @@ define(["require", "exports", "./editSong"], function (require, exports, editSon
     }
     exports.installEditionMode = installEditionMode;
     function search(query) {
-        window.location.pathname = "/search/" + encodeURIComponent(query);
+        window.location.pathname = "/search/" + query;
         return false;
     }
     exports.search = search;

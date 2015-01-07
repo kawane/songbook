@@ -166,7 +166,7 @@ export function installEditionMode(activate: boolean) {
 }
 
 export function search(query: string) {
-    window.location.pathname = "/search/" + encodeURIComponent(query);
+    window.location.pathname = "/search/" + query;
     return false;
 }
 
