@@ -113,10 +113,13 @@ public class Templates {
     }
 
     @Language("HTML")
+    public static String alert(String type, String message) {
+        return "<div class='alert alert-"+ type +"' role='alert'>" + message + "</div>";
+    }
+
+    @Language("HTML")
     public static String alertSongDoesNotExist(String songId) {
-        return  "<div class='alert alert-warning' role='alert'>"+
-                    "Song <b>" + songId + "</b> was deleted or doesn't exist." +
-                "</div>";
+        return  alert("warning", "Song <b>" + songId + "</b> was deleted or doesn't exist.");
     }
 
     private static String internalLink(String key, String link) {

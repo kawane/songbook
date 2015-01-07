@@ -78,13 +78,7 @@ public class Server extends Verticle {
 
         // initializes index.
         try {
-            long start = System.currentTimeMillis();
-            Path songs = dataRoot.resolve("songs");
-            if (Files.notExists(songs)) Files.createDirectories(songs);
-            indexDatabase = new IndexDatabase(dataRoot.resolve("index"), songs);
-            long end = System.currentTimeMillis();
-            logger.info("Opened index in " + (end - start) + " milliseconds.");
-
+            initializeIndex(false);
         } catch (IOException e) {
             logger.error("Can't initialize index in " + dataRoot.resolve("index"));
         }
@@ -100,18 +94,29 @@ public class Server extends Verticle {
         httpServer.listen(port, host);
     }
 
+    private void initializeIndex(boolean forceReindex) throws IOException {
+        long start = System.currentTimeMillis();
+        Path songs = dataRoot.resolve("songs");
+        if (Files.notExists(songs)) Files.createDirectories(songs);
+        indexDatabase = new IndexDatabase(dataRoot.resolve("index"), songs, forceReindex);
+        long end = System.currentTimeMillis();
+        logger.info("Opened index in " + (end - start) + " milliseconds.");
+    }
+
     private void matchRequest(RouteMatcher routeMatcher) {
-        routeMatcher.get("/", (request) -> search(request)); // Home Page
-        routeMatcher.noMatch((request) -> serveFile(request));
-        routeMatcher.get("/new", (request) -> songForm(request));
+        routeMatcher.get("/",this::search); // Home Page
+        routeMatcher.noMatch(this:: serveFile);
+        routeMatcher.get("/new", this::songForm);
 
-        routeMatcher.get("/search/:query", (request) -> search(request));
-        routeMatcher.get("/search/", (request) -> search(request));
-        routeMatcher.get("/search", (request) -> search(request));
+        routeMatcher.get("/search/:query", this::search);
+        routeMatcher.get("/search/", this::search);
+        routeMatcher.get("/search", this::search);
 
-        routeMatcher.get("/songs/:title", (request) -> getSong(request));
-        routeMatcher.put("/songs/:title", (request) -> modifySong(request));
-        routeMatcher.delete("/songs/:title", (request) -> deleteSong(request));
+        routeMatcher.get("/songs/:title", this::getSong);
+        routeMatcher.put("/songs/:title", this::modifySong);
+        routeMatcher.delete("/songs/:title", this::deleteSong);
+
+        routeMatcher.get("/admin/resetIndex", this::resetIndex);
     }
 
     private void serveFile(HttpServerRequest request) {
@@ -361,6 +366,32 @@ public class Server extends Verticle {
         }
     }
 
+    private void resetIndex(HttpServerRequest request) {
+        if (checkDeniedAccess(request, true)) return;
+        String key = request.params().get("key");
+
+        HttpServerResponse response = request.response();
+        response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+
+        response.setChunked(true);
+
+        response.write(Templates.getHeader("Administration - My SongBook"));
+        response.write(Templates.getNavigation(key));
+
+        try {
+            initializeIndex(true);
+            response.write(Templates.alert("success", "Songs are re-indexed."));
+            response.setStatusCode(200);
+        } catch (IOException e) {
+            logger.error("Can't initialize index in " + dataRoot.resolve("index"));
+            response.write(Templates.alert("danger", "An error occurred while indexing songs."));
+            response.setStatusCode(500);
+        }
+
+        response.write(Templates.getFooter());
+        response.end();
+    }
+
     private Path getWebRoot() {
         final String webRoot = System.getenv("WEB_ROOT");
         return Paths.get(webRoot == null ? DEFAULT_WEB_ROOT : webRoot);
@@ -517,7 +548,15 @@ public class Server extends Verticle {
     private void forbiddenAccess(HttpServerRequest request) {
         HttpServerResponse response = request.response();
         response.setStatusCode(403);
-        response.end("Access Forbidden '" + request.path() + "'");
+        response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+
+        response.setChunked(true);
+
+        response.write(Templates.getHeader("Forbidden - My SongBook"));
+        response.write(Templates.getNavigation(null));
+        response.write(Templates.alert("danger","Access Forbidden '" + request.path() + "'"));
+        response.write(Templates.getFooter());
+        response.end();
     }
 
 

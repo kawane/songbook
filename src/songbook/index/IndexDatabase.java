@@ -43,13 +43,22 @@ public class IndexDatabase {
     private StandardAnalyzer analyzer;
 
     private Directory index;
+    private IndexWriterConfig config;
 
-    public IndexDatabase(Path indexFolder, Path songsFolder) throws IOException {
+    public IndexDatabase(Path indexFolder, Path songsFolder, boolean forceReindex) throws IOException {
         this.songsFolder = songsFolder;
 
         analyzer = new StandardAnalyzer(Version.LUCENE_48);
         index = new NIOFSDirectory(indexFolder.toFile());
-        if (DirectoryReader.indexExists(index) == false) {
+        config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
+
+        if (forceReindex) {
+            // clears index
+            IndexWriter writer = new IndexWriter(index, config);
+            writer.deleteAll();
+            writer.close();
+        }
+        if (forceReindex || DirectoryReader.indexExists(index) == false) {
             // index is empty, analyze songs
             analyzeSongs();
         }
@@ -57,7 +66,6 @@ public class IndexDatabase {
 
     public void addOrUpdateDocument(Document document) throws IOException {
         Term term = new Term("id", document.get("id"));
-        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
         IndexWriter w = new IndexWriter(index, config);
         w.updateDocument(term, document);
         w.close();
