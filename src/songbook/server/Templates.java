@@ -2,9 +2,8 @@ package songbook.server;
 
 import org.apache.lucene.document.Document;
 import org.intellij.lang.annotations.Language;
+import songbook.index.SongUtil;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -104,7 +103,7 @@ public class Templates {
     public static String showDocument(String key, Document document) {
         String id = document.get("id");
         String title = document.get("title");
-        return  "<a class='list-group-item' href='"+ internalLink(key, "/songs/"+ encodeUrl(id)) +"'>\n" +
+        return  "<a class='list-group-item' href='"+ internalLink(key, "/songs/"+ SongUtil.encodeUrl(title)) +"'>\n" +
                 "<h4 class='list-group-item-heading'>" + (title ==null ? id : title) + "</h4>\n" +
                 "<p class='list-group-item-text'>" +
                 Stream.of(document.getValues("author")).collect(Collectors.joining(", "))+
@@ -114,30 +113,17 @@ public class Templates {
     }
 
     @Language("HTML")
-    public static String alertSongDoesntExist(String songId) {
-        return  "<div class='alert alert-warning' role='alert'>"+
-                    "Song <b>" + songId + "</b> was deleted." +
-                "</div>";
+    public static String alert(String type, String message) {
+        return "<div class='alert alert-"+ type +"' role='alert'>" + message + "</div>";
     }
 
-
     @Language("HTML")
-    public static String showAdminKey(String key) {
-        return  "" +
-                "" +
-                "";
+    public static String alertSongDoesNotExist(String songId) {
+        return  alert("warning", "Song <b>" + songId + "</b> was deleted or doesn't exist.");
     }
 
     private static String internalLink(String key, String link) {
         return link + (key!=null && key.length()>0 ? "?key=" + key : "");
       }
 
-    public static String encodeUrl(String id) {
-        try {
-            return URLEncoder.encode(id, "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            // Do nothing
-            return id;
-        }
-    }
 }

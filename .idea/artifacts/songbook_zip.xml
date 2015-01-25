@@ -5,11 +5,6 @@
       <element id="archive" name="songbook.zip">
         <element id="directory" name="songbook">
           <element id="artifact" artifact-name="songbook" />
-          <element id="directory" name="data">
-            <element id="directory" name="songs">
-              <element id="dir-copy" path="$PROJECT_DIR$/deploy/songs" />
-            </element>
-          </element>
         </element>
       </element>
     </root>

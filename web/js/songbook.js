@@ -103,19 +103,19 @@ define(["require", "exports", "./editSong"], function (require, exports, editSon
             });
         });
     }
-    function switchEdition(target, button) {
-        var edited = target.attributes["edited"];
+    function switchEdition(song, button) {
+        var edited = song.attributes["edited"];
         if (edited === undefined || edited === true) {
-            target.attributes["edited"] = false;
-            target.classList.add("edited");
+            song.attributes["edited"] = false;
+            song.classList.add("edited");
             updateGlyph(button, "send");
-            editSong.startEdition(target);
+            editSong.startEdition(song);
         }
         else {
-            target.attributes["edited"] = true;
-            target.classList.remove("edited");
+            song.attributes["edited"] = true;
+            song.classList.remove("edited");
             updateGlyph(button, "refresh");
-            editSong.endEdition(target);
+            editSong.endEdition(song);
             putSong(function (event) {
                 var request = event.currentTarget;
                 if (request.readyState == 4) {
@@ -148,7 +148,7 @@ define(["require", "exports", "./editSong"], function (require, exports, editSon
     }
     exports.installEditionMode = installEditionMode;
     function search(query) {
-        window.location.pathname = "/search/" + encodeURIComponent(query);
+        window.location.pathname = "/search/" + query;
         return false;
     }
     exports.search = search;
