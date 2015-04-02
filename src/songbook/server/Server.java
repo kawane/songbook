@@ -45,10 +45,6 @@ public class Server extends Verticle {
 
     private Logger logger;
 
-    private Path webRoot;
-
-    private Path dataRoot;
-
     private IndexDatabase indexDatabase;
 
     private boolean showKeyCreationAlert = false;
@@ -58,8 +54,8 @@ public class Server extends Verticle {
     @Override
     public void start() {
         logger = getContainer().logger();
-        webRoot = getWebRoot();
-        dataRoot = getDataRoot();
+        Path webRoot = getWebRoot();
+        Path dataRoot = getDataRoot();
 
         try {
             if (Files.exists(dataRoot) == false) Files.createDirectories(dataRoot);
@@ -96,9 +92,9 @@ public class Server extends Verticle {
 
     private void initializeIndex(boolean forceReindex) throws IOException {
         long start = System.currentTimeMillis();
-        Path songs = dataRoot.resolve("songs");
+        Path songs = getSongsPath();
         if (Files.notExists(songs)) Files.createDirectories(songs);
-        indexDatabase = new IndexDatabase(dataRoot.resolve("index"), songs, forceReindex);
+        indexDatabase = new IndexDatabase(getDataRoot().resolve("index"), songs, forceReindex);
         long end = System.currentTimeMillis();
         logger.info("Opened index in " + (end - start) + " milliseconds.");
     }
@@ -124,16 +120,15 @@ public class Server extends Verticle {
         allowCrossOrigin(request);
         // Serve Files
         HttpServerResponse response = request.response();
-        String path = request.path();
-        String fileName = path.equals("/") ? "index.html" : path;
-        Path localFilePath = Paths.get(webRoot.toString(), QueryStringDecoder.decodeComponent(fileName)).toAbsolutePath();
+        String path = request.path().equals("/") ? "index.html" : request.path().substring(1);
+        Path localFilePath = getWebRoot().resolve(QueryStringDecoder.decodeComponent(path)).toAbsolutePath();
         logger.info("GET " + localFilePath);
         String type = "text/plain";
-        if (fileName.endsWith(".js")) {
+        if (path.endsWith(".js")) {
             type = "application/javascript";
-        } else if (fileName.endsWith(".css")) {
+        } else if (path.endsWith(".css")) {
             type = "text/css";
-        } else if (fileName.endsWith(".html")) {
+        } else if (path.endsWith(".html")) {
             type = "text/html";
         }
 
@@ -143,7 +138,7 @@ public class Server extends Verticle {
 
     private Path getSongPath(String title) {
         String filename = SongUtil.generateId(title) + IndexDatabase.SONG_EXTENSION ;
-        return dataRoot.resolve("songs").resolve(filename).toAbsolutePath();
+        return getSongsPath().resolve(filename).toAbsolutePath();
     }
 
     public String getSongTitle(HttpServerRequest request) {
@@ -264,7 +259,7 @@ public class Server extends Verticle {
         response.write(Templates.getHeader("New Song - My SongBook"));
         response.write(Templates.getNavigation(key));
         if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
-        final Path song = webRoot.resolve("NewSong.html");
+        final Path song = getWebRoot().resolve("NewSong.html");
         vertx.fileSystem().readFile(song.toString(), (e) -> {
             response.write(e.result());
             logger.trace("Serve Song 'New Song'");
@@ -387,7 +382,7 @@ public class Server extends Verticle {
                     response.write(Templates.alert("success", "Songs are re-indexed."));
                     response.setStatusCode(200);
                 } catch (IOException e) {
-                    logger.error("Can't initialize index in " + dataRoot.resolve("index"));
+                    logger.error("Can't initialize index in " + getDataRoot().resolve("index"));
                     response.write(Templates.alert("danger", "An error occurred while indexing songs."));
                     response.setStatusCode(500);
                 }
@@ -409,6 +404,11 @@ public class Server extends Verticle {
     private static Path getDataRoot() {
         final String dataRoot = System.getenv("DATA_ROOT");
         return Paths.get(dataRoot == null ? DEFAULT_DATA_ROOT : dataRoot);
+    }
+
+    private Path getSongsPath() {
+        final String songRoot = System.getenv("SONGS_ROOT");
+        return songRoot == null  ? getDataRoot().resolve("songs") : Paths.get(songRoot);
     }
 
     private int getPort() {
