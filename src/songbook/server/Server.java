@@ -116,7 +116,7 @@ public class Server extends Verticle {
         routeMatcher.put("/songs/:title", this::modifySong);
         routeMatcher.delete("/songs/:title", this::deleteSong);
 
-        routeMatcher.get("/admin/resetIndex", this::resetIndex);
+        routeMatcher.get("/admin/index/:command", this::adminIndex);
     }
 
     private void serveFile(HttpServerRequest request) {
@@ -366,9 +366,10 @@ public class Server extends Verticle {
         }
     }
 
-    private void resetIndex(HttpServerRequest request) {
+    private void adminIndex(HttpServerRequest request) {
         if (checkDeniedAccess(request, true)) return;
         String key = request.params().get("key");
+
 
         HttpServerResponse response = request.response();
         response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
@@ -378,16 +379,24 @@ public class Server extends Verticle {
         response.write(Templates.getHeader("Administration - My SongBook"));
         response.write(Templates.getNavigation(key));
 
-        try {
-            initializeIndex(true);
-            response.write(Templates.alert("success", "Songs are re-indexed."));
-            response.setStatusCode(200);
-        } catch (IOException e) {
-            logger.error("Can't initialize index in " + dataRoot.resolve("index"));
-            response.write(Templates.alert("danger", "An error occurred while indexing songs."));
-            response.setStatusCode(500);
+        String command = QueryStringDecoder.decodeComponent(request.params().get("command"));
+        switch (command) {
+            case "reset":
+                try {
+                    initializeIndex(true);
+                    response.write(Templates.alert("success", "Songs are re-indexed."));
+                    response.setStatusCode(200);
+                } catch (IOException e) {
+                    logger.error("Can't initialize index in " + dataRoot.resolve("index"));
+                    response.write(Templates.alert("danger", "An error occurred while indexing songs."));
+                    response.setStatusCode(500);
+                }
+                break;
+            default:
+                response.write(Templates.alert("danger", "Command '"+ command +"' isn't supported for index."));
+                response.setStatusCode(500);
+                break;
         }
-
         response.write(Templates.getFooter());
         response.end();
     }
@@ -557,27 +566,5 @@ public class Server extends Verticle {
         response.write(Templates.alert("danger","Access Forbidden '" + request.path() + "'"));
         response.write(Templates.getFooter());
         response.end();
-    }
-
-
-    public static void main(String[] args) throws IOException {
-        Server server = new Server();
-        server.dataRoot = server.getDataRoot();
-
-        Files.createDirectories(server.dataRoot.resolve("songs"));
-
-        Files.list(Paths.get("data/oldSongs")).
-                filter((path) -> path.toString().endsWith(".html")).
-                forEach((path) -> {
-                    String title = path.getFileName().toString();
-                    Path newSongPath = server.getSongPath(title.substring(0, title.length() - 5));
-                    System.out.println(title + "->" + newSongPath.getFileName());
-                    try {
-                        Files.copy(path, newSongPath);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-
     }
 }
