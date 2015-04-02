@@ -10,7 +10,7 @@ public class SongUtil {
 
     private final static String HEXES = "0123456789abcdef";
 
-    public static String getIdFromTitle(String title) {
+    public static String generateId(String title) {
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
             byte[] digest = messageDigest.digest(title.getBytes(StandardCharsets.UTF_8));

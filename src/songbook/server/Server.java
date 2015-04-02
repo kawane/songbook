@@ -105,7 +105,7 @@ public class Server extends Verticle {
 
     private void matchRequest(RouteMatcher routeMatcher) {
         routeMatcher.get("/",this::search); // Home Page
-        routeMatcher.noMatch(this:: serveFile);
+        routeMatcher.noMatch(this::serveFile);
         routeMatcher.get("/new", this::songForm);
 
         routeMatcher.get("/search/:query", this::search);
@@ -142,7 +142,7 @@ public class Server extends Verticle {
     }
 
     private Path getSongPath(String title) {
-        String filename = SongUtil.getIdFromTitle(title) + IndexDatabase.SONG_EXTENSION ;
+        String filename = SongUtil.generateId(title) + IndexDatabase.SONG_EXTENSION ;
         return dataRoot.resolve("songs").resolve(filename).toAbsolutePath();
     }
 
@@ -163,7 +163,7 @@ public class Server extends Verticle {
     }
 
     public void readHtmlSong(String title, Handler<AsyncResult<String>> handler) {
-        String id = SongUtil.getIdFromTitle(title);
+        String id = SongUtil.generateId(title);
 
         DefaultFutureResult<String> event = new DefaultFutureResult<>();
         event.setHandler(handler);
@@ -288,14 +288,14 @@ public class Server extends Verticle {
                 // constructs song info
                 String oldTitle = getRefererSongTitle(request);
                 String newTitle = getSongTitle(request);
-                String newId = SongUtil.getIdFromTitle(newTitle);
+                String newId = SongUtil.generateId(newTitle);
 
                 // if title changed
                 if (oldTitle != null && newTitle.equals(oldTitle) == false) {
                     Path filePath = getSongPath(oldTitle);
                     vertx.fileSystem().delete(filePath.toString(), (ar) -> {/* do nothing */});
 
-                    String oldId = SongUtil.getIdFromTitle(oldTitle);
+                    String oldId = SongUtil.generateId(oldTitle);
                     indexDatabase.removeDocument(oldId);
 
                     // removes song from vert.x cache (using old title)
@@ -342,7 +342,7 @@ public class Server extends Verticle {
         try {
 
             String title = getSongTitle(request);
-            String id = SongUtil.getIdFromTitle(title);
+            String id = SongUtil.generateId(title);
 
             // removes file
             Path filePath = getSongPath(title);

@@ -5,8 +5,8 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 
 /**
-* Created by laurent on 16/06/2014.
-*/
+ * Is used by HtmlIndexer to configure the mapping between the index name and the css classname that comes from the html
+ */
 public class IndexEntityType {
 
     public final String name;

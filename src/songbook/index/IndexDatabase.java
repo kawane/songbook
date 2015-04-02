@@ -86,7 +86,7 @@ public class IndexDatabase {
             if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".html")) {
                 try {
                     Document document = songIndexer.indexSong(filePath);
-                    document.add(new StringField("id", SongUtil.getIdFromTitle(filePath.getFileName().toString()), Field.Store.YES));
+                    document.add(new StringField("id", SongUtil.generateId(filePath.getFileName().toString()), Field.Store.YES));
                     w.addDocument(document);
 
                     count[0] += 1;
