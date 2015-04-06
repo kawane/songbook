@@ -5,20 +5,17 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.vertx.java.core.AsyncResult;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.HttpHeaders;
 import org.vertx.java.core.http.HttpServer;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.HttpServerResponse;
 import org.vertx.java.core.http.RouteMatcher;
-import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.shareddata.ConcurrentSharedMap;
 import org.vertx.java.platform.Verticle;
-import songbook.index.HtmlIndexer;
 import songbook.index.IndexDatabase;
-import songbook.index.SongUtil;
+import songbook.index.SongIndexer;
+import songbook.index.SongDatabase;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -45,7 +42,9 @@ public class Server extends Verticle {
 
     private Logger logger;
 
-    private IndexDatabase indexDatabase;
+    private SongDatabase songDb;
+
+    private IndexDatabase indexDb;
 
     private boolean showKeyCreationAlert = false;
     private String administratorKey = null;
@@ -54,7 +53,7 @@ public class Server extends Verticle {
     @Override
     public void start() {
         logger = getContainer().logger();
-        Path webRoot = getWebRoot();
+
         Path dataRoot = getDataRoot();
 
         try {
@@ -71,6 +70,9 @@ public class Server extends Verticle {
 
         // creates admin key if needed
         if (administratorKey == null) createAdminKey();
+
+        // initialize songDb
+        songDb = new SongDatabase(vertx, getSongsPath());
 
         // initializes index.
         try {
@@ -92,9 +94,8 @@ public class Server extends Verticle {
 
     private void initializeIndex(boolean forceReindex) throws IOException {
         long start = System.currentTimeMillis();
-        Path songs = getSongsPath();
-        if (Files.notExists(songs)) Files.createDirectories(songs);
-        indexDatabase = new IndexDatabase(getDataRoot().resolve("index"), songs, forceReindex);
+        songDb.clearCache();
+        indexDb = new IndexDatabase(getDataRoot().resolve("index"), songDb, forceReindex);
         long end = System.currentTimeMillis();
         logger.info("Opened index in " + (end - start) + " milliseconds.");
     }
@@ -108,9 +109,9 @@ public class Server extends Verticle {
         routeMatcher.get("/search/", this::search);
         routeMatcher.get("/search", this::search);
 
-        routeMatcher.get("/songs/:title", this::getSong);
-        routeMatcher.put("/songs/:title", this::modifySong);
-        routeMatcher.delete("/songs/:title", this::deleteSong);
+        routeMatcher.get("/songs/:id", this::getSong);
+        routeMatcher.put("/songs/:id", this::modifySong);
+        routeMatcher.delete("/songs/:id", this::deleteSong);
 
         routeMatcher.get("/admin/index/:command", this::adminIndex);
     }
@@ -136,55 +137,6 @@ public class Server extends Verticle {
         response.sendFile(localFilePath.toString());
     }
 
-    private Path getSongPath(String title) {
-        String filename = SongUtil.generateId(title) + IndexDatabase.SONG_EXTENSION ;
-        return getSongsPath().resolve(filename).toAbsolutePath();
-    }
-
-    public String getSongTitle(HttpServerRequest request) {
-        return QueryStringDecoder.decodeComponent(request.params().get("title"));
-    }
-
-    public String getRefererSongTitle(HttpServerRequest request) {
-        String url = request.headers().get("Referer");
-        if (url == null) return null;
-        String path = "/songs/";
-        int songPathIndex = url.indexOf(path);
-        if (songPathIndex < 0) return null;
-        int paramIndex = url.indexOf('?', songPathIndex);
-        int endIndex = paramIndex < 0 ? url.length() : paramIndex;
-        return QueryStringDecoder.decodeComponent(url.substring(songPathIndex + path.length(), endIndex));
-
-    }
-
-    public void readHtmlSong(String title, Handler<AsyncResult<String>> handler) {
-        String id = SongUtil.generateId(title);
-
-        DefaultFutureResult<String> event = new DefaultFutureResult<>();
-        event.setHandler(handler);
-        try {
-            ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
-            String song = songs.get(id);
-            if (song != null) {
-                event.setResult(song);
-            } else {
-                final Path songPath = getSongPath(title);
-                vertx.fileSystem().readFile(songPath.toString(), (e) -> {
-                    if (e.succeeded()) {
-                        String songFromFile = e.result().toString();
-                        songs.put(id, songFromFile);
-                        event.setResult(songFromFile);
-                    } else {
-                        event.setFailure(e.cause());
-                    }
-                });
-
-            }
-        } catch (Throwable e) {
-            event.setFailure(e);
-        }
-    }
-
     private void search(HttpServerRequest request) {
         if (checkDeniedAccess(request, false)) return;
         String key = request.params().get("key");
@@ -205,7 +157,7 @@ public class Server extends Verticle {
         if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
 
         try {
-            indexDatabase.search(key, query, request);
+            indexDb.search(key, query, request);
         } catch (ParseException e) {
             e.printStackTrace();
             response.write("Wrong Query Syntax");
@@ -226,19 +178,19 @@ public class Server extends Verticle {
         HttpServerResponse response = request.response();
         response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
-        String title = getSongTitle(request);
+        String id = request.params().get("id");
         response.setChunked(true);
 
-        response.write(Templates.getHeader(title + " - My SongBook"));
+        response.write(Templates.getHeader(id + " - My SongBook"));
         response.write(Templates.getNavigation(key));
         if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
-        readHtmlSong(title, (e) -> {
-            if (e.succeeded()) {
-                response.write(e.result());
-                logger.trace("Serve Song " + title);
+        songDb.readSong(id, (handler) -> {
+            if (handler.succeeded()) {
+                response.write(handler.result());
+                logger.trace("Serve Song " + id);
             } else {
-                response.write(Templates.alertSongDoesNotExist(title));
-                logger.error("Failed to read song " + title, e.cause());
+                response.write(Templates.alertSongDoesNotExist(id));
+                logger.error("Failed to read song " + id, handler.cause());
                 response.setStatusCode(404);
             }
             response.write(Templates.getFooter());
@@ -277,49 +229,33 @@ public class Server extends Verticle {
             try {
 
                 // indexes updated song
-                HtmlIndexer songIndexer = new HtmlIndexer();
+                SongIndexer songIndexer = new SongIndexer();
                 Document document = songIndexer.indexSong(songData);
 
-                // constructs song info
-                String oldTitle = getRefererSongTitle(request);
-                String newTitle = getSongTitle(request);
-                String newId = SongUtil.generateId(newTitle);
+                String id = request.params().get("id");
 
-                // if title changed
-                if (oldTitle != null && newTitle.equals(oldTitle) == false) {
-                    Path filePath = getSongPath(oldTitle);
-                    vertx.fileSystem().delete(filePath.toString(), (ar) -> {/* do nothing */});
+                // Verify that song exists
+                if (songDb.exists(id)) {
+                    // prepares new document
+                    document.add(new StringField("id", id, Field.Store.YES));
+                    indexDb.addOrUpdateDocument(document);
 
-                    String oldId = SongUtil.generateId(oldTitle);
-                    indexDatabase.removeDocument(oldId);
-
-                    // removes song from vert.x cache (using old title)
-                    ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
-                    songs.remove(oldId);
+                    // writes song to database
+                    songDb.writeSong(id, songData, (ar) -> {
+                        if (ar.succeeded()) {
+                            response.end(id);
+                        } else {
+                            logger.error("Failed to update the song", ar.cause());
+                            response.setStatusCode(500);
+                            response.end();
+                        }
+                    });
+                } else {
+                    response.setStatusCode(400);
+                    response.end("The song doesn't exist and cannot be updated");
                 }
 
-                // prepares new document
-                document.add(new StringField("id", newId, Field.Store.YES));
-                indexDatabase.addOrUpdateDocument(document);
 
-
-                // writes file to disk
-                Path filePath = getSongPath(newTitle);
-                vertx.fileSystem().writeFile(filePath.toString(), body, (ar) -> {
-                    if (ar.succeeded()) {
-                        response.end(newTitle);
-                    } else {
-                        logger.error("Failed to update the song", ar.cause());
-                        response.setStatusCode(500);
-                        response.end();
-
-                        try {
-                            Files.deleteIfExists(filePath);
-                        } catch (IOException e) {
-                            logger.warn("Can't delete file", e);
-                        }
-                    }
-                });
             } catch (Exception e) {
                 // TODO write error to client
                 logger.error("Error indexing song", e);
@@ -335,24 +271,22 @@ public class Server extends Verticle {
 
         HttpServerResponse response = request.response();
         try {
+            String id = request.params().get("id");
 
-            String title = getSongTitle(request);
-            String id = SongUtil.generateId(title);
+            // Verify that song exists
+            if (songDb.exists(id)) {
+                // removes file
+                songDb.delete(id);
 
-            // removes file
-            Path filePath = getSongPath(title);
-            vertx.fileSystem().delete(filePath.toString(), (ar) -> {/* do nothing */});
+                // removes document from index
+                indexDb.removeDocument(id);
 
-            // removes document
-            indexDatabase.removeDocument(id);
-
-            // removes song from vert.x cache (using old title)
-            ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
-            songs.remove(id);
-
-            response.setStatusCode(200);
-            response.end();
-
+                response.setStatusCode(200);
+                response.end();
+            } else {
+                response.setStatusCode(400);
+                response.end("The song doesn't exist and cannot be deleted");
+            }
         } catch (Exception e) {
             // TODO write error to client
             logger.error("Error removing song", e);

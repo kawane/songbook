@@ -2,7 +2,7 @@ package songbook.server;
 
 import org.apache.lucene.document.Document;
 import org.intellij.lang.annotations.Language;
-import songbook.index.SongUtil;
+import songbook.index.SongDatabase;
 
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -103,10 +103,10 @@ public class Templates {
     public static String showDocument(String key, Document document) {
         String id = document.get("id");
         String title = document.get("title");
-        return  "<a class='list-group-item' href='"+ internalLink(key, "/songs/"+ SongUtil.encodeUrl(title)) +"'>\n" +
+        return  "<a class='list-group-item' href='"+ internalLink(key, "/songs/"+ document.get("id")) +"'>\n" +
                 "<h4 class='list-group-item-heading'>" + (title ==null ? id : title) + "</h4>\n" +
                 "<p class='list-group-item-text'>" +
-                Stream.of(document.getValues("author")).collect(Collectors.joining(", "))+
+                Stream.of(document.getValues("artist")).collect(Collectors.joining(", "))+
                 "</p>" +
                 "</a>\n";
 

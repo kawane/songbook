@@ -28,7 +28,6 @@ import org.vertx.java.core.http.HttpServerResponse;
 import songbook.server.Templates;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -36,69 +35,62 @@ import java.nio.file.Path;
  */
 public class IndexDatabase {
 
-    public final static String SONG_EXTENSION = ".html";
+    private final SongDatabase songDb;
 
-    private final Path songsFolder;
+    private final IndexWriter indexWriter;
 
     private StandardAnalyzer analyzer;
 
     private Directory index;
 
-    public IndexDatabase(Path indexFolder, Path songsFolder, boolean forceReindex) throws IOException {
-        this.songsFolder = songsFolder;
+    public IndexDatabase(Path indexFolder, SongDatabase songDb, boolean forceReindex) throws IOException {
+        this.songDb = songDb;
 
         analyzer = new StandardAnalyzer(Version.LUCENE_48);
         index = new NIOFSDirectory(indexFolder.toFile());
+        indexWriter = new IndexWriter(index, new IndexWriterConfig(Version.LUCENE_48, analyzer));
 
         if (forceReindex) {
             // clears index
-            IndexWriter writer = new IndexWriter(index, new IndexWriterConfig(Version.LUCENE_48, analyzer));
-            writer.deleteAll();
-            writer.close();
+            indexWriter.deleteAll();
+            indexWriter.commit();
         }
         if (forceReindex || DirectoryReader.indexExists(index) == false) {
             // index is empty, analyze songs
             analyzeSongs();
+            indexWriter.commit();
         }
     }
 
     public void addOrUpdateDocument(Document document) throws IOException {
         Term term = new Term("id", document.get("id"));
-        IndexWriter w = new IndexWriter(index, new IndexWriterConfig(Version.LUCENE_48, analyzer));
-        w.updateDocument(term, document);
-        w.close();
+        indexWriter.updateDocument(term, document);
+        indexWriter.commit();
     }
 
     public void removeDocument(String id) throws IOException {
         Term term = new Term("id", id);
-        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
-        IndexWriter w = new IndexWriter(index, config);
-        w.deleteDocuments(term);
-        w.close();
+        indexWriter.deleteDocuments(term);
+        indexWriter.commit();
     }
 
-    private int analyzeSongs() throws IOException {
-        int[] count = { 0 };
-        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_48, analyzer);
-        IndexWriter w = new IndexWriter(index, config);
-        HtmlIndexer songIndexer = new HtmlIndexer();
-        Files.walk(songsFolder).forEach(filePath -> {
-            if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".html")) {
-                try {
-                    Document document = songIndexer.indexSong(filePath);
-                    document.add(new StringField("id", SongUtil.generateId(filePath.getFileName().toString()), Field.Store.YES));
-                    w.addDocument(document);
-
-                    count[0] += 1;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+    private void analyzeSongs() {
+        SongIndexer songIndexer = new SongIndexer();
+        songDb.listSongIds((handler) -> {
+            for (String id : handler.result()) {
+                songDb.readSong(id, songHandler -> {
+                    Document document = songIndexer.indexSong(songHandler.result());
+                    document.add(new StringField("id", id, Field.Store.YES));
+                    try {
+                        indexWriter.addDocument(document);
+                        indexWriter.commit();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
             }
         });
-        w.close();
-        return count[0];
     }
-
 
     public void search(String key, String querystr, HttpServerRequest request) throws ParseException, IOException {
         HttpServerResponse response = request.response();
