@@ -69,27 +69,23 @@
 	font-size: 140%;
 }
 
-.song-subtitle {
-	font-style: italic;
-}
-
-.song-author {
-	font-style: italic;
-}
-
 .song-artist {
 	font-style: italic;
 }
 
-.song-compositor {
-	font-style: italic;
-}
-
 .song-album {
-	font-style: italic;
+
 }
 
 .song-year {
+}
+
+.song-metadata-name {
+	font-weight: bold;
+	text-transform: capitalize;
+}
+
+.song-metadata-value {
 	font-style: italic;
 }
 

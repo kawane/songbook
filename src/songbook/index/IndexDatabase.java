@@ -75,11 +75,10 @@ public class IndexDatabase {
     }
 
     private void analyzeSongs() {
-        SongIndexer songIndexer = new SongIndexer();
         songDb.listSongIds((handler) -> {
             for (String id : handler.result()) {
                 songDb.readSong(id, songHandler -> {
-                    Document document = songIndexer.indexSong(songHandler.result());
+                    Document document = SongUtils.indexSong(songHandler.result());
                     document.add(new StringField("id", id, Field.Store.YES));
                     try {
                         indexWriter.addDocument(document);
