@@ -37,7 +37,7 @@ public class SongUtils {
 	public static void writeHtml(Appendable w, String songData) {
 		try {
 			String[] songLines = SongUtils.getSongLines(songData);
-			w.append("<div class='song' itemtype='http://schema.org/MusicComposition'>\n");
+			w.append("<div class='song' itemscope='' itemtype='http://schema.org/MusicComposition'>\n");
 			w.append("<div class='song-title' itemprop='name'>");
 			w.append(songLines[0]);
 			w.append("</div>\n");
