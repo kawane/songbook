@@ -80,9 +80,9 @@ public class Server extends Verticle {
 
 		// initializes index.
 		try {
-			initializeIndex(false);
+			indexDb = new IndexDatabase(getDataRoot().resolve("index"), songDb);
 		} catch (IOException e) {
-			logger.error("Can't initialize index in " + dataRoot.resolve("index"));
+			logger.error("Can't initialize index in " + dataRoot.resolve("index"), e);
 		}
 
 		//installs matcher to server song
@@ -94,14 +94,6 @@ public class Server extends Verticle {
 		final String host = getHost();
 		logger.info("Starting server on '" + host + ":" + port + "'.");
 		httpServer.listen(port, host);
-	}
-
-	private void initializeIndex(boolean forceReindex) throws IOException {
-		long start = System.currentTimeMillis();
-		songDb.clearCache();
-		indexDb = new IndexDatabase(getDataRoot().resolve("index"), songDb, forceReindex);
-		long end = System.currentTimeMillis();
-		logger.info("Opened index in " + (end - start) + " milliseconds.");
 	}
 
 	private void matchRequest(RouteMatcher routeMatcher) {
@@ -327,11 +319,16 @@ public class Server extends Verticle {
 		switch (command) {
 			case "reset":
 				try {
-					initializeIndex(true);
+					long start = System.currentTimeMillis();
+					songDb.clearCache();
+					indexDb.analyzeSongs();
+
+					long end = System.currentTimeMillis();
+					logger.info("Opened index in " + (end - start) + " milliseconds.");
 					response.write(Templates.alert("success", "Songs are re-indexed."));
 					response.setStatusCode(200);
 				} catch (IOException e) {
-					logger.error("Can't initialize index in " + getDataRoot().resolve("index"));
+					logger.error("Can't initialize index in " + getDataRoot().resolve("index"), e);
 					response.write(Templates.alert("danger", "An error occurred while indexing songs."));
 					response.setStatusCode(500);
 				}

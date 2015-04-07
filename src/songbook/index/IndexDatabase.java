@@ -43,22 +43,14 @@ public class IndexDatabase {
 
     private Directory index;
 
-    public IndexDatabase(Path indexFolder, SongDatabase songDb, boolean forceReindex) throws IOException {
+    public IndexDatabase(Path indexFolder, SongDatabase songDb) throws IOException {
         this.songDb = songDb;
 
         analyzer = new StandardAnalyzer(Version.LUCENE_48);
         index = new NIOFSDirectory(indexFolder.toFile());
         indexWriter = new IndexWriter(index, new IndexWriterConfig(Version.LUCENE_48, analyzer));
-
-        if (forceReindex) {
-            // clears index
-            indexWriter.deleteAll();
-            indexWriter.commit();
-        }
-        if (forceReindex || DirectoryReader.indexExists(index) == false) {
-            // index is empty, analyze songs
+        if (DirectoryReader.indexExists(index) == false) {
             analyzeSongs();
-            indexWriter.commit();
         }
     }
 
@@ -74,7 +66,11 @@ public class IndexDatabase {
         indexWriter.commit();
     }
 
-    private void analyzeSongs() {
+    public void analyzeSongs() throws IOException {
+        // clears index
+        indexWriter.deleteAll();
+        indexWriter.commit();
+
         songDb.listSongIds((handler) -> {
             for (String id : handler.result()) {
                 songDb.readSong(id, songHandler -> {
@@ -89,6 +85,8 @@ public class IndexDatabase {
                 });
             }
         });
+        indexWriter.commit();
+
     }
 
     public void search(String key, String querystr, HttpServerRequest request) throws ParseException, IOException {
