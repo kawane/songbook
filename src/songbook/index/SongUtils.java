@@ -37,8 +37,8 @@ public class SongUtils {
 	public static void writeHtml(Appendable w, String songData) {
 		try {
 			String[] songLines = SongUtils.getSongLines(songData);
-			w.append("<div class='song'>\n");
-			w.append("<div class='song-title'>");
+			w.append("<div class='song' itemtype='http://schema.org/MusicComposition'>\n");
+			w.append("<div class='song-title' itemprop='name'>");
 			w.append(songLines[0]);
 			w.append("</div>\n");
 			boolean verse = false;
@@ -63,7 +63,20 @@ public class SongUtils {
 					w.append(propName);
 					w.append(": </span>\n");
 					if (!propValue.isEmpty()) {
-						w.append("<span class='song-metadata-value'>");
+						w.append("<span class='song-metadata-value'");
+						switch (propName) {
+							case "author":
+							case "artist":
+								w.append(" itemprop='composer'");
+								break;
+							case "album":
+								w.append(" itemprop='inAlbum'");
+								break;
+							case "tone":
+								w.append(" itemprop='musicalKey'");
+								break;
+						}
+						w.append(">");
 						boolean isLink = propName.equals("video") || propName.equals("audio") || propName.equals("link");
 						if (isLink) {
 							w.append("<a href='");
