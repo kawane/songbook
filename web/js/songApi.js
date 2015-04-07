@@ -27,7 +27,7 @@ define(["require", "exports", "./utils"], function (require, exports, utils) {
         SongApi.prototype.search = function (query, contentType, onSuccess, onError) {
             utils.request({
                 method: "GET",
-                headers: { "Content-Type": contentType },
+                headers: { "Accept": contentType },
                 url: "/search/" + encodeURIComponent(query),
                 onSuccess: onSuccess,
                 onError: onError
@@ -40,9 +40,10 @@ define(["require", "exports", "./utils"], function (require, exports, utils) {
          * @param onSuccess
          * @param onError
          */
-        SongApi.prototype.get = function (id, onSuccess, onError) {
+        SongApi.prototype.get = function (id, contentType, onSuccess, onError) {
             utils.request({
                 method: "GET",
+                headers: { "Accept": contentType },
                 url: this.url(id),
                 onSuccess: onSuccess,
                 onError: onError

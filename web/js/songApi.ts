@@ -32,10 +32,10 @@ export class SongApi {
      * @param onSuccess
      * @param onError
      */
-    search(query: string, contentType: string ,onSuccess: (song: string) => void, onError?: (error: string) => void) {
+    search(query: string, contentType: string, onSuccess: (song: string) => void, onError?: (error: string) => void) {
         utils.request({
             method: "GET",
-            headers: {"Content-Type": contentType},
+            headers: {"Accept": contentType},
             url:  "/search/" + encodeURIComponent(query),
             onSuccess: onSuccess,
             onError: onError
@@ -49,9 +49,10 @@ export class SongApi {
      * @param onSuccess
      * @param onError
      */
-    get(id: string, onSuccess: (song: string) => void, onError?: (error: string) => void) {
+    get(id: string, contentType: string, onSuccess: (song: string) => void, onError?: (error: string) => void) {
         utils.request({
             method: "GET",
+            headers: {"Accept": contentType},
             url:  this.url(id),
             onSuccess: onSuccess,
             onError: onError

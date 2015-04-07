@@ -54,8 +54,8 @@
                     <label for="search-content-type">Content Type</label>
 
                     <select class="form-control" name="contentType" id="search-content-type">
+                        <option value="text/plain">text</option>
                         <option value="text/html">html</option>
-                        <option value="application/json">json</option>
                     </select>
                 </div>
 
@@ -68,6 +68,15 @@
                 <div class="form-group">
                     <label for="get-id">Id</label>
                     <input class="form-control" type="text"  name="id" id="get-id"/>
+
+                    
+                </div>
+                <div class="form-group">
+                    <label for="get-content-type">Content Type</label>
+                    <select class="form-control" name="contentType" id="get-content-type">
+                        <option value="text/plain">text</option>
+                        <option value="text/html">html</option>
+                    </select>
                 </div>
 
                 <button class="btn btn-default" name="get">Get</button>

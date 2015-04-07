@@ -138,31 +138,42 @@ public class Server extends Verticle {
 		String key = request.params().get("key");
 
 		// Serve all songs
-		HttpServerResponse response = request.response();
-		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
 		String query = QueryStringDecoder.decodeComponent(request.params().get("query"));
-		response.setChunked(true);
 		String title = "My SongBook";
 		if (query != null && !query.isEmpty()) {
 			title = query + " - " + title;
 		}
 
-		response.write(Templates.getHeader(title));
-		response.write(Templates.getNavigation(key));
-		if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
-
+		HttpServerResponse response = request.response();
 		try {
-			indexDb.search(key, query, request);
+			String mimeType = MimeParser.bestMatch(request.headers().get(HttpHeaders.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
+			switch (mimeType) {
+				case  MIME_TEXT_HTML:
+					response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+					response.setChunked(true);
+					response.write(Templates.getHeader(title));
+					response.write(Templates.getNavigation(key));
+					if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
+					indexDb.search(key, query, request, mimeType);
+					response.write(Templates.getFooter());
+					response.end();
+					break;
+				default:
+					response.setChunked(true);
+					indexDb.search(key, query, request, mimeType);
+					response.end();
+					break;
+
+			}
 		} catch (ParseException e) {
 			e.printStackTrace();
-			response.write("Wrong Query Syntax");
+			response.end("Wrong Query Syntax");
 		} catch (IOException e) {
 			e.printStackTrace();
-			response.write("Internal Error");
+			response.end("Internal Error");
 		}
-		response.write(Templates.getFooter());
-		response.end();
+
 	}
 
 	private void getSong(HttpServerRequest request) {
@@ -264,7 +275,6 @@ public class Server extends Verticle {
 
 
 			} catch (Exception e) {
-				// TODO write error to client
 				logger.error("Error indexing song", e);
 				response.setStatusCode(500);
 				response.end();
@@ -295,7 +305,6 @@ public class Server extends Verticle {
 				response.end("The song doesn't exist and cannot be deleted");
 			}
 		} catch (Exception e) {
-			// TODO write error to client
 			logger.error("Error removing song", e);
 			response.setStatusCode(500);
 			response.end();

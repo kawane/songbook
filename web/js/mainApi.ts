@@ -81,7 +81,11 @@ function executeAction(action, form) {
     var api = songApi.create(serverUrl);
     switch (action) {
         case "get":
-            api.get(form.id.value, function (song) {
+            var mode = "ace/mode/html";
+            if (form.contentType.value === "application/json") {
+                mode = "ace/mode/json";
+            }
+            api.get(form.id.value, form.contentType.value, function (song) {
                 setResult(song, "ace/mode/html");
             }, errorCallBack);
             break;

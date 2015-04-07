@@ -25,6 +25,7 @@ import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Version;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.HttpServerResponse;
+import songbook.server.Server;
 import songbook.server.Templates;
 
 import java.io.IOException;
@@ -89,7 +90,7 @@ public class IndexDatabase {
 
     }
 
-    public void search(String key, String querystr, HttpServerRequest request) throws ParseException, IOException {
+    public void search(String key, String querystr, HttpServerRequest request, String mimeType) throws ParseException, IOException {
         HttpServerResponse response = request.response();
         response.setChunked(true);
 
@@ -111,13 +112,25 @@ public class IndexDatabase {
             hits = collector.topDocs().scoreDocs;
         }
 
-        response.write(Templates.startResult());
+        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+            response.write(Templates.startResult());
+        }
         for (int i = 0; i < hits.length; ++i) {
             int docId = hits[i].doc;
             Document d = searcher.doc(docId);
-            response.write(Templates.showDocument(key, d));
+            switch (mimeType) {
+                case Server.MIME_TEXT_HTML:
+                    response.write(Templates.showDocument(key, d));
+                    break;
+                case Server.MIME_TEXT_PLAIN:
+                default:
+                    response.write(d.get("id")+ "\n");
+                    break;
+            }
         }
-        response.write(Templates.endResult());
+        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+            response.write(Templates.endResult());
+        }
 
         // reader can only be closed when there
         // is no need to access the documents any more.
