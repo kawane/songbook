@@ -106,6 +106,8 @@ public class Server extends Verticle {
 		routeMatcher.get("/search", this::search);
 
 		routeMatcher.get("/songs/:id", this::getSong);
+		routeMatcher.post("/songs", this::createSong);
+		routeMatcher.post("/songs/", this::createSong);
 		routeMatcher.put("/songs/:id", this::modifySong);
 		routeMatcher.delete("/songs/:id", this::deleteSong);
 
@@ -239,6 +241,50 @@ public class Server extends Verticle {
 		});
 	}
 
+	private void createSong(HttpServerRequest request) {
+		allowCrossOrigin(request);
+		if (checkDeniedAccess(request, true)) return;
+		request.bodyHandler((body) -> {
+			HttpServerResponse response = request.response();
+			String songData = body.toString();
+			try {
+
+				// indexes updated song
+				Document document = SongUtils.indexSong(songData);
+				String title = document.get("title");
+				String artist = document.get("artist");
+
+				if (title == null || title.isEmpty() || artist == null ) {
+					response.setStatusCode(400);
+					response.end("You must provide a title and an artist information");
+					return;
+				}
+				String id = songDb.generateId(title, artist);
+				// prepares new document
+				document.add(new StringField("id", id, Field.Store.YES));
+				indexDb.addOrUpdateDocument(document);
+
+				// writes song to database
+				songDb.writeSong(id, songData, (ar) -> {
+					if (ar.succeeded()) {
+						response.end(id);
+					} else {
+						logger.error("Failed to create the song", ar.cause());
+						response.setStatusCode(500);
+						response.end();
+					}
+				});
+
+
+
+			} catch (Exception e) {
+				logger.error("Error indexing song", e);
+				response.setStatusCode(500);
+				response.end();
+			}
+		});
+	}
+
 	private void modifySong(HttpServerRequest request) {
 		allowCrossOrigin(request);
 		if (checkDeniedAccess(request, true)) return;
@@ -299,7 +345,8 @@ public class Server extends Verticle {
 				indexDb.removeDocument(id);
 
 				response.setStatusCode(200);
-				response.end();
+
+				response.end(id);
 			} else {
 				response.setStatusCode(400);
 				response.end("The song doesn't exist and cannot be deleted");
