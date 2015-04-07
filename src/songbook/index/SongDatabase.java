@@ -7,12 +7,12 @@ import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.shareddata.ConcurrentSharedMap;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.Normalizer;
 
 public class SongDatabase {
 
@@ -58,7 +58,7 @@ public class SongDatabase {
             } else {
                 vertx.fileSystem().readFile(getSongPath(id).toString(), (e) -> {
                     if (e.succeeded()) {
-                        String songFromFile = e.result().toString();
+                        String songFromFile = e.result().toString("UTF-8");
                         songs.put(id, songFromFile);
                         event.setResult(songFromFile);
                     } else {
@@ -74,7 +74,7 @@ public class SongDatabase {
     public void writeSong(String id, String songData, Handler<AsyncResult<Void>> handler) {
         ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
         songs.put(id, songData);
-        vertx.fileSystem().writeFile(getSongPath(id).toString(), new Buffer(songData), handler);
+        vertx.fileSystem().writeFile(getSongPath(id).toString(), new Buffer(songData, "UTF-8"), handler);
     }
 
     public void delete(String id) {
@@ -96,10 +96,10 @@ public class SongDatabase {
      * @return
      */
     public String generateId(String title, String artist) {
-        String id = encodeUrl(artist + "-" + title);
+        String id = encodeId(artist + "-" + title);
         int i = 1;
         while (exists(id)) {
-            id = encodeUrl(artist + "-" + title+ "_" + i);
+            id = encodeId(artist + "-" + title + "_" + i);
             i++;
         }
         return id;
@@ -128,8 +128,11 @@ public class SongDatabase {
         return songDir.resolve(id + SONG_EXTENSION);
     }
 
-    private static String encodeUrl(String id) {
+    private static String encodeId(String id) {
         try {
+            id = id.replace("'", " ").replace("\"", " ").trim();
+            id = Normalizer.normalize(id, Normalizer.Form.NFD);
+            id = id.replaceAll("\\p{M}", "").toLowerCase();
             return URLEncoder.encode(id, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             // do nothing
