@@ -37,35 +37,31 @@ public class SongUtils {
 	public static void writeHtml(Appendable w, String songData) {
 		try {
 			String[] songLines = SongUtils.getSongLines(songData);
-			w.append("<div class='song'>");
+			w.append("<div class='song'>\n");
 			w.append("<div class='song-title'>");
 			w.append(songLines[0]);
-			w.append("</div>");
+			w.append("</div>\n");
 			boolean verse = false;
 			for (int i = 1; i < songLines.length; i++) {
 				String line = songLines[i].trim();
 				int indexOfCol = line.indexOf(":");
-				if (line.isEmpty() && verse) {
-					// close verse
-					w.append("</div>");
-					verse = false;
-				}
+
 				if (indexOfCol != -1) {
 					String propName = line.substring(0, indexOfCol).toLowerCase().trim();
 					String propValue = line.substring(indexOfCol + 1).trim();
 					if (!propValue.isEmpty()) {
 						if (verse) {
 							// close verse
-							w.append("</div>");
+							w.append("</div>\n");
 							verse = false;
 						}
 					}
 					w.append("<div class='song-");
 					w.append(propName);
-					w.append("'>");
+					w.append("'>\n");
 					w.append("<span class='song-metadata-name'>");
 					w.append(propName);
-					w.append(": </span>");
+					w.append(": </span>\n");
 					if (!propValue.isEmpty()) {
 						w.append("<span class='song-metadata-value'>");
 						boolean isLink = propName.equals("video") || propName.equals("audio") || propName.equals("link");
@@ -78,13 +74,19 @@ public class SongUtils {
 						if (isLink) {
 							w.append("</a>");
 						}
-						w.append("</span>");
-						w.append("</div>");
+						w.append("</span>\n");
+						w.append("</div>\n");
 					} else {
 						// Start of verse don't close div
 						verse = true;
 					}
 
+				} else if (line.isEmpty()) {
+					if (verse) {
+						// close verse
+						w.append("</div>\n");
+						verse = false;
+					}
 				} else {
 					String[] tokens = line.split(" ");
 					boolean isChord = true;
@@ -93,25 +95,32 @@ public class SongUtils {
 							isChord = isChord && SongUtils.CHORD_REGEXP.matcher(tokens[j]).matches();
 						}
 					}
-					if (line.isEmpty()) {
-						w.append("<div class='song-line'> </div>");
-					} else if (isChord) {
+					if (isChord) {
+						if (!verse) {
+							w.append("<div class='song-verse'>");
+							verse = true;
+						}
 						w.append("<div class='song-chords'>");
 						w.append(line);
-						w.append("</div>");
+						w.append("</div>\n");
 					} else {
+						if (!verse) {
+							w.append("<div class='song-verse'>");
+							verse = true;
+						}
 						w.append("<div class='song-line'>");
 						w.append(line);
-						w.append(" </div>");
+						w.append(" </div>\n");
 					}
 				}
+
 			}
 			if (verse) {
 				// close verse
-				w.append("</div>");
+				w.append("</div>\n");
 				verse = false;
 			}
-			w.append("</div>");
+			w.append("</div>\n");
 		} catch (IOException e) {
 			System.err.println("An appendable must not failed here!");
 		}

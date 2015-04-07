@@ -10,11 +10,10 @@
     border: 1px solid darkgray;
 }
 
-.song-section {
+.song-verse,
+.song-chorus
+{
 	margin: 3ex 0;	
-}
-
-.song-verse {
 }
 
 .song-chorus {
