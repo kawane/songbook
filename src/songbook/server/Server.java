@@ -1,6 +1,6 @@
 package songbook.server;
 
-import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.*;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -25,6 +25,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class Server extends Verticle {
 
@@ -42,6 +43,7 @@ public class Server extends Verticle {
 	public static final String MIME_TEXT_HTML = "text/html";
 	public static final String MIME_TEXT_PLAIN = "text/plain";
 	public static final String MIME_TEXT_SONG = "text/song";
+	public static final String SESSION_KEY = "SessionKey";
 
 
 	private Logger logger;
@@ -59,6 +61,7 @@ public class Server extends Verticle {
 		logger = getContainer().logger();
 
 		Path dataRoot = getDataRoot();
+		Templates.setTemplatesPath(getWebRoot().resolve("templates"));
 
 		try {
 			if (Files.exists(dataRoot) == false) Files.createDirectories(dataRoot);
@@ -136,8 +139,8 @@ public class Server extends Verticle {
 	}
 
 	private void search(HttpServerRequest request) {
-		if (checkDeniedAccess(request, false)) return;
-		String key = request.params().get("key");
+		String sessionKey = sessionKey(request);
+		if (checkDeniedAccess(request, sessionKey, false)) return;
 
 		// Serve all songs
 
@@ -149,25 +152,23 @@ public class Server extends Verticle {
 
 		HttpServerResponse response = request.response();
 		try {
+			StringBuilder sb = new StringBuilder();
 			String mimeType = MimeParser.bestMatch(request.headers().get(HttpHeaders.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
 			switch (mimeType) {
-				case  MIME_TEXT_HTML:
+				case MIME_TEXT_HTML:
 					response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-					response.setChunked(true);
-					response.write(Templates.getHeader(title));
-					response.write(Templates.getNavigation(key));
-					if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
-					indexDb.search(key, query, request, mimeType);
-					response.write(Templates.getFooter());
-					response.end();
+					sb.append(Templates.header(title));
+					if (showKeyCreationAlert) {
+						sb.append(Templates.alertKeyCreation(administratorKey, request.path()));
+					}
+					indexDb.search(query, sb, mimeType);
+					sb.append(Templates.footer());
 					break;
 				default:
-					response.setChunked(true);
-					indexDb.search(key, query, request, mimeType);
-					response.end();
+					indexDb.search(query, sb, mimeType);
 					break;
-
 			}
+			response.end(sb.toString(), "UTF-8");
 		} catch (ParseException e) {
 			e.printStackTrace();
 			response.end("Wrong Query Syntax");
@@ -178,9 +179,40 @@ public class Server extends Verticle {
 
 	}
 
+	private String sessionKey(HttpServerRequest request) {
+		String sessionKey = null;
+		Set<Cookie> cookies = CookieDecoder.decode(request.headers().get(HttpHeaders.COOKIE));
+		for (Cookie cookie : cookies) {
+			if (SESSION_KEY.equals(cookie.getName())) {
+				sessionKey = cookie.getValue();
+			}
+		}
+		String key = request.params().get("key");
+		if (key != null && !key.isEmpty() && !key.equals(sessionKey)) {
+			sessionKey = key;
+			// Set Cookie
+			Cookie cookie = new DefaultCookie(SESSION_KEY, sessionKey);
+			cookie.setMaxAge(Integer.MAX_VALUE);
+			request.response().headers().add(HttpHeaders.SET_COOKIE, ServerCookieEncoder.encode(cookie));
+		}
+		if (isAdministrator(sessionKey)) {
+			// gets administrator key, remove alert (if present)
+			if (showKeyCreationAlert) {
+				showKeyCreationAlert = false;
+				try {
+					Files.createFile(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
+				} catch (IOException e) {
+					logger.error("Can't create file '" + ADMINISTRATOR_ACTIVATED_PATH + "'", e);
+				}
+			}
+		}
+		return sessionKey;
+	}
+
 	private void getSong(HttpServerRequest request) {
 		allowCrossOrigin(request);
-		if (checkDeniedAccess(request, false)) return;
+		String sessionKey = sessionKey(request);
+		if (checkDeniedAccess(request, sessionKey, false)) return;
 		String id = request.params().get("id");
 
 		// Serves song
@@ -191,7 +223,7 @@ public class Server extends Verticle {
 				switch (mimeType) {
 					case MIME_TEXT_HTML:
 						response.putHeader(HttpHeaders.CONTENT_TYPE, mimeType);
-						response.end(htmlSong(request.params().get("key"), id, handler.result(), request.path()));
+						response.end(htmlSong(sessionKey, id, handler.result(), request.path()));
 						break;
 					default:
 					case MIME_TEXT_PLAIN:
@@ -211,17 +243,16 @@ public class Server extends Verticle {
 
 	private String htmlSong(String key, String id, String songData, String path) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(Templates.getHeader(id + " - My SongBook"));
-		sb.append(Templates.getNavigation(key));
-		if (showKeyCreationAlert) sb.append(Templates.getKeyCreationAlert(administratorKey, path));
+		sb.append(Templates.header(id + " - My SongBook"));
+		if (showKeyCreationAlert) sb.append(Templates.alertKeyCreation(administratorKey, path));
 		SongUtils.writeHtml(sb, songData);
-		sb.append(Templates.getFooter());
+		sb.append(Templates.footer());
 		return sb.toString();
 	}
 
 	private void songForm(HttpServerRequest request) {
-		if (checkDeniedAccess(request, true)) return;
-		String key = request.params().get("key");
+		String sessionKey = sessionKey(request);
+		if (checkDeniedAccess(request, sessionKey, true)) return;
 
 		// Serves song
 		HttpServerResponse response = request.response();
@@ -229,21 +260,21 @@ public class Server extends Verticle {
 
 		response.setChunked(true);
 
-		response.write(Templates.getHeader("New Song - My SongBook"));
-		response.write(Templates.getNavigation(key));
-		if (showKeyCreationAlert) response.write(Templates.getKeyCreationAlert(administratorKey, request.path()));
+		response.write(Templates.header("New Song - My SongBook"));
+		if (showKeyCreationAlert) response.write(Templates.alertKeyCreation(administratorKey, request.path()));
 		final Path song = getWebRoot().resolve("NewSong.html");
 		vertx.fileSystem().readFile(song.toString(), (e) -> {
 			response.write(e.result());
 			logger.trace("Serve Song 'New Song'");
-			response.write(Templates.getFooter());
+			response.write(Templates.footer());
 			response.end();
 		});
 	}
 
 	private void createSong(HttpServerRequest request) {
 		allowCrossOrigin(request);
-		if (checkDeniedAccess(request, true)) return;
+		String sessionKey = sessionKey(request);
+		if (checkDeniedAccess(request, sessionKey, true)) return;
 		request.bodyHandler((body) -> {
 			HttpServerResponse response = request.response();
 			String songData = body.toString();
@@ -254,7 +285,7 @@ public class Server extends Verticle {
 				String title = document.get("title");
 				String artist = document.get("artist");
 
-				if (title == null || title.isEmpty() || artist == null ) {
+				if (title == null || title.isEmpty() || artist == null) {
 					response.setStatusCode(400);
 					response.end("You must provide a title and an artist information");
 					return;
@@ -276,7 +307,6 @@ public class Server extends Verticle {
 				});
 
 
-
 			} catch (Exception e) {
 				logger.error("Error indexing song", e);
 				response.setStatusCode(500);
@@ -287,7 +317,8 @@ public class Server extends Verticle {
 
 	private void modifySong(HttpServerRequest request) {
 		allowCrossOrigin(request);
-		if (checkDeniedAccess(request, true)) return;
+		String sessionKey = sessionKey(request);
+		if (checkDeniedAccess(request, sessionKey, true)) return;
 		request.bodyHandler((body) -> {
 			HttpServerResponse response = request.response();
 			String songData = body.toString();
@@ -330,7 +361,8 @@ public class Server extends Verticle {
 
 	private void deleteSong(HttpServerRequest request) {
 		allowCrossOrigin(request);
-		if (checkDeniedAccess(request, true)) return;
+		String sessionKey = sessionKey(request);
+		if (checkDeniedAccess(request, sessionKey, true)) return;
 
 		HttpServerResponse response = request.response();
 		try {
@@ -359,17 +391,15 @@ public class Server extends Verticle {
 	}
 
 	private void adminIndex(HttpServerRequest request) {
-		if (checkDeniedAccess(request, true)) return;
-		String key = request.params().get("key");
-
+		String sessionKey = sessionKey(request);
+		if (checkDeniedAccess(request, sessionKey, true)) return;
 
 		HttpServerResponse response = request.response();
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
 		response.setChunked(true);
 
-		response.write(Templates.getHeader("Administration - My SongBook"));
-		response.write(Templates.getNavigation(key));
+		response.write(Templates.header("Administration - My SongBook"));
 
 		String command = QueryStringDecoder.decodeComponent(request.params().get("command"));
 		switch (command) {
@@ -381,20 +411,20 @@ public class Server extends Verticle {
 
 					long end = System.currentTimeMillis();
 					logger.info("Opened index in " + (end - start) + " milliseconds.");
-					response.write(Templates.alert("success", "Songs are re-indexed."));
+					response.write(Templates.alertSongReindexed());
 					response.setStatusCode(200);
 				} catch (IOException e) {
 					logger.error("Can't initialize index in " + getDataRoot().resolve("index"), e);
-					response.write(Templates.alert("danger", "An error occurred while indexing songs."));
+					response.write(Templates.alertIndexingError());
 					response.setStatusCode(500);
 				}
 				break;
 			default:
-				response.write(Templates.alert("danger", "Command '" + command + "' isn't supported for index."));
+				response.write(Templates.alertCommandNotSupported());
 				response.setStatusCode(500);
 				break;
 		}
-		response.write(Templates.getFooter());
+		response.write(Templates.footer());
 		response.end();
 	}
 
@@ -536,22 +566,13 @@ public class Server extends Verticle {
 	/**
 	 * Checks if request need to be denied, returns true if access is denied.
 	 */
-	private boolean checkDeniedAccess(HttpServerRequest request, boolean needAdmin) {
-		String key = request.params().get("key");
-		if (isAdministrator(key)) {
-			// gets administrator key, remove alert (if present)
-			if (showKeyCreationAlert) {
-				showKeyCreationAlert = false;
-				try {
-					Files.createFile(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
-				} catch (IOException e) {
-					logger.error("Can't create file '" + ADMINISTRATOR_ACTIVATED_PATH + "'", e);
-				}
-			}
+	private boolean checkDeniedAccess(HttpServerRequest request, String sessionKey, boolean needAdmin) {
+		if (isAdministrator(sessionKey)) {
 			return false;
 		}
-		if (isUser(key) && needAdmin == false) return false;
-
+		if (isUser(sessionKey) && needAdmin == false){
+			return false;
+		}
 		forbiddenAccess(request);
 		return true;
 	}
@@ -563,10 +584,9 @@ public class Server extends Verticle {
 
 		response.setChunked(true);
 
-		response.write(Templates.getHeader("Forbidden - My SongBook"));
-		response.write(Templates.getNavigation(null));
-		response.write(Templates.alert("danger", "Access Forbidden '" + request.path() + "'"));
-		response.write(Templates.getFooter());
+		response.write(Templates.header("Forbidden - My SongBook"));
+		response.write(Templates.alertAccessForbidden(request.path()));
+		response.write(Templates.footer());
 		response.end();
 	}
 }

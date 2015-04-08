@@ -30,6 +30,8 @@ import songbook.server.Templates;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by laurent on 08/05/2014.
@@ -90,10 +92,7 @@ public class IndexDatabase {
 
     }
 
-    public void search(String key, String querystr, HttpServerRequest request, String mimeType) throws ParseException, IOException {
-        HttpServerResponse response = request.response();
-        response.setChunked(true);
-
+    public void search(String querystr, Appendable out, String mimeType) throws ParseException, IOException {
         int hitsPerPage = 50;
         IndexReader reader = DirectoryReader.open(index);
         IndexSearcher searcher = new IndexSearcher(reader);
@@ -113,23 +112,24 @@ public class IndexDatabase {
         }
 
         if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            response.write(Templates.startResult());
+            out.append(Templates.startSongItems());
         }
         for (int i = 0; i < hits.length; ++i) {
             int docId = hits[i].doc;
-            Document d = searcher.doc(docId);
+            Document doc = searcher.doc(docId);
             switch (mimeType) {
                 case Server.MIME_TEXT_HTML:
-                    response.write(Templates.showDocument(key, d));
+                    String artists = Stream.of(doc.getValues("artist")).collect(Collectors.joining(", "));
+                    out.append(Templates.songItem(doc.get("id"), doc.get("title"), artists));
                     break;
                 case Server.MIME_TEXT_PLAIN:
                 default:
-                    response.write(d.get("id")+ "\n");
+                    out.append(doc.get("id") + "\n");
                     break;
             }
         }
         if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            response.write(Templates.endResult());
+            out.append(Templates.endSongItems());
         }
 
         // reader can only be closed when there
