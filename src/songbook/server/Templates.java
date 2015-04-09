@@ -58,37 +58,37 @@ public class Templates {
 
     public static String alertSongDoesNotExist(String songId) {
         StringBuilder out = new StringBuilder();
-        print(out, "alert/songDoesNotExist.html", "songId", songId);
+        print(out, "alerts/songDoesNotExist.html", "songId", songId);
         return out.toString();
 	}
 
     public static String alertKeyCreation(String adminSessionKey, String path) {
         StringBuilder out = new StringBuilder();
-        print(out, "alert/keyCreation.html", "adminSessionKey", adminSessionKey, "path", path);
+        print(out, "alerts/keyCreation.html", "adminSessionKey", adminSessionKey, "path", path);
         return out.toString();
 	}
 
     public static String alertSongReindexed() {
         StringBuilder out = new StringBuilder();
-        print(out, "alert/songReindexed.html");
+        print(out, "alerts/songReindexed.html");
         return out.toString();
 	}
 
     public static String alertAccessForbidden(String path) {
         StringBuilder out = new StringBuilder();
-        print(out, "alert/accessForbidden.html", "path", path);
+        print(out, "alerts/accessForbidden.html", "path", path);
         return out.toString();
     }
 
     public static String alertIndexingError() {
         StringBuilder out = new StringBuilder();
-        print(out, "alert/indexingError.html");
+        print(out, "alerts/indexingError.html");
         return out.toString();
     }
 
     public static String alertCommandNotSupported() {
         StringBuilder out = new StringBuilder();
-        print(out, "alert/commandNotSupported.html");
+        print(out, "alerts/commandNotSupported.html");
         return out.toString();
     }
 
