@@ -143,7 +143,6 @@ public class Server extends Verticle {
 		if (checkDeniedAccess(request, sessionKey, false)) return;
 
 		// Serve all songs
-
 		String query = QueryStringDecoder.decodeComponent(request.params().get("query"));
 		String title = "My SongBook";
 		if (query != null && !query.isEmpty()) {
