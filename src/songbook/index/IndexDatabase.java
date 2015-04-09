@@ -105,7 +105,7 @@ public class IndexDatabase {
         } else {
             // the "lyrics" arg specifies the default field to use
             // when no field is explicitly specified in the query.
-            Query query = new QueryParser(Version.LUCENE_48, "lyrics", analyzer).parse(querystr);
+            Query query = new QueryParser(Version.LUCENE_48, "song", analyzer).parse(querystr);
             TopScoreDocCollector collector = TopScoreDocCollector.create(hitsPerPage, true);
             searcher.search(query, collector);
             hits = collector.topDocs().scoreDocs;

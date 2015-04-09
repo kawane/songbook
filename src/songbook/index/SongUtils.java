@@ -18,6 +18,7 @@ public class SongUtils {
 	public static Document indexSong(String songData) {
 		Document document = new Document();
 		String[] songLines = getSongLines(songData);
+		document.add(new TextField("song", songData, Field.Store.NO));
 		document.add(new TextField("title", songLines[0], Field.Store.YES));
 		for (String line: songLines) {
 			String lineLC = line.toLowerCase();
@@ -26,6 +27,7 @@ public class SongUtils {
 			} else if (lineLC.startsWith("album:")) {
 				document.add(new TextField("album", line.substring("album:".length()), Field.Store.YES));
 			}
+			// TODO Fulltext search
 		}
 		return document;
 	}
