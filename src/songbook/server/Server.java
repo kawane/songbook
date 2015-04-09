@@ -180,10 +180,13 @@ public class Server extends Verticle {
 
 	private String sessionKey(HttpServerRequest request) {
 		String sessionKey = null;
-		Set<Cookie> cookies = CookieDecoder.decode(request.headers().get(HttpHeaders.COOKIE));
-		for (Cookie cookie : cookies) {
-			if (SESSION_KEY.equals(cookie.getName())) {
-				sessionKey = cookie.getValue();
+		String cookieStr = request.headers().get(HttpHeaders.COOKIE);
+		if (cookieStr != null) {
+			Set<Cookie> cookies = CookieDecoder.decode(cookieStr);
+			for (Cookie cookie : cookies) {
+				if (SESSION_KEY.equals(cookie.getName())) {
+					sessionKey = cookie.getValue();
+				}
 			}
 		}
 		String key = request.params().get("key");
