@@ -103,7 +103,7 @@ public class SongUtils {
 						verse = false;
 					}
 				} else {
-					String[] tokens = line.split(" ");
+					String[] tokens = line.replace("|", " ").split(" ");
 					boolean isChord = true;
 					for (int j = 0; isChord && j < tokens.length; j++) {
 						if (!tokens[j].isEmpty()) {

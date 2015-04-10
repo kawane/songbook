@@ -99,17 +99,17 @@ function executeAction(action, form) {
             }, errorCallBack);
             break;
         case "create":
-            api.create(createSongEditor.getValue(), form.adminkey.value, (id) => {
+            api.create(createSongEditor.getValue(), (id) => {
                 setResult(id, "ace/mode/json");
             }, errorCallBack);
             break;
         case "update":
-            api.update(form.id.value, updateSongEditor.getValue(), form.adminkey.value, (result) => {
+            api.update(form.id.value, updateSongEditor.getValue(), (result) => {
                 setResult(result, "ace/mode/json");
             }, errorCallBack);
             break;
         case "delete":
-            api.remove(form.id.value, form.adminkey.value, (result) => {
+            api.remove(form.id.value, (result) => {
                 setResult(result, "ace/mode/json");
             }, errorCallBack);
             break;

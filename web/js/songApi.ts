@@ -63,14 +63,13 @@ export class SongApi {
      * Create a song
      *
      * @param {string} song
-     * @param {string} key
      * @param onSuccess
      * @param onError
      */
-    create(song: string, key: string, onSuccess: (id: string) => void, onError?: (error: string) => void) {
+    create(song: string, onSuccess: (id: string) => void, onError?: (error: string) => void) {
         utils.request({
             method: "POST",
-            url:  this.songUrl + "?key=" + key,
+            url:  this.songUrl,
             data: song,
             onSuccess: onSuccess,
             onError: onError
@@ -82,14 +81,13 @@ export class SongApi {
      *
      * @param {string} id
      * @param {string} song
-     * @param {string} key
      * @param onSuccess
      * @param onError
      */
-    update(id: string, song: string, key: string, onSuccess?: (result) => void, onError?: (error: string) => void) {
+    update(id: string, song: string, onSuccess?: (result: string) => void, onError?: (error: string) => void) {
         utils.request({
             method: "PUT",
-            url: this.url(id) + "?key=" + key,
+            url: this.url(id),
             data: song,
             onSuccess: onSuccess,
             onError: onError
@@ -100,14 +98,13 @@ export class SongApi {
      * Remove a song
      *
      * @param {string} id
-     * @param {string} key
      * @param onSuccess
      * @param onError
      */
-    remove(id: string, key: string, onSuccess?: (result) => void, onError?: (error: string) => void) {
+    remove(id: string, onSuccess?: (result: string) => void, onError?: (error: string) => void) {
         utils.request( {
             method: "DELETE",
-            url: this.url(id) + "?key=" + key,
+            url: this.url(id),
             onSuccess: onSuccess,
             onError: onError
         });

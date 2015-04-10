@@ -80,17 +80,17 @@ define(["require", "exports", "./songApi", "ace", "acemodehtml", "acemodejson"],
                 }, errorCallBack);
                 break;
             case "create":
-                api.create(createSongEditor.getValue(), form.adminkey.value, function (id) {
+                api.create(createSongEditor.getValue(), function (id) {
                     setResult(id, "ace/mode/json");
                 }, errorCallBack);
                 break;
             case "update":
-                api.update(form.id.value, updateSongEditor.getValue(), form.adminkey.value, function (result) {
+                api.update(form.id.value, updateSongEditor.getValue(), function (result) {
                     setResult(result, "ace/mode/json");
                 }, errorCallBack);
                 break;
             case "delete":
-                api.remove(form.id.value, form.adminkey.value, function (result) {
+                api.remove(form.id.value, function (result) {
                     setResult(result, "ace/mode/json");
                 }, errorCallBack);
                 break;

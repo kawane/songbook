@@ -1,4 +1,4 @@
-define(["require", "exports", "./songbook", "./utils"], function (require, exports, songbook, utils) {
+define(["require", "exports", "./songbook", "./utils", "./songApi"], function (require, exports, songbook, utils, songApi) {
     var queryParam = utils.getQueryParam();
     var key = queryParam["key"];
     if (key !== undefined) {
@@ -24,6 +24,29 @@ define(["require", "exports", "./songbook", "./utils"], function (require, expor
     var message = queryParam["message"];
     if (message) {
         songbook.createAlert(message, "info");
+    }
+    var songTextEdit = document.getElementById("song");
+    if (songTextEdit) {
+        var api = songApi.create(songApi.PathUrl);
+        var editButton = document.getElementById("editButton");
+        editButton.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = songTextEdit.dataset["songid"];
+            if (id) {
+                api.update(id, songTextEdit.value, function (id) {
+                    location.pathname = "/songs/" + id;
+                }, function (error) {
+                    console.log(error);
+                });
+            }
+            else {
+                api.create(songTextEdit.value, function (id) {
+                    location.pathname = "/songs/" + id;
+                }, function (error) {
+                    console.log(error);
+                });
+            }
+        });
     }
 });
 //# sourceMappingURL=main.js.map

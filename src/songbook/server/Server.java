@@ -102,7 +102,12 @@ public class Server extends Verticle {
 	private void matchRequest(RouteMatcher routeMatcher) {
 		routeMatcher.get("/", this::search); // Home Page
 		routeMatcher.noMatch(this::serveFile);
-		routeMatcher.get("/new", this::songForm);
+		routeMatcher.get("/view/:id", this::getSong);
+		routeMatcher.get("/edit/:id", this::editSong);
+		routeMatcher.get("/edit/", this::editSong);
+		routeMatcher.get("/edit", this::editSong);
+		routeMatcher.get("/delete/:id", this::deleteSong);
+
 
 		routeMatcher.get("/search/:query", this::search);
 		routeMatcher.get("/search/", this::search);
@@ -156,7 +161,7 @@ public class Server extends Verticle {
 			switch (mimeType) {
 				case MIME_TEXT_HTML:
 					response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-					sb.append(Templates.header(title));
+					sb.append(Templates.header(title, ""));
 					if (showKeyCreationAlert) {
 						sb.append(Templates.alertKeyCreation(administratorKey, request.path()));
 					}
@@ -225,52 +230,75 @@ public class Server extends Verticle {
 				switch (mimeType) {
 					case MIME_TEXT_HTML:
 						response.putHeader(HttpHeaders.CONTENT_TYPE, mimeType);
-						response.end(htmlSong(sessionKey, id, handler.result(), request.path()));
+						response.end(htmlSong(sessionKey, id, handler.result(), request.path()), "UTF-8");
 						break;
 					default:
 					case MIME_TEXT_PLAIN:
 					case MIME_TEXT_SONG:
 						response.putHeader(HttpHeaders.CONTENT_TYPE, mimeType);
-						response.end(handler.result());
+						response.end(handler.result(), "UTF-8");
 						break;
 				}
 				logger.trace("Serve Song " + id);
 			} else {
-				response.write(Templates.alertSongDoesNotExist(id));
 				logger.error("Failed to read song " + id, handler.cause());
 				response.setStatusCode(404);
+				StringBuilder sb = new StringBuilder();
+				sb.append(Templates.header("404", id));
+				sb.append(Templates.alertSongDoesNotExist(id));
+				sb.append(Templates.footer());
+				response.end(sb.toString(), "UTF-8");
 			}
 		});
 	}
 
 	private String htmlSong(String key, String id, String songData, String path) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(Templates.header(id + " - My SongBook"));
+		sb.append(Templates.header(id + " - My SongBook", id));
 		if (showKeyCreationAlert) sb.append(Templates.alertKeyCreation(administratorKey, path));
 		SongUtils.writeHtml(sb, songData);
 		sb.append(Templates.footer());
 		return sb.toString();
 	}
 
-	private void songForm(HttpServerRequest request) {
+	private void editSong(HttpServerRequest request) {
 		String sessionKey = sessionKey(request);
 		if (checkDeniedAccess(request, sessionKey, true)) return;
+
+		String id = request.params().get("id");
 
 		// Serves song
 		HttpServerResponse response = request.response();
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
-		response.setChunked(true);
 
-		response.write(Templates.header("New Song - My SongBook"));
-		if (showKeyCreationAlert) response.write(Templates.alertKeyCreation(administratorKey, request.path()));
-		final Path song = getWebRoot().resolve("NewSong.html");
-		vertx.fileSystem().readFile(song.toString(), (e) -> {
-			response.write(e.result());
-			logger.trace("Serve Song 'New Song'");
-			response.write(Templates.footer());
-			response.end();
-		});
+		StringBuilder sb = new StringBuilder();
+		sb.append(Templates.header("Edit - My SongBook", id));
+		if (showKeyCreationAlert) sb.append(Templates.alertKeyCreation(administratorKey, request.path()));
+		if (id != null && !id.isEmpty()) {
+			songDb.readSong(id, (handler) -> {
+				if (handler.succeeded()) {
+					sb.append(Templates.editSong(id, handler.result()));
+					sb.append(Templates.footer());
+					response.end(sb.toString(), "UTF-8");
+				} else {
+					sb.append(Templates.alertSongDoesNotExist(id));
+					logger.error("Failed to read song " + id, handler.cause());
+					response.setStatusCode(404);
+
+					sb.append(Templates.alertSongDoesNotExist(id));
+					sb.append(Templates.footer());
+					response.end(sb.toString(), "UTF-8");
+				}
+				response.end(sb.toString(), "UTF-8");
+			});
+		} else {
+			sb.append(Templates.editSong("", Templates.newSong()));
+			sb.append(Templates.footer());
+			response.end(sb.toString(), "UTF-8");
+
+		}
+
 	}
 
 	private void createSong(HttpServerRequest request) {
@@ -375,12 +403,28 @@ public class Server extends Verticle {
 				// removes file
 				songDb.delete(id);
 
+				String title = indexDb.getTitle(id);
+
 				// removes document from index
 				indexDb.removeDocument(id);
 
+
 				response.setStatusCode(200);
 
-				response.end(id);
+				String mimeType = MimeParser.bestMatch(request.headers().get(HttpHeaders.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
+				switch (mimeType) {
+					case MIME_TEXT_HTML:
+						StringBuilder sb = new StringBuilder();
+						sb.append(Templates.header("My SongBook", ""));
+						// show home page with message
+						sb.append(Templates.alertSongRemovedSuccessfully(title == null ? id : title));
+						sb.append(Templates.footer());
+						response.end(sb.toString());
+						break;
+					case MIME_TEXT_PLAIN:
+						response.end(id);
+						break;
+				}
 			} else {
 				response.setStatusCode(400);
 				response.end("The song doesn't exist and cannot be deleted");
@@ -401,7 +445,7 @@ public class Server extends Verticle {
 
 		response.setChunked(true);
 
-		response.write(Templates.header("Administration - My SongBook"));
+		response.write(Templates.header("Administration - My SongBook", ""));
 
 		String command = QueryStringDecoder.decodeComponent(request.params().get("command"));
 		switch (command) {
@@ -586,7 +630,7 @@ public class Server extends Verticle {
 
 		response.setChunked(true);
 
-		response.write(Templates.header("Forbidden - My SongBook"));
+		response.write(Templates.header("Forbidden - My SongBook", ""));
 		response.write(Templates.alertAccessForbidden(request.path()));
 		response.write(Templates.footer());
 		response.end();

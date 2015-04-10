@@ -1,4 +1,4 @@
-
+/// <reference path ='./SongApi'/>
 import songbook = require("./songbook");
 import utils = require("./utils");
 
@@ -32,6 +32,31 @@ if (window.location.pathname.indexOf(searchPath) == 0) {
 var message = queryParam["message"];
 if (message) {
     songbook.createAlert(message, "info");
+}
+
+var songTextEdit = <HTMLTextAreaElement>document.getElementById("song");
+import songApi = require("./songApi");
+if (songTextEdit) {
+    var api = songApi.create(songApi.PathUrl);
+    var editButton = document.getElementById("editButton");
+    editButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        var id = songTextEdit.dataset["songid"];
+        if (id) {
+            api.update(id, songTextEdit.value, (id: string) => {
+                location.pathname = "/songs/" + id;
+            }, (error) => {
+                console.log(error);
+            });
+        } else {
+            api.create(songTextEdit.value, (id: string) => {
+                location.pathname = "/songs/" + id;
+            }, (error) => {
+                console.log(error);
+            })
+        }
+    });
+
 }
 
 

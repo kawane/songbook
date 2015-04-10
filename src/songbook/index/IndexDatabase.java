@@ -11,15 +11,8 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.SortField.Type;
-import org.apache.lucene.search.TopFieldDocs;
-import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Version;
@@ -58,14 +51,27 @@ public class IndexDatabase {
     }
 
     public void addOrUpdateDocument(Document document) throws IOException {
-        Term term = new Term("id", document.get("id"));
-        indexWriter.updateDocument(term, document);
+        indexWriter.updateDocument(new Term("id", document.get("id")), document);
         indexWriter.commit();
     }
 
+
+
+    public String getTitle(String id) throws IOException {
+        DirectoryReader reader = DirectoryReader.open(index);
+        IndexSearcher searcher = new IndexSearcher(reader);
+
+        ScoreDoc[] scoreDocs = searcher.search(new TermQuery(new Term("id", id)), 1).scoreDocs;
+        String title = null;
+        if (scoreDocs.length > 0) {
+            title = reader.document(scoreDocs[0].doc).get("title");
+        }
+        reader.close();
+        return title;
+    }
+
     public void removeDocument(String id) throws IOException {
-        Term term = new Term("id", id);
-        indexWriter.deleteDocuments(term);
+        indexWriter.deleteDocuments(new Term("id", id));
         indexWriter.commit();
     }
 

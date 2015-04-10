@@ -53,14 +53,13 @@ define(["require", "exports", "./utils"], function (require, exports, utils) {
          * Create a song
          *
          * @param {string} song
-         * @param {string} key
          * @param onSuccess
          * @param onError
          */
-        SongApi.prototype.create = function (song, key, onSuccess, onError) {
+        SongApi.prototype.create = function (song, onSuccess, onError) {
             utils.request({
                 method: "POST",
-                url: this.songUrl + "?key=" + key,
+                url: this.songUrl,
                 data: song,
                 onSuccess: onSuccess,
                 onError: onError
@@ -71,14 +70,13 @@ define(["require", "exports", "./utils"], function (require, exports, utils) {
          *
          * @param {string} id
          * @param {string} song
-         * @param {string} key
          * @param onSuccess
          * @param onError
          */
-        SongApi.prototype.update = function (id, song, key, onSuccess, onError) {
+        SongApi.prototype.update = function (id, song, onSuccess, onError) {
             utils.request({
                 method: "PUT",
-                url: this.url(id) + "?key=" + key,
+                url: this.url(id),
                 data: song,
                 onSuccess: onSuccess,
                 onError: onError
@@ -88,14 +86,13 @@ define(["require", "exports", "./utils"], function (require, exports, utils) {
          * Remove a song
          *
          * @param {string} id
-         * @param {string} key
          * @param onSuccess
          * @param onError
          */
-        SongApi.prototype.remove = function (id, key, onSuccess, onError) {
+        SongApi.prototype.remove = function (id, onSuccess, onError) {
             utils.request({
                 method: "DELETE",
-                url: this.url(id) + "?key=" + key,
+                url: this.url(id),
                 onSuccess: onSuccess,
                 onError: onError
             });
@@ -104,4 +101,4 @@ define(["require", "exports", "./utils"], function (require, exports, utils) {
     })();
     exports.SongApi = SongApi;
 });
-//# sourceMappingURL=songApi.js.map
+//# sourceMappingURL=SongApi.js.map

@@ -26,9 +26,9 @@ public class Templates {
         TEMPLATES_PATH = templatesPath;
     }
 
-    public static String header(String title) {
+    public static String header(String title, String songId) {
         StringBuilder out = new StringBuilder();
-        print(out, "header.html", "title", title);
+        print(out, "header.html", "title", title, "songId", songId);
         return out.toString();
 	}
 
@@ -37,6 +37,18 @@ public class Templates {
         print(out, "footer.html");
         return out.toString();
 	}
+
+    public static String editSong(String songId, String song) {
+        StringBuilder out = new StringBuilder();
+        print(out, "editSong.html", "songId", songId, "song", song);
+        return out.toString();
+    }
+
+    public static String newSong() {
+        StringBuilder out = new StringBuilder();
+        print(out, "newSong.song");
+        return out.toString();
+    }
 
     public static String startSongItems() {
         StringBuilder out = new StringBuilder();
@@ -92,11 +104,21 @@ public class Templates {
         return out.toString();
     }
 
+    public static String alertSongRemovedSuccessfully(String songTitle) {
+        StringBuilder out = new StringBuilder();
+        print(out, "alerts/songRemovedSuccessfully.html", "songTitle", songTitle);
+        return out.toString();
+    }
+
     protected static void print(Appendable out, String templateName, String... vars) {
         try {
             String content = getContent(templateName);
             for (int i = 0; i < vars.length; i += 2) {
-                content = content.replace("${" + vars[i] + "}", vars[i+1]);
+                String value = vars[i+1];
+                if (value == null) {
+                    value = "";
+                }
+                content = content.replace("${" + vars[i] + "}", value);
             }
             out.append(content);
         } catch (IOException e) {
