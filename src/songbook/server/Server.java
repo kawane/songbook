@@ -158,29 +158,29 @@ public class Server extends Verticle {
 
 		HttpServerResponse response = request.response();
 		try {
-			StringBuilder sb = new StringBuilder();
+			StringBuilder out = new StringBuilder();
 			String mimeType = MimeParser.bestMatch(request.headers().get(HttpHeaders.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
 			switch (mimeType) {
 				case MIME_TEXT_HTML:
 					response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-					sb.append(Templates.header(title, ""));
+					Templates.header(out, title, "");
 					if (showKeyCreationAlert) {
-						sb.append(Templates.alertKeyCreation(administratorKey, request.path()));
+						Templates.alertKeyCreation(out, administratorKey, request.path());
 					}
-					indexDb.search(query, sb, mimeType);
-					sb.append(Templates.footer());
+					indexDb.search(query, out, mimeType);
+					Templates.footer(out);
 					break;
 				default:
-					indexDb.search(query, sb, mimeType);
+					indexDb.search(query, out, mimeType);
 					break;
 			}
-			response.end(sb.toString(), "UTF-8");
+			response.end(out.toString(), "UTF-8");
 		} catch (ParseException e) {
 			e.printStackTrace();
-			response.end("Wrong Query Syntax");
+			response.end("Wrong Query Syntax", "UTF-8");
 		} catch (IOException e) {
 			e.printStackTrace();
-			response.end("Internal Error");
+			response.end("Internal Error", "UTF-8");
 		}
 
 	}
@@ -245,22 +245,22 @@ public class Server extends Verticle {
 			} else {
 				logger.error("Failed to read song " + id, handler.cause());
 				response.setStatusCode(404);
-				StringBuilder sb = new StringBuilder();
-				sb.append(Templates.header("404", id));
-				sb.append(Templates.alertSongDoesNotExist(id));
-				sb.append(Templates.footer());
-				response.end(sb.toString(), "UTF-8");
+				StringBuilder out = new StringBuilder();
+				Templates.header(out, "404", id);
+				Templates.alertSongDoesNotExist(out, id);
+				Templates.footer(out);
+				response.end(out.toString(), "UTF-8");
 			}
 		});
 	}
 
 	private String htmlSong(String key, String id, String songData, String path) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(Templates.header(id + " - My SongBook", id));
-		if (showKeyCreationAlert) sb.append(Templates.alertKeyCreation(administratorKey, path));
-		SongUtils.writeHtml(sb, songData);
-		sb.append(Templates.footer());
-		return sb.toString();
+		StringBuilder out = new StringBuilder();
+		Templates.header(out, id + " - My SongBook", id);
+		if (showKeyCreationAlert) Templates.alertKeyCreation(out, administratorKey, path);
+		SongUtils.writeHtml(out, songData);
+		Templates.footer(out);
+		return out.toString();
 	}
 
 	private void editSong(HttpServerRequest request) {
@@ -274,30 +274,30 @@ public class Server extends Verticle {
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
 
-		StringBuilder sb = new StringBuilder();
-		sb.append(Templates.header("Edit - My SongBook", id));
-		if (showKeyCreationAlert) sb.append(Templates.alertKeyCreation(administratorKey, request.path()));
+		StringBuilder out = new StringBuilder();
+		Templates.header(out, "Edit - My SongBook", id);
+		if (showKeyCreationAlert)Templates.alertKeyCreation(out, administratorKey, request.path());
 		if (id != null && !id.isEmpty()) {
 			songDb.readSong(id, (handler) -> {
 				if (handler.succeeded()) {
-					sb.append(Templates.editSong(id, handler.result()));
-					sb.append(Templates.footer());
-					response.end(sb.toString(), "UTF-8");
+					Templates.editSong(out, id, handler.result());
+					Templates.footer(out);
+					response.end(out.toString(), "UTF-8");
 				} else {
-					sb.append(Templates.alertSongDoesNotExist(id));
+					Templates.alertSongDoesNotExist(out, id);
 					logger.error("Failed to read song " + id, handler.cause());
 					response.setStatusCode(404);
 
-					sb.append(Templates.alertSongDoesNotExist(id));
-					sb.append(Templates.footer());
-					response.end(sb.toString(), "UTF-8");
+					Templates.alertSongDoesNotExist(out, id);
+					Templates.footer(out);
+					response.end(out.toString(), "UTF-8");
 				}
-				response.end(sb.toString(), "UTF-8");
+				response.end(out.toString(), "UTF-8");
 			});
 		} else {
-			sb.append(Templates.editSong("", Templates.newSong()));
-			sb.append(Templates.footer());
-			response.end(sb.toString(), "UTF-8");
+			Templates.editSong(out, "", Templates.newSong(new StringBuilder()));
+			Templates.footer(out);
+			response.end(out.toString(), "UTF-8");
 
 		}
 
@@ -319,7 +319,7 @@ public class Server extends Verticle {
 
 				if (title == null || title.isEmpty() || artist == null) {
 					response.setStatusCode(400);
-					response.end("You must provide a title and an artist information");
+					response.end("You must provide a title and an artist information", "UTF-8");
 					return;
 				}
 				String id = songDb.generateId(title, artist);
@@ -330,7 +330,7 @@ public class Server extends Verticle {
 				// writes song to database
 				songDb.writeSong(id, songData, (ar) -> {
 					if (ar.succeeded()) {
-						response.end(id);
+						response.end(id, "UTF-8");
 					} else {
 						logger.error("Failed to create the song", ar.cause());
 						response.setStatusCode(500);
@@ -370,7 +370,7 @@ public class Server extends Verticle {
 					// writes song to database
 					songDb.writeSong(id, songData, (ar) -> {
 						if (ar.succeeded()) {
-							response.end(id);
+							response.end(id, "UTF-8");
 						} else {
 							logger.error("Failed to update the song", ar.cause());
 							response.setStatusCode(500);
@@ -379,7 +379,7 @@ public class Server extends Verticle {
 					});
 				} else {
 					response.setStatusCode(400);
-					response.end("The song doesn't exist and cannot be updated");
+					response.end("The song doesn't exist and cannot be updated", "UTF-8");
 				}
 
 
@@ -416,25 +416,25 @@ public class Server extends Verticle {
 				String mimeType = MimeParser.bestMatch(request.headers().get(HttpHeaders.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
 				switch (mimeType) {
 					case MIME_TEXT_HTML:
-						StringBuilder sb = new StringBuilder();
-						sb.append(Templates.header("My SongBook", ""));
+						StringBuilder out = new StringBuilder();
+						Templates.header(out, "My SongBook", "");
 						// show home page with message
-						sb.append(Templates.alertSongRemovedSuccessfully(title == null ? id : title));
-						sb.append(Templates.footer());
-						response.end(sb.toString());
+						Templates.alertSongRemovedSuccessfully(out, title == null ? id : title);
+						Templates.footer(out);
+						response.end(out.toString(), "UTF-8");
 						break;
 					case MIME_TEXT_PLAIN:
-						response.end(id);
+						response.end(id, "UTF-8");
 						break;
 				}
 			} else {
 				response.setStatusCode(400);
-				response.end("The song doesn't exist and cannot be deleted");
+				response.end("The song doesn't exist and cannot be deleted", "UTF-8");
 			}
 		} catch (Exception e) {
 			logger.error("Error removing song", e);
 			response.setStatusCode(500);
-			response.end();
+			response.end("Error removing song", "UTF-8");
 		}
 	}
 
@@ -444,12 +444,12 @@ public class Server extends Verticle {
 
 		HttpServerResponse response = request.response();
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-		StringBuilder sb = new StringBuilder();
+		StringBuilder out = new StringBuilder();
 
-		sb.append(Templates.header("Song Console Api", ""));
-		sb.append(Templates.consoleApi());
-		sb.append(Templates.footer());
-		response.end(sb.toString());
+		Templates.header(out, "Song Console Api", "");
+		Templates.consoleApi(out);
+		Templates.footer(out);
+		response.end(out.toString(), "UTF-8");
 	}
 
 	private void admin(HttpServerRequest request) {
@@ -458,12 +458,12 @@ public class Server extends Verticle {
 
 		HttpServerResponse response = request.response();
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-		StringBuilder sb = new StringBuilder();
+		StringBuilder out = new StringBuilder();
 
-		sb.append(Templates.header("SongBook Admin Page", ""));
-		sb.append(Templates.admin());
-		sb.append(Templates.footer());
-		response.end(sb.toString());
+		Templates.header(out, "SongBook Admin Page", "");
+		Templates.admin(out);
+		Templates.footer(out);
+		response.end(out.toString(), "UTF-8");
 	}
 
 	private void adminCommand(HttpServerRequest request) {
@@ -473,9 +473,8 @@ public class Server extends Verticle {
 		HttpServerResponse response = request.response();
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
-		response.setChunked(true);
-
-		response.write(Templates.header("Administration - My SongBook", ""));
+		StringBuilder out = new StringBuilder();
+		Templates.header(out, "Administration - My SongBook", "");
 
 		String section = QueryStringDecoder.decodeComponent(request.params().get("section"));
 		String command = QueryStringDecoder.decodeComponent(request.params().get("command"));
@@ -490,32 +489,32 @@ public class Server extends Verticle {
 
 							long end = System.currentTimeMillis();
 							logger.info("Opened index in " + (end - start) + " milliseconds.");
-							response.write(Templates.alertSongReindexed());
-							response.write(Templates.admin());
+							Templates.alertSongReindexed(out);
+							Templates.admin(out);
 							response.setStatusCode(200);
 						} catch (IOException e) {
 							logger.error("Can't initialize index in " + getDataRoot().resolve("index"), e);
-							response.write(Templates.alertIndexingError());
-							response.write(Templates.admin());
+							Templates.alertIndexingError(out);
+							Templates.admin(out);
 							response.setStatusCode(500);
 						}
 						break;
 					default:
-						response.write(Templates.alertCommandNotSupported());
-						response.write(Templates.admin());
+						Templates.alertCommandNotSupported(out);
+						Templates.admin(out);
 						response.setStatusCode(500);
 						break;
 				}
 				break;
 			default:
-				response.write(Templates.alertCommandNotSupported());
-				response.write(Templates.admin());
+				Templates.alertCommandNotSupported(out);
+				Templates.admin(out);
 				response.setStatusCode(500);
 				break;
 
 		}
-		response.write(Templates.footer());
-		response.end();
+		Templates.footer(out);
+		response.end(out.toString(), "UTF-8");
 	}
 
 	private Path getWebRoot() {
@@ -671,12 +670,11 @@ public class Server extends Verticle {
 		HttpServerResponse response = request.response();
 		response.setStatusCode(403);
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+		StringBuilder out = new StringBuilder();
 
-		response.setChunked(true);
-
-		response.write(Templates.header("Forbidden - My SongBook", ""));
-		response.write(Templates.alertAccessForbidden(request.path()));
-		response.write(Templates.footer());
-		response.end();
+		Templates.header(out, "Forbidden - My SongBook", "");
+		Templates.alertAccessForbidden(out, request.path());
+		Templates.footer(out);
+		response.end(out.toString(), "UTF-8");
 	}
 }

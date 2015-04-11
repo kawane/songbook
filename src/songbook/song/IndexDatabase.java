@@ -116,7 +116,7 @@ public class IndexDatabase {
         }
 
         if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            out.append(Templates.startSongItems());
+            Templates.startSongItems(out);
         }
         for (int i = 0; i < hits.length; ++i) {
             int docId = hits[i].doc;
@@ -124,7 +124,7 @@ public class IndexDatabase {
             switch (mimeType) {
                 case Server.MIME_TEXT_HTML:
                     String artists = Stream.of(doc.getValues("artist")).collect(Collectors.joining(", "));
-                    out.append(Templates.songItem(doc.get("id"), doc.get("title"), artists));
+                    Templates.songItem(out, doc.get("id"), doc.get("title"), artists);
                     break;
                 case Server.MIME_TEXT_PLAIN:
                 default:
@@ -133,7 +133,7 @@ public class IndexDatabase {
             }
         }
         if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            out.append(Templates.endSongItems());
+            Templates.endSongItems(out);
         }
 
         // reader can only be closed when there

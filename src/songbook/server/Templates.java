@@ -26,107 +26,75 @@ public class Templates {
         TEMPLATES_PATH = templatesPath;
     }
 
-    public static String header(String title, String songId) {
-        StringBuilder out = new StringBuilder();
-        print(out, "header.html", "title", title, "songId", songId);
-        return out.toString();
+    public static <A extends Appendable> A header(A out, CharSequence title, CharSequence songId) {
+        return print(out, "header.html", "title", title, "songId", songId);
 	}
 
-    public static String footer() {
-        StringBuilder out = new StringBuilder();
-        print(out, "footer.html");
-        return out.toString();
+    public static <A extends Appendable> A footer(A out) {
+        return print(out, "footer.html");
 	}
 
-    public static String editSong(String songId, String song) {
-        StringBuilder out = new StringBuilder();
-        print(out, "editSong.html", "songId", songId, "song", song);
-        return out.toString();
+    public static <A extends Appendable> A editSong(A out, CharSequence songId, CharSequence song) {
+        return print(out, "editSong.html", "songId", songId, "song", song);
     }
 
-    public static String newSong() {
-        StringBuilder out = new StringBuilder();
-        print(out, "newSong.song");
-        return out.toString();
+    public static <A extends Appendable> A newSong(A out) {
+        return print(out, "newSong.song");
     }
 
-    public static String startSongItems() {
-        StringBuilder out = new StringBuilder();
-        print(out, "startSongItems.html");
-        return out.toString();
+    public static <A extends Appendable> A startSongItems(A out) {
+        return print(out, "startSongItems.html");
 	}
 
-    public static String songItem(String songId, String songTitle, String songArtist) {
-        StringBuilder out = new StringBuilder();
-        print(out, "songItem.html", "songId", songId, "songTitle", songTitle, "songArtist", songArtist);
-        return out.toString();
+    public static <A extends Appendable> A songItem(A out, CharSequence songId, CharSequence songTitle, CharSequence songArtist) {
+        return print(out, "songItem.html", "songId", songId, "songTitle", songTitle, "songArtist", songArtist);
 	}
 
-    public static String endSongItems() {
-        StringBuilder out = new StringBuilder();
-        print(out, "endSongItems.html");
-        return out.toString();
+    public static <A extends Appendable> A endSongItems(A out) {
+        return print(out, "endSongItems.html");
 	}
 
-    public static String admin() {
-        StringBuilder out = new StringBuilder();
-        print(out, "admin.html");
-        return out.toString();
+    public static <A extends Appendable> A admin(A out) {
+        return print(out, "admin.html");
     }
 
-    public static String consoleApi() {
-        StringBuilder out = new StringBuilder();
-        print(out, "consoleApi.html");
-        return out.toString();
+    public static <A extends Appendable> A consoleApi(A out) {
+        return print(out, "consoleApi.html");
     }
 
-    public static String alertSongDoesNotExist(String songId) {
-        StringBuilder out = new StringBuilder();
-        print(out, "alerts/songDoesNotExist.html", "songId", songId);
-        return out.toString();
+    public static <A extends Appendable> A alertSongDoesNotExist(A out, CharSequence songId) {
+        return print(out, "alerts/songDoesNotExist.html", "songId", songId);
 	}
 
-    public static String alertKeyCreation(String adminSessionKey, String path) {
-        StringBuilder out = new StringBuilder();
-        print(out, "alerts/keyCreation.html", "adminSessionKey", adminSessionKey, "path", path);
-        return out.toString();
+    public static <A extends Appendable> A alertKeyCreation(A out, CharSequence adminSessionKey, CharSequence path) {
+        return print(out, "alerts/keyCreation.html", "adminSessionKey", adminSessionKey, "path", path);
 	}
 
-    public static String alertSongReindexed() {
-        StringBuilder out = new StringBuilder();
-        print(out, "alerts/songReindexed.html");
-        return out.toString();
+    public static <A extends Appendable> A alertSongReindexed(A out) {
+        return print(out, "alerts/songReindexed.html");
 	}
 
-    public static String alertAccessForbidden(String path) {
-        StringBuilder out = new StringBuilder();
-        print(out, "alerts/accessForbidden.html", "path", path);
-        return out.toString();
+    public static <A extends Appendable> A alertAccessForbidden(A out, CharSequence path) {
+        return print(out, "alerts/accessForbidden.html", "path", path);
     }
 
-    public static String alertIndexingError() {
-        StringBuilder out = new StringBuilder();
-        print(out, "alerts/indexingError.html");
-        return out.toString();
+    public static <A extends Appendable> A alertIndexingError(A out) {
+        return print(out, "alerts/indexingError.html");
     }
 
-    public static String alertCommandNotSupported() {
-        StringBuilder out = new StringBuilder();
-        print(out, "alerts/commandNotSupported.html");
-        return out.toString();
+    public static <A extends Appendable> A alertCommandNotSupported(A out) {
+        return print(out, "alerts/commandNotSupported.html");
     }
 
-    public static String alertSongRemovedSuccessfully(String songTitle) {
-        StringBuilder out = new StringBuilder();
-        print(out, "alerts/songRemovedSuccessfully.html", "songTitle", songTitle);
-        return out.toString();
+    public static <A extends Appendable> A alertSongRemovedSuccessfully(A out, CharSequence songTitle) {
+        return print(out, "alerts/songRemovedSuccessfully.html", "songTitle", songTitle);
     }
 
-    protected static void print(Appendable out, String templateName, String... vars) {
+    protected static <A extends Appendable> A print(A out, String templateName, CharSequence... vars) {
         try {
             String content = getContent(templateName);
             for (int i = 0; i < vars.length; i += 2) {
-                String value = vars[i+1];
+                CharSequence value = vars[i+1];
                 if (value == null) {
                     value = "";
                 }
@@ -136,6 +104,7 @@ public class Templates {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return out;
     }
 
     private static class TemplateCache {
