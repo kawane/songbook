@@ -1,11 +1,10 @@
-package songbook.index;
+package songbook.song;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.regex.Pattern;
 
 /**

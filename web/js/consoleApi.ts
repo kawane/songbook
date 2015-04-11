@@ -2,7 +2,7 @@
 /// <amd-dependency path="acemodehtml" />
 /// <amd-dependency path="acemodejson" />
 
-import songApi = require("./songApi");
+import SongApi = require("./SongApi");
 
 // JavaScript imports
 declare var ace;
@@ -16,14 +16,14 @@ createSongEditor.getSession().setMode("ace/mode/html");
 var resultEditor = ace.edit("result");
 resultEditor.getSession().setMode("ace/mode/html");
 
-(<HTMLInputElement>document.querySelector("#server-url")).value = (<any>window.location).origin + songApi.PathUrl;
+(<HTMLInputElement>document.querySelector("#server-url")).value = (<any>window.location).origin + "/songs/";
 
 
 function getAction() {
     if (window.location.hash) {
         return window.location.hash.substring(1);
     }
-    return "search";
+    return "searchApi";
 }
 
 var forEach = Array.prototype.forEach;
@@ -78,7 +78,7 @@ function getServerUrl(): string {
 
 function executeAction(action, form) {
     var serverUrl = getServerUrl();
-    var api = songApi.create(serverUrl);
+    var api = new SongApi(serverUrl);
     switch (action) {
         case "get":
             var mode = "ace/mode/html";
@@ -89,7 +89,7 @@ function executeAction(action, form) {
                 setResult(song, "ace/mode/html");
             }, errorCallBack);
             break;
-        case "search":
+        case "searchApi":
             var mode = "ace/mode/html";
             if (form.contentType.value === "application/json") {
                 mode = "ace/mode/json";

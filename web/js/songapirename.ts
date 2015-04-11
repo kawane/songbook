@@ -1,18 +1,13 @@
 
-import utils = require("./utils");
-
-export var PathUrl = "/songs/";
-
-export function create(songUrl: string): SongApi {
-    return new SongApi(songUrl);
-}
-
-export class SongApi {
+class SongApi {
 
     songUrl: string;
 
-    constructor(songUrl: string) {
+    sessionKey: string;
+
+    constructor(songUrl: string, sessionKey?: string) {
         this.songUrl = songUrl;
+        this.sessionKey = sessionKey;
     }
 
     /**
@@ -33,7 +28,7 @@ export class SongApi {
      * @param onError
      */
     search(query: string, contentType: string, onSuccess: (song: string) => void, onError?: (error: string) => void) {
-        utils.request({
+        this.request({
             method: "GET",
             headers: {"Accept": contentType},
             url:  "/search/" + encodeURIComponent(query),
@@ -50,7 +45,7 @@ export class SongApi {
      * @param onError
      */
     get(id: string, contentType: string, onSuccess: (song: string) => void, onError?: (error: string) => void) {
-        utils.request({
+        this.request({
             method: "GET",
             headers: {"Accept": contentType},
             url:  this.url(id),
@@ -67,7 +62,7 @@ export class SongApi {
      * @param onError
      */
     create(song: string, onSuccess: (id: string) => void, onError?: (error: string) => void) {
-        utils.request({
+        this.request({
             method: "POST",
             url:  this.songUrl,
             data: song,
@@ -85,7 +80,7 @@ export class SongApi {
      * @param onError
      */
     update(id: string, song: string, onSuccess?: (result: string) => void, onError?: (error: string) => void) {
-        utils.request({
+        this.request({
             method: "PUT",
             url: this.url(id),
             data: song,
@@ -102,12 +97,60 @@ export class SongApi {
      * @param onError
      */
     remove(id: string, onSuccess?: (result: string) => void, onError?: (error: string) => void) {
-        utils.request( {
+        this.request( {
             method: "DELETE",
             url: this.url(id),
             onSuccess: onSuccess,
             onError: onError
         });
     }
+
+
+    request(requestData: RequestData) {
+        var req = new XMLHttpRequest();
+        req.open(requestData.method, requestData.url, true);
+        if (requestData.headers) {
+            Object.keys(requestData.headers).forEach((headerName) => {
+                req.setRequestHeader(headerName, requestData.headers[headerName]);
+            });
+        }
+        if (this.sessionKey) {
+            req.setRequestHeader("Cookie", "SessionKey="+this.sessionKey);
+        }
+        req.onreadystatechange = () => {
+            if (req.readyState == 4) {
+                if (req.status < 300) {
+                    if (requestData.onSuccess) {
+                        requestData.onSuccess(req.response, req);
+                    }
+                } else {
+                    if (requestData.onError) {
+                        requestData.onError(req.response, req);
+                    }
+                }
+            }
+        };
+        req.send(requestData.data);
+    }
+
 }
 
+
+interface OnSuccess {
+    (data: string, req?: XMLHttpRequest): void;
+}
+
+interface OnError {
+    (error: string, req?: XMLHttpRequest): void;
+}
+
+interface RequestData {
+    method: string;
+    url: string;
+    headers?: any;
+    data?: any;
+    onSuccess?: OnSuccess;
+    onError?: OnError;
+}
+
+export = SongApi;

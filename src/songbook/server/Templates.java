@@ -68,6 +68,12 @@ public class Templates {
         return out.toString();
 	}
 
+    public static String consoleApi() {
+        StringBuilder out = new StringBuilder();
+        print(out, "consoleApi.html");
+        return out.toString();
+    }
+
     public static String alertSongDoesNotExist(String songId) {
         StringBuilder out = new StringBuilder();
         print(out, "alerts/songDoesNotExist.html", "songId", songId);

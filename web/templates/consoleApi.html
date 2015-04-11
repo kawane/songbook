@@ -1,26 +1,16 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>Song Api</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-    <link href='/css/main.css' rel='stylesheet' media='screen'>
-    <link href='/css/song.css' rel='stylesheet' media='screen'>
-    <style>
-        #result {
-            margin-top: 1em;
-            height: 500px;
-        }
+<style>
+    #result {
+        margin-top: 1em;
+        height: 500px;
+    }
 
-        #create-songdata, #update-songdata {
-            height: 300px;
-        }
+    #create-songdata, #update-songdata {
+        height: 300px;
+    }
 
-        .action-form {
-        }
-    </style>
-</head>
-<body>
+    .action-form {
+    }
+</style>
 <div class="container">
     <div>
         <div class="col-sm-6">
@@ -35,7 +25,7 @@
     </div>
     <div>
         <ul id="services" class="nav nav-pills" role="navigation">
-            <li><a href="#search">Search</a></li>
+            <li><a href="#searchApi">Search</a></li>
             <li><a href="#get">Get</a></li>
             <li><a href="#create">Create</a></li>
             <li><a href="#update">Update</a></li>
@@ -44,7 +34,7 @@
     </div>
     <div class="col-sm-6">
 
-        <div id="search" class="action-form">
+        <div id="searchApi" class="action-form">
             <form role="form">
                 <div class="form-group">
                     <label for="search-query">Query</label>
@@ -89,10 +79,6 @@
                     <label for="create-songdata">Song Data</label>
                     <div id="create-songdata"></div>
                 </div>
-                <div class="form-group">
-                    <label for="create-adminkey">Admin Key</label>
-                    <input type="text" class="form-control" name="adminkey" id="create-adminkey">
-                </div>
                 <button class="btn btn-default" name="create">Create</button>
             </form>
         </div>
@@ -107,10 +93,6 @@
                     <label for="update-songdata">Song Data</label>
                     <div id="update-songdata"></div>
                 </div>
-                <div class="form-group">
-                    <label for="update-adminkey">Admin Key</label>
-                    <input type="text" class="form-control" name="adminkey" id="update-adminkey">
-                </div>
                 <button class="btn btn-default" name="update">Update</button>
             </form>
         </div>
@@ -121,10 +103,6 @@
                     <label for="delete-id">Id</label>
                     <input class="form-control" type="text"  name="id" id="delete-id"/>
                 </div>
-                <div class="form-group">
-                    <label for="delete-adminkey">Admin Key</label>
-                    <input type="text" class="form-control" name="adminkey" id="delete-adminkey">
-                </div>
                 <button class="btn btn-default" name="delete">Delete</button>
             </form>
         </div>
@@ -134,17 +112,15 @@
 
 </div>
 
-
-<script src='/js/require.js' data-main='/js/mainApi'></script>
 <script>
     require.config({paths: {
         ace: "//cdn.jsdelivr.net/ace/1.1.7/min/ace",
         acemodehtml: "//cdn.jsdelivr.net/ace/1.1.7/min/mode-html",
         acemodejson: "//cdn.jsdelivr.net/ace/1.1.7/min/mode-json"
     }})
+    require(["./consoleApi"], function() {});
 </script>
 <script src='//cdn.jsdelivr.net/ace/1.1.7/min/ace.js'></script>
 <script src='//cdn.jsdelivr.net/ace/1.1.7/min/mode-html.js'></script>
 <script src='//cdn.jsdelivr.net/ace/1.1.7/min/mode-json.js'></script>
-</body>
-</html>
+

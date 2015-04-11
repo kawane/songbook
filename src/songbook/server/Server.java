@@ -12,9 +12,9 @@ import org.vertx.java.core.http.HttpServerResponse;
 import org.vertx.java.core.http.RouteMatcher;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
-import songbook.index.IndexDatabase;
-import songbook.index.SongUtils;
-import songbook.index.SongDatabase;
+import songbook.song.IndexDatabase;
+import songbook.song.SongUtils;
+import songbook.song.SongDatabase;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -118,6 +118,7 @@ public class Server extends Verticle {
 		routeMatcher.post("/songs/", this::createSong);
 		routeMatcher.put("/songs/:id", this::modifySong);
 		routeMatcher.delete("/songs/:id", this::deleteSong);
+		routeMatcher.get("/consoleApi", this::consoleApi);
 
 		routeMatcher.get("/admin/index/:command", this::adminIndex);
 	}
@@ -434,6 +435,20 @@ public class Server extends Verticle {
 			response.setStatusCode(500);
 			response.end();
 		}
+	}
+
+	private void consoleApi(HttpServerRequest request) {
+		String sessionKey = sessionKey(request);
+		if (checkDeniedAccess(request, sessionKey, false)) return;
+
+		HttpServerResponse response = request.response();
+		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(Templates.header("Song Console Api", ""));
+		sb.append(Templates.consoleApi());
+		sb.append(Templates.footer());
+		response.end(sb.toString());
 	}
 
 	private void adminIndex(HttpServerRequest request) {

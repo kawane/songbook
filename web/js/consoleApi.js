@@ -1,19 +1,19 @@
 /// <amd-dependency path="ace" />
 /// <amd-dependency path="acemodehtml" />
 /// <amd-dependency path="acemodejson" />
-define(["require", "exports", "./songApi", "ace", "acemodehtml", "acemodejson"], function (require, exports, songApi) {
+define(["require", "exports", "./songapirename", "ace", "acemodehtml", "acemodejson"], function (require, exports, SongApi) {
     var updateSongEditor = ace.edit("update-songdata");
     updateSongEditor.getSession().setMode("ace/mode/html");
     var createSongEditor = ace.edit("create-songdata");
     createSongEditor.getSession().setMode("ace/mode/html");
     var resultEditor = ace.edit("result");
     resultEditor.getSession().setMode("ace/mode/html");
-    document.querySelector("#server-url").value = window.location.origin + songApi.PathUrl;
+    document.querySelector("#server-url").value = window.location.origin + "/songs/";
     function getAction() {
         if (window.location.hash) {
             return window.location.hash.substring(1);
         }
-        return "search";
+        return "searchApi";
     }
     var forEach = Array.prototype.forEach;
     function highlightMenu(serviceName) {
@@ -59,7 +59,7 @@ define(["require", "exports", "./songApi", "ace", "acemodehtml", "acemodejson"],
     }
     function executeAction(action, form) {
         var serverUrl = getServerUrl();
-        var api = songApi.create(serverUrl);
+        var api = new SongApi(serverUrl);
         switch (action) {
             case "get":
                 var mode = "ace/mode/html";
@@ -70,7 +70,7 @@ define(["require", "exports", "./songApi", "ace", "acemodehtml", "acemodejson"],
                     setResult(song, "ace/mode/html");
                 }, errorCallBack);
                 break;
-            case "search":
+            case "searchApi":
                 var mode = "ace/mode/html";
                 if (form.contentType.value === "application/json") {
                     mode = "ace/mode/json";
@@ -106,4 +106,4 @@ define(["require", "exports", "./songApi", "ace", "acemodehtml", "acemodejson"],
         });
     });
 });
-//# sourceMappingURL=mainApi.js.map
+//# sourceMappingURL=consoleApi.js.map

@@ -1,4 +1,4 @@
-package songbook.index;
+package songbook.song;
 
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
