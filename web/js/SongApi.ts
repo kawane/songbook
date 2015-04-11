@@ -1,4 +1,4 @@
-
+/** Song Api class that helps using http song api */
 class SongApi {
 
     songUrl: string;

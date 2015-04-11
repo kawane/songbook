@@ -1,4 +1,4 @@
-define(["require", "exports", "./songapirename"], function (require, exports, SongApi) {
+define(["require", "exports", "./SongApi"], function (require, exports, SongApi) {
     var songTextEdit = document.getElementById("song");
     if (songTextEdit) {
         var api = new SongApi("/songs/");

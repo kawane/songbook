@@ -1,7 +1,7 @@
 /// <amd-dependency path="ace" />
 /// <amd-dependency path="acemodehtml" />
 /// <amd-dependency path="acemodejson" />
-define(["require", "exports", "./songapirename", "ace", "acemodehtml", "acemodejson"], function (require, exports, SongApi) {
+define(["require", "exports", "./SongApi", "ace", "acemodehtml", "acemodejson"], function (require, exports, SongApi) {
     var updateSongEditor = ace.edit("update-songdata");
     updateSongEditor.getSession().setMode("ace/mode/html");
     var createSongEditor = ace.edit("create-songdata");
