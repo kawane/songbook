@@ -68,6 +68,12 @@ public class Templates {
         return out.toString();
 	}
 
+    public static String admin() {
+        StringBuilder out = new StringBuilder();
+        print(out, "admin.html");
+        return out.toString();
+    }
+
     public static String consoleApi() {
         StringBuilder out = new StringBuilder();
         print(out, "consoleApi.html");

@@ -120,7 +120,8 @@ public class Server extends Verticle {
 		routeMatcher.delete("/songs/:id", this::deleteSong);
 		routeMatcher.get("/consoleApi", this::consoleApi);
 
-		routeMatcher.get("/admin/index/:command", this::adminIndex);
+		routeMatcher.get("/admin/:section/:command", this::adminCommand);
+		routeMatcher.get("/admin", this::admin);
 	}
 
 	private void serveFile(HttpServerRequest request) {
@@ -451,7 +452,21 @@ public class Server extends Verticle {
 		response.end(sb.toString());
 	}
 
-	private void adminIndex(HttpServerRequest request) {
+	private void admin(HttpServerRequest request) {
+		String sessionKey = sessionKey(request);
+		if (checkDeniedAccess(request, sessionKey, false)) return;
+
+		HttpServerResponse response = request.response();
+		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(Templates.header("SongBook Admin Page", ""));
+		sb.append(Templates.admin());
+		sb.append(Templates.footer());
+		response.end(sb.toString());
+	}
+
+	private void adminCommand(HttpServerRequest request) {
 		String sessionKey = sessionKey(request);
 		if (checkDeniedAccess(request, sessionKey, true)) return;
 
@@ -462,28 +477,42 @@ public class Server extends Verticle {
 
 		response.write(Templates.header("Administration - My SongBook", ""));
 
+		String section = QueryStringDecoder.decodeComponent(request.params().get("section"));
 		String command = QueryStringDecoder.decodeComponent(request.params().get("command"));
-		switch (command) {
-			case "reset":
-				try {
-					long start = System.currentTimeMillis();
-					songDb.clearCache();
-					indexDb.analyzeSongs();
+		switch (section) {
+			case "index":
+				switch (command) {
+					case "reset":
+						try {
+							long start = System.currentTimeMillis();
+							songDb.clearCache();
+							indexDb.analyzeSongs();
 
-					long end = System.currentTimeMillis();
-					logger.info("Opened index in " + (end - start) + " milliseconds.");
-					response.write(Templates.alertSongReindexed());
-					response.setStatusCode(200);
-				} catch (IOException e) {
-					logger.error("Can't initialize index in " + getDataRoot().resolve("index"), e);
-					response.write(Templates.alertIndexingError());
-					response.setStatusCode(500);
+							long end = System.currentTimeMillis();
+							logger.info("Opened index in " + (end - start) + " milliseconds.");
+							response.write(Templates.alertSongReindexed());
+							response.write(Templates.admin());
+							response.setStatusCode(200);
+						} catch (IOException e) {
+							logger.error("Can't initialize index in " + getDataRoot().resolve("index"), e);
+							response.write(Templates.alertIndexingError());
+							response.write(Templates.admin());
+							response.setStatusCode(500);
+						}
+						break;
+					default:
+						response.write(Templates.alertCommandNotSupported());
+						response.write(Templates.admin());
+						response.setStatusCode(500);
+						break;
 				}
 				break;
 			default:
 				response.write(Templates.alertCommandNotSupported());
+				response.write(Templates.admin());
 				response.setStatusCode(500);
 				break;
+
 		}
 		response.write(Templates.footer());
 		response.end();
