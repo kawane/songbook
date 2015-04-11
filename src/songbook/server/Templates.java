@@ -1,7 +1,5 @@
 package songbook.server;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -117,7 +115,6 @@ public class Templates {
         }
     }
 
-    @NotNull
     private static String getContent(String templateName) throws IOException {
         TemplateCache templateCache = cache.get(templateName);
         Path templatePath = TEMPLATES_PATH.resolve(templateName);
