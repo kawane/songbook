@@ -1,12 +1,12 @@
 
-<div>
+<div class="container-fluid">
     <textarea id="song" class="song-edit" data-songid="${songId}">${song}</textarea>
 </div>
 <script>
     var toolbar = document.getElementById('toolbar');
-    toolbar.innerHTML += '<a id="saveButton" href="#save"><span class="btn btn-default navbar-btn  glyphicon glyphicon-floppy-save"></span></a> ';
+    toolbar.innerHTML += '<a id="saveButton" href="#save"><span title="Save" class="btn btn-default navbar-btn  glyphicon glyphicon-floppy-save"></span></a> ';
     if ('${songId}') {
-        toolbar.innerHTML += '<a id="deleteButton" href="/delete/${songId}"><span class="btn btn-default navbar-btn glyphicon glyphicon-trash"></span></a> ';
+        toolbar.innerHTML += '<a id="deleteButton" href="/delete/${songId}"><span title="Delete" class="btn btn-default navbar-btn glyphicon glyphicon-trash"></span></a> ';
     }
     require(["./edit"], function() {});
 </script>

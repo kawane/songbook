@@ -120,6 +120,7 @@ public class Server extends Verticle {
 		routeMatcher.delete("/songs/:id", this::deleteSong);
 		routeMatcher.get("/consoleApi", this::consoleApi);
 
+		routeMatcher.get("/signin", this::signin);
 		routeMatcher.get("/admin/:section/:command", this::adminCommand);
 		routeMatcher.get("/admin", this::admin);
 	}
@@ -163,7 +164,9 @@ public class Server extends Verticle {
 			switch (mimeType) {
 				case MIME_TEXT_HTML:
 					response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-					Templates.header(out, title, "");
+
+					String role = isAdministrator(sessionKey) ? "admin" : "user";
+					Templates.header(out, title, role);
 					if (showKeyCreationAlert) {
 						Templates.alertKeyCreation(out, administratorKey, request.path());
 					}
@@ -246,7 +249,8 @@ public class Server extends Verticle {
 				logger.error("Failed to read song " + id, handler.cause());
 				response.setStatusCode(404);
 				StringBuilder out = new StringBuilder();
-				Templates.header(out, "404", id);
+				String role = isAdministrator(sessionKey) ? "admin" : "user";
+				Templates.header(out, "404", role);
 				Templates.alertSongDoesNotExist(out, id);
 				Templates.footer(out);
 				response.end(out.toString(), "UTF-8");
@@ -254,10 +258,11 @@ public class Server extends Verticle {
 		});
 	}
 
-	private String htmlSong(String key, String id, String songData, String path) {
+	private String htmlSong(String sessionKey, String id, String songData, String path) {
 		StringBuilder out = new StringBuilder();
 		// Todo use a songmark object to extract title and then generate html
-		Templates.header(out, id + " - My SongBook", id);
+		String role = isAdministrator(sessionKey) ? "admin" : "user";
+		Templates.header(out, id + " - My SongBook", role);
 		if (showKeyCreationAlert) Templates.alertKeyCreation(out, administratorKey, path);
 		Templates.viewSong(out, id, SongUtils.writeHtml(new StringBuilder(), songData));
 
@@ -277,8 +282,9 @@ public class Server extends Verticle {
 
 
 		StringBuilder out = new StringBuilder();
-		Templates.header(out, "Edit - My SongBook", id);
-		if (showKeyCreationAlert)Templates.alertKeyCreation(out, administratorKey, request.path());
+		String role = isAdministrator(sessionKey) ? "admin" : "user";
+		Templates.header(out, "Edit - My SongBook", role);
+		if (showKeyCreationAlert) Templates.alertKeyCreation(out, administratorKey, request.path());
 		if (id != null && !id.isEmpty()) {
 			songDb.readSong(id, (handler) -> {
 				if (handler.succeeded()) {
@@ -419,7 +425,8 @@ public class Server extends Verticle {
 				switch (mimeType) {
 					case MIME_TEXT_HTML:
 						StringBuilder out = new StringBuilder();
-						Templates.header(out, "My SongBook", "");
+						String role = isAdministrator(sessionKey) ? "admin" : "user";
+						Templates.header(out, "My SongBook", role);
 						// show home page with message
 						Templates.alertSongRemovedSuccessfully(out, title == null ? id : title);
 						Templates.footer(out);
@@ -448,13 +455,14 @@ public class Server extends Verticle {
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 		StringBuilder out = new StringBuilder();
 
-		Templates.header(out, "Song Console Api", "");
+		String role = isAdministrator(sessionKey) ? "admin" : "user";
+		Templates.header(out, "Song Console Api", role);
 		Templates.consoleApi(out);
 		Templates.footer(out);
 		response.end(out.toString(), "UTF-8");
 	}
 
-	private void admin(HttpServerRequest request) {
+	private void signin(HttpServerRequest request) {
 		String sessionKey = sessionKey(request);
 		if (checkDeniedAccess(request, sessionKey, false)) return;
 
@@ -462,7 +470,23 @@ public class Server extends Verticle {
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 		StringBuilder out = new StringBuilder();
 
-		Templates.header(out, "SongBook Admin Page", "");
+		String role = isAdministrator(sessionKey) ? "admin" : "user";
+		Templates.header(out, "SongBook Admin Page", role);
+		Templates.signin(out);
+		Templates.footer(out);
+		response.end(out.toString(), "UTF-8");
+	}
+
+	private void admin(HttpServerRequest request) {
+		String sessionKey = sessionKey(request);
+		if (checkDeniedAccess(request, sessionKey, true)) return;
+
+		HttpServerResponse response = request.response();
+		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+		StringBuilder out = new StringBuilder();
+
+		String role = isAdministrator(sessionKey) ? "admin" : "user";
+		Templates.header(out, "SongBook Admin Page", role);
 		Templates.admin(out);
 		Templates.footer(out);
 		response.end(out.toString(), "UTF-8");
@@ -476,7 +500,9 @@ public class Server extends Verticle {
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
 		StringBuilder out = new StringBuilder();
-		Templates.header(out, "Administration - My SongBook", "");
+
+		String role = isAdministrator(sessionKey) ? "admin" : "user";
+		Templates.header(out, "Administration - My SongBook", role);
 
 		String section = QueryStringDecoder.decodeComponent(request.params().get("section"));
 		String command = QueryStringDecoder.decodeComponent(request.params().get("command"));
@@ -661,7 +687,7 @@ public class Server extends Verticle {
 		if (isAdministrator(sessionKey)) {
 			return false;
 		}
-		if (isUser(sessionKey) && needAdmin == false){
+		if (isUser(sessionKey) && needAdmin == false) {
 			return false;
 		}
 		forbiddenAccess(request);
@@ -674,7 +700,7 @@ public class Server extends Verticle {
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 		StringBuilder out = new StringBuilder();
 
-		Templates.header(out, "Forbidden - My SongBook", "");
+		Templates.header(out, "Forbidden - My SongBook", "user");
 		Templates.alertAccessForbidden(out, request.path());
 		Templates.footer(out);
 		response.end(out.toString(), "UTF-8");

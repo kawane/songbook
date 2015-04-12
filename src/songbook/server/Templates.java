@@ -24,8 +24,8 @@ public class Templates {
         TEMPLATES_PATH = templatesPath;
     }
 
-    public static <A extends Appendable> A header(A out, CharSequence title, CharSequence songId) {
-        return print(out, "header.html", "title", title, "songId", songId);
+    public static <A extends Appendable> A header(A out, CharSequence title, CharSequence role) {
+        return print(out, "header.html", "title", title, "role", role);
 	}
 
     public static <A extends Appendable> A footer(A out) {
@@ -55,6 +55,10 @@ public class Templates {
     public static <A extends Appendable> A endSongItems(A out) {
         return print(out, "endSongItems.html");
 	}
+
+    public static <A extends Appendable> A signin(A out) {
+        return print(out, "signin.html");
+    }
 
     public static <A extends Appendable> A admin(A out) {
         return print(out, "admin.html");
