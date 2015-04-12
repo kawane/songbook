@@ -46,7 +46,7 @@ The first Songbook version will include this features:
 - [x] Supports for computers, smart phones and tablets.
 - [ ] Administration
   - [ ] Import/Export all songs in one archive
-  - [ ] Clear and rebuild index 
+  - [x] Clear and rebuild index 
 - [ ] Auto scroll for song.
 
 Here are some feature for the future (partial):
