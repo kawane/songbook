@@ -2,8 +2,8 @@ define(["require", "exports", "./SongApi"], function (require, exports, SongApi)
     var songTextEdit = document.getElementById("song");
     if (songTextEdit) {
         var api = new SongApi("/songs/");
-        var editButton = document.getElementById("editButton");
-        editButton.addEventListener("click", function (e) {
+        var saveButton = document.getElementById("saveButton");
+        saveButton.addEventListener("click", function (e) {
             e.preventDefault();
             var id = songTextEdit.dataset["songid"];
             if (id) {

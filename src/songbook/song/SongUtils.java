@@ -35,7 +35,7 @@ public class SongUtils {
 		return songData.replace("\r\n", "\n").replace("\r", "").split("\n");
 	}
 
-	public static void writeHtml(Appendable w, String songData) {
+	public static <A extends Appendable> A writeHtml(A w, String songData) {
 		try {
 			String[] songLines = SongUtils.getSongLines(songData);
 			w.append("<div class='song' itemscope='' itemtype='http://schema.org/MusicComposition'>\n");
@@ -138,5 +138,6 @@ public class SongUtils {
 		} catch (IOException e) {
 			System.err.println("An appendable must not failed here!");
 		}
+		return w;
 	}
 }

@@ -1,33 +1,4 @@
 
-#header {
-	background-color: #eef;
-	text-align: center;
-	padding: 1em;
-	border-bottom: 1px solid #ccc;
-}
-
-#editor {
-	white-space: pre;
-	padding: 1em;
-	border: 1px solid #ddd;
-	border-radius: 5px;
-	font-family: monospace;
-}
-
-#content {
-	max-width: 860px;
-	margin: 0 auto;
-}
-
-#intellij-banner {
-    max-width: 860px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.navbar-search .input-prepend {
-    margin-bottom: 0;
-}
 
 .song-edit {
 	-webkit-box-sizing: border-box;

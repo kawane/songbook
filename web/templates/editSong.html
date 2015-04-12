@@ -1,7 +1,13 @@
+
 <div>
     <textarea id="song" class="song-edit" data-songid="${songId}">${song}</textarea>
 </div>
 <script>
+    var toolbar = document.getElementById('toolbar');
+    toolbar.innerHTML += '<li><a id="saveButton" href="#save"><span id="" class="glyphicon glyphicon-floppy-save"></span></a></li>';
+    if ('${songId}') {
+        toolbar.innerHTML += '<li><a id="deleteButton" href="/delete/${songId}"><span class="glyphicon glyphicon-trash"></span></a></li>';
+    }
     require(["./edit"], function() {});
 </script>
 

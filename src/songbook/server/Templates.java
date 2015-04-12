@@ -36,6 +36,10 @@ public class Templates {
         return print(out, "editSong.html", "songId", songId, "song", song);
     }
 
+    public static <A extends Appendable> A viewSong(A out, CharSequence songId, CharSequence song) {
+        return print(out, "viewSong.html", "songId", songId, "song", song);
+    }
+
     public static <A extends Appendable> A newSong(A out) {
         return print(out, "newSong.song");
     }

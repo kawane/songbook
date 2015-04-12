@@ -256,9 +256,11 @@ public class Server extends Verticle {
 
 	private String htmlSong(String key, String id, String songData, String path) {
 		StringBuilder out = new StringBuilder();
+		// Todo use a songmark object to extract title and then generate html
 		Templates.header(out, id + " - My SongBook", id);
 		if (showKeyCreationAlert) Templates.alertKeyCreation(out, administratorKey, path);
-		SongUtils.writeHtml(out, songData);
+		Templates.viewSong(out, id, SongUtils.writeHtml(new StringBuilder(), songData));
+
 		Templates.footer(out);
 		return out.toString();
 	}

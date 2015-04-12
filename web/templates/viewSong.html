@@ -1,0 +1,12 @@
+
+<div>
+    ${song}
+</div>
+
+<script>
+    var toolbar = document.getElementById('toolbar');
+    toolbar.innerHTML += '<li><a id="editButton" href="/edit/${songId}"><span id="" class="glyphicon glyphicon-pencil"></span></a></li>';
+    toolbar.innerHTML += '<li><a id="deleteButton" href="/delete/${songId}"><span class="glyphicon glyphicon-trash"></span></a></li>';
+    require(["./edit"], function() {});
+</script>
+

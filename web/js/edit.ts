@@ -4,8 +4,8 @@ import SongApi = require("./SongApi");
 var songTextEdit = <HTMLTextAreaElement>document.getElementById("song");
 if (songTextEdit) {
     var api = new SongApi("/songs/");
-    var editButton = document.getElementById("editButton");
-    editButton.addEventListener("click", (e) => {
+    var saveButton = document.getElementById("saveButton");
+    saveButton.addEventListener("click", (e) => {
         e.preventDefault();
         var id = songTextEdit.dataset["songid"];
         if (id) {
