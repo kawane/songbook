@@ -1,6 +1,5 @@
 /// <amd-dependency path="ace" />
-/// <amd-dependency path="acemodehtml" />
-/// <amd-dependency path="acemodejson" />
+/// 
 
 import SongApi = require("./SongApi");
 
@@ -8,13 +7,16 @@ import SongApi = require("./SongApi");
 declare var ace;
 
 var updateSongEditor = ace.edit("update-songdata");
-updateSongEditor.getSession().setMode("ace/mode/html");
+updateSongEditor.getSession().setMode("ace/mode/song");
+updateSongEditor.renderer.setShowGutter(false);
 
 var createSongEditor = ace.edit("create-songdata");
-createSongEditor.getSession().setMode("ace/mode/html");
+createSongEditor.getSession().setMode("ace/mode/song");
+createSongEditor.renderer.setShowGutter(false);
 
 var resultEditor = ace.edit("result");
-resultEditor.getSession().setMode("ace/mode/html");
+resultEditor.getSession().setMode("ace/mode/song");
+resultEditor.renderer.setShowGutter(false);
 
 (<HTMLInputElement>document.querySelector("#server-url")).value = (<any>window.location).origin + "/songs/";
 
@@ -84,15 +86,19 @@ function executeAction(action, form) {
             var mode = "ace/mode/html";
             if (form.contentType.value === "application/json") {
                 mode = "ace/mode/json";
+            } else if (form.contentType.value === "text/plain") {
+                mode = "ace/mode/song";
             }
             api.get(form.id.value, form.contentType.value, function (song) {
-                setResult(song, "ace/mode/html");
+                setResult(song, mode);
             }, errorCallBack);
             break;
         case "searchApi":
             var mode = "ace/mode/html";
             if (form.contentType.value === "application/json") {
                 mode = "ace/mode/json";
+            } else if (form.contentType.value === "text/plain") {
+                mode = "ace/mode/song";
             }
             api.search(form.search.value, form.contentType.value, (song) => {
                 setResult(song, mode);
@@ -100,17 +106,17 @@ function executeAction(action, form) {
             break;
         case "create":
             api.create(createSongEditor.getValue(), (id) => {
-                setResult(id, "ace/mode/json");
+                setResult(id, "ace/mode/song");
             }, errorCallBack);
             break;
         case "update":
             api.update(form.id.value, updateSongEditor.getValue(), (result) => {
-                setResult(result, "ace/mode/json");
+                setResult(result, "ace/mode/song");
             }, errorCallBack);
             break;
         case "delete":
             api.remove(form.id.value, (result) => {
-                setResult(result, "ace/mode/json");
+                setResult(result, "ace/mode/song");
             }, errorCallBack);
             break;
     }

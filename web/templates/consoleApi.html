@@ -112,15 +112,13 @@
 
 </div>
 
+<script src='/js/ace/ace.js'></script>
+
 <script>
     require.config({paths: {
-        ace: "//cdn.jsdelivr.net/ace/1.1.7/min/ace",
-        acemodehtml: "//cdn.jsdelivr.net/ace/1.1.7/min/mode-html",
-        acemodejson: "//cdn.jsdelivr.net/ace/1.1.7/min/mode-json"
+        ace: "/js/ace/ace",
     }})
     require(["./consoleApi"], function() {});
 </script>
-<script src='//cdn.jsdelivr.net/ace/1.1.7/min/ace.js'></script>
-<script src='//cdn.jsdelivr.net/ace/1.1.7/min/mode-html.js'></script>
-<script src='//cdn.jsdelivr.net/ace/1.1.7/min/mode-json.js'></script>
+
 

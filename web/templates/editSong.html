@@ -1,7 +1,8 @@
 
 <div class="container-fluid">
-    <textarea id="song" class="song-edit" data-songid="${songId}">${song}</textarea>
+    <div id="song" class="song-edit" data-songid="${songId}">${song}</div>
 </div>
+<script src='/js/ace/ace.js'></script>
 <script>
     var toolbar = document.getElementById('toolbar');
     toolbar.innerHTML += '<a id="saveButton" href="#save"><span title="Save" class="btn btn-default navbar-btn  glyphicon glyphicon-floppy-save"></span></a> ';
