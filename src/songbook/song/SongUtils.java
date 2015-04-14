@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  */
 public class SongUtils {
 
-	public static Pattern CHORD_REGEXP = Pattern.compile("^(C|D|E|F|G|A|B)(b|#)?(m|M|min|maj)?((sus)?(b|#)?(2|4|5|6|7|9|10|11|13)?)*(\\+|aug|alt)?(\\/(C|D|E|F|G|A|B))?$");
+	public static Pattern CHORD_REGEXP = Pattern.compile("^(C|D|E|F|G|A|B)(b|#)?(m|M|min|maj)?((sus|add)?(b|#)?(2|4|5|6|7|9|10|11|13)?)*(\\+|aug|alt)?(\\/(C|D|E|F|G|A|B)(b|#)?)?$");
 
 	public static Document indexSong(String songData) {
 		Document document = new Document();
