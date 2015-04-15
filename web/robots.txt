@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /edit/
+Disallow: /new
+Disallow: /delete/
+Disallow: /admin/
+Disallow: /search/
+Disallow: /signin
+Disallow: /consoleApi

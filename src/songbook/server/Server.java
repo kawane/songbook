@@ -104,9 +104,8 @@ public class Server extends Verticle {
 		routeMatcher.noMatch(this::serveFile);
 		routeMatcher.get("/view/:id", this::getSong);
 		routeMatcher.get("/edit/:id", this::editSong);
-		routeMatcher.get("/edit/", this::editSong);
-		routeMatcher.get("/edit", this::editSong);
 		routeMatcher.get("/delete/:id", this::deleteSong);
+		routeMatcher.get("/new", this::editSong);
 
 
 		routeMatcher.get("/search/:query", this::search);
