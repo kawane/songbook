@@ -261,8 +261,9 @@ public class Server extends Verticle {
 	private String htmlSong(String sessionKey, String id, String songData, String path) {
 		StringBuilder out = new StringBuilder();
 		// Todo use a songmark object to extract title and then generate html
+		String title = SongUtils.getTitle(songData);
 		String role = isAdministrator(sessionKey) ? "admin" : "user";
-		Templates.header(out, id + " - My SongBook", role);
+		Templates.header(out, title + " - My SongBook", role);
 		if (showKeyCreationAlert) Templates.alertKeyCreation(out, administratorKey, path);
 		Templates.viewSong(out, id, SongUtils.writeHtml(new StringBuilder(), songData));
 
@@ -280,35 +281,33 @@ public class Server extends Verticle {
 		HttpServerResponse response = request.response();
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
 
-
 		StringBuilder out = new StringBuilder();
 		String role = isAdministrator(sessionKey) ? "admin" : "user";
-		Templates.header(out, "Edit - My SongBook", role);
-		if (showKeyCreationAlert) Templates.alertKeyCreation(out, administratorKey, request.path());
+
 		if (id != null && !id.isEmpty()) {
 			songDb.readSong(id, (handler) -> {
 				if (handler.succeeded()) {
+					String songData = handler.result();
+					String title = SongUtils.getTitle(songData);
+					Templates.header(out, "Edit - " + title + " - My SongBook", role);
 					Templates.editSong(out, id, handler.result());
 					Templates.footer(out);
-					response.end(out.toString(), "UTF-8");
 				} else {
-					Templates.alertSongDoesNotExist(out, id);
 					logger.error("Failed to read song " + id, handler.cause());
 					response.setStatusCode(404);
 
+					Templates.header(out, "Edit - My SongBook", role);
 					Templates.alertSongDoesNotExist(out, id);
 					Templates.footer(out);
-					response.end(out.toString(), "UTF-8");
 				}
 				response.end(out.toString(), "UTF-8");
 			});
 		} else {
+			Templates.header(out, "Create Song - My SongBook", role);
 			Templates.editSong(out, "", Templates.newSong(new StringBuilder()));
 			Templates.footer(out);
 			response.end(out.toString(), "UTF-8");
-
 		}
-
 	}
 
 	private void createSong(HttpServerRequest request) {

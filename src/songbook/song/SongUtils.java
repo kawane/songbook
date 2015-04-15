@@ -14,6 +14,15 @@ public class SongUtils {
 
 	public static Pattern CHORD_REGEXP = Pattern.compile("^(C|D|E|F|G|A|B)(b|#)?(m|M|min|maj)?((sus|add)?(b|#)?(2|4|5|6|7|9|10|11|13)?)*(\\+|aug|alt)?(\\/(C|D|E|F|G|A|B)(b|#)?)?$");
 
+
+	public static String getTitle(String songData) {
+		int indexOfFirstLine = songData.replace("\r\n", "\n").replace("\r", "\n").indexOf("\n");
+		if (indexOfFirstLine != -1) {
+			return songData.substring(0, indexOfFirstLine);
+		}
+		return songData;
+	}
+
 	public static Document indexSong(String songData) {
 		Document document = new Document();
 		String[] songLines = getSongLines(songData);
@@ -32,7 +41,7 @@ public class SongUtils {
 	}
 
 	public static String[] getSongLines(String songData) {
-		return songData.replace("\r\n", "\n").replace("\r", "").split("\n");
+		return songData.replace("\r\n", "\n").replace("\r", "\n").split("\n");
 	}
 
 	public static <A extends Appendable> A writeHtml(A w, String songData) {
@@ -140,4 +149,5 @@ public class SongUtils {
 		}
 		return w;
 	}
+
 }
