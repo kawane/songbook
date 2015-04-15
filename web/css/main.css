@@ -7,6 +7,7 @@
 	box-sizing: border-box;
 	width: 100%;
 	font-family: consolas, "monospace";
+	white-space: pre;
 }
 
 .user-admin, .admin-user {
