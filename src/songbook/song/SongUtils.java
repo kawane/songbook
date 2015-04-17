@@ -2,6 +2,7 @@ package songbook.song;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 
 import java.io.IOException;
@@ -27,13 +28,13 @@ public class SongUtils {
 		Document document = new Document();
 		String[] songLines = getSongLines(songData);
 		document.add(new TextField("song", songData, Field.Store.NO));
-		document.add(new TextField("title", songLines[0], Field.Store.YES));
+		document.add(new StringField("title", songLines[0], Field.Store.YES));
 		for (String line: songLines) {
 			String lineLC = line.toLowerCase();
 			if (lineLC.startsWith("artist:")) {
-				document.add(new TextField("artist", line.substring("artist:".length()), Field.Store.YES));
+				document.add(new StringField("artist", line.substring("artist:".length()), Field.Store.YES));
 			} else if (lineLC.startsWith("album:")) {
-				document.add(new TextField("album", line.substring("album:".length()), Field.Store.YES));
+				document.add(new StringField("album", line.substring("album:".length()), Field.Store.YES));
 			}
 			// TODO Fulltext search
 		}
