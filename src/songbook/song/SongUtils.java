@@ -36,7 +36,6 @@ public class SongUtils {
 			} else if (lineLC.startsWith("album:")) {
 				document.add(new StringField("album", line.substring("album:".length()), Field.Store.YES));
 			}
-			// TODO Fulltext search
 		}
 		return document;
 	}
