@@ -29,12 +29,16 @@ public class SongUtils {
 		String[] songLines = getSongLines(songData);
 		document.add(new TextField("song", songData, Field.Store.NO));
 		document.add(new StringField("title", songLines[0], Field.Store.YES));
-		for (String line: songLines) {
-			String lineLC = line.toLowerCase();
-			if (lineLC.startsWith("artist:")) {
-				document.add(new StringField("artist", line.substring("artist:".length()), Field.Store.YES));
-			} else if (lineLC.startsWith("album:")) {
-				document.add(new StringField("album", line.substring("album:".length()), Field.Store.YES));
+		for (int i = 1; i < songLines.length; i++) {
+			String line = songLines[i].trim();
+			int indexOfCol = line.indexOf(":");
+
+			if (indexOfCol != -1) {
+				String propName = line.substring(0, indexOfCol).toLowerCase().trim();
+				String propValue = line.substring(indexOfCol + 1).trim();
+				if (!propValue.isEmpty()) {
+					document.add(new StringField(propName, propValue, Field.Store.YES));
+				}
 			}
 		}
 		return document;
