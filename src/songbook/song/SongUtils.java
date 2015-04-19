@@ -57,7 +57,7 @@ public class SongUtils {
 			w.append("</div>\n");
 			boolean verse = false;
 			for (int i = 1; i < songLines.length; i++) {
-				String line = songLines[i].trim();
+				String line = songLines[i];
 				int indexOfCol = line.indexOf(":");
 
 				if (indexOfCol != -1) {
@@ -108,7 +108,7 @@ public class SongUtils {
 						verse = true;
 					}
 
-				} else if (line.isEmpty()) {
+				} else if (line.trim().isEmpty()) {
 					if (verse) {
 						// close verse
 						w.append("</div>\n");
