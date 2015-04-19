@@ -3,6 +3,8 @@ Songbook
 
 Visit [Songbook](http://kawane.ovh/songbook/index.html) website.
 
+[![Build Status](https://drone.io/github.com/kawane/songbook/status.png)](https://drone.io/github.com/kawane/songbook/latest)
+
 Songbook is an extremely simple server that allows you to store and edit songs with chords and lyrics on your own server.
 It helps setting you free of web site full of distracting animations to focus on the song.
 
