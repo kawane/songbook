@@ -1,0 +1,21 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+version = '0.4'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.apache.lucene', name: 'lucene-core', version: '4.8.0'
+    compile group: 'org.apache.lucene', name: 'lucene-queryparser', version: '4.8.0'
+    compile group: 'org.apache.lucene', name: 'lucene-analyzers-common', version: '4.8.0'
+
+    compile group: 'io.vertx', name: 'vertx-core', version: '2.1'
+    compile group: 'io.vertx', name: 'vertx-platform', version: '2.1'
+    compile group: 'io.vertx', name: 'vertx-hazelcast', version: '2.1'
+
+    testCompile 'junit:junit:4.11'
+}
