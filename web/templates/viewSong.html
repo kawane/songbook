@@ -1,5 +1,5 @@
 
-<div class="container-fluid">
+<div id="song" class="container-fluid">
     ${song}
 </div>
 
@@ -7,5 +7,8 @@
     var toolbar = document.getElementById('toolbar');
     toolbar.innerHTML += '<a id="editButton" href="/edit/${songId}"><span id="" title="Edit" class="btn btn-default navbar-btn glyphicon glyphicon-pencil"></span></a> ';
     toolbar.innerHTML += '<a id="deleteButton" href="/delete/${songId}"><span title="Delete" class="btn btn-default navbar-btn glyphicon glyphicon-trash"></span></a> ';
+    toolbar.innerHTML += '<a id="biggerButton"><span title="Bigger" class="btn btn-default navbar-btn glyphicon glyphicon-zoom-in"></span></a> ';
+    toolbar.innerHTML += '<a id="smallerButton"><span title="Bigger" class="btn btn-default navbar-btn glyphicon glyphicon-zoom-out"></span></a> ';
+    require(["./view"], function() {});
 </script>
 
