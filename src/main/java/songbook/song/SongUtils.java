@@ -86,7 +86,7 @@ public class SongUtils {
 							case "album":
 								w.append(" itemprop='inAlbum'");
 								break;
-							case "tone":
+							case "tone":case "key":
 								w.append(" itemprop='musicalKey'");
 								break;
 						}
