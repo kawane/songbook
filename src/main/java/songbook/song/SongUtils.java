@@ -128,7 +128,7 @@ public class SongUtils {
 							verse = true;
 						}
 						w.append("<div class='song-chords'>");
-						w.append(CHORD_REGEXP.matcher(line).replaceAll("<span class='chord'>$0</span>"));
+						w.append(CHORD_REGEXP.matcher(line).replaceAll("<span class='song-chord'>$0</span>"));
 						w.append("</div>\n");
 					} else {
 						if (!verse) {
