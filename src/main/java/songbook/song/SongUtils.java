@@ -13,8 +13,8 @@ import java.util.regex.Pattern;
  */
 public class SongUtils {
 
-	public static Pattern CHORD_REGEXP = Pattern.compile("^(C|D|E|F|G|A|B)(b|#)?(m|M|min|maj)?((sus|add)?(b|#)?(2|4|5|6|7|9|10|11|13)?)*(\\+|aug|alt)?(\\/(C|D|E|F|G|A|B)(b|#)?)?$");
-
+	public static String  CHORD_REGEXP_STR = "(C|D|E|F|G|A|B)(b|#)?(m|M|min|maj)?((sus|add)?(b|#)?(2|4|5|6|7|9|10|11|13)?)*(\\+|aug|alt)?(\\/(C|D|E|F|G|A|B)(b|#)?)?";
+	public static Pattern CHORD_REGEXP = Pattern.compile(CHORD_REGEXP_STR);
 
 	public static String getTitle(String songData) {
 		int indexOfFirstLine = songData.replace("\r\n", "\n").replace("\r", "\n").indexOf("\n");
@@ -119,7 +119,7 @@ public class SongUtils {
 					boolean isChord = true;
 					for (int j = 0; isChord && j < tokens.length; j++) {
 						if (!tokens[j].isEmpty()) {
-							isChord = isChord && SongUtils.CHORD_REGEXP.matcher(tokens[j]).matches();
+							isChord = isChord && CHORD_REGEXP.matcher(tokens[j]).matches();
 						}
 					}
 					if (isChord) {
@@ -128,7 +128,7 @@ public class SongUtils {
 							verse = true;
 						}
 						w.append("<div class='song-chords'>");
-						w.append(line);
+						w.append(CHORD_REGEXP.matcher(line).replaceAll("<span class='chord'>$0</span>"));
 						w.append("</div>\n");
 					} else {
 						if (!verse) {
