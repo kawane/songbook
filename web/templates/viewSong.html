@@ -9,6 +9,9 @@
     toolbar.innerHTML += '<a id="deleteButton" href="/delete/${songId}"><span title="Delete" class="btn btn-default navbar-btn glyphicon glyphicon-trash"></span></a> ';
     toolbar.innerHTML += '<a id="biggerButton"><span title="Bigger" class="btn btn-default navbar-btn glyphicon glyphicon-zoom-in"></span></a> ';
     toolbar.innerHTML += '<a id="smallerButton"><span title="Bigger" class="btn btn-default navbar-btn glyphicon glyphicon-zoom-out"></span></a> ';
+    toolbar.innerHTML += '<a id="transposeLessButton"><span title="Bigger" class="btn btn-default navbar-btn glyphicon glyphicon-chevron-left"></span></a> ';
+    toolbar.innerHTML += '<a><span id="transposeDisplay" title="Bigger" class="btn btn-default navbar-btn">0</span></a> ';
+    toolbar.innerHTML += '<a id="transposeMoreButton"><span title="Bigger" class="btn btn-default navbar-btn glyphicon glyphicon-chevron-right"></span></a> ';
     require(["./view"], function() {});
 </script>
 
