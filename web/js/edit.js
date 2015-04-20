@@ -10,9 +10,9 @@ define(["require", "exports", "./SongApi"], function (require, exports, SongApi)
     var saveButton = document.getElementById("saveButton");
     saveButton.addEventListener("click", function (e) {
         e.preventDefault();
-        var id = songTextEdit.container.dataset["songid"];
-        if (id) {
-            api.update(id, songTextEdit.getValue(), function (id) {
+        var songId = songTextEdit.container.dataset["songid"];
+        if (songId) {
+            api.update(songId, songTextEdit.getValue(), function (id) {
                 location.pathname = "/songs/" + id;
             }, function (error) {
                 console.log(error);
