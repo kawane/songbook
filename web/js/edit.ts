@@ -16,9 +16,9 @@ var api = new SongApi("/songs/");
 var saveButton = document.getElementById("saveButton");
 saveButton.addEventListener("click", (e) => {
     e.preventDefault();
-    var id = songTextEdit.container.dataset["songid"];
-    if (id) {
-        api.update(id, songTextEdit.getValue(), (id: string) => {
+    var songId = songTextEdit.container.dataset["songid"];
+    if (songId) {
+        api.update(songId, songTextEdit.getValue(), (id: string) => {
             location.pathname = "/songs/" + id;
         }, (error) => {
             console.log(error);
