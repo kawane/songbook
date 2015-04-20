@@ -5,6 +5,10 @@
 
 # out directory
 out
+build/
+
+# Gradle
+.gradle
 
 # Idea project files to ignore
 *.iws
