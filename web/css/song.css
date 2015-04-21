@@ -1,7 +1,6 @@
 
 
 .song {
-	margin: 0 2em;
 	font-family: consolas, monospace;
 	white-space: nowrap;
 }
@@ -13,12 +12,16 @@
 .song-verse,
 .song-chorus
 {
-	margin: 3ex 0;	
+	margin: 2.5ex 0;
 }
 
 .song-chorus {
 	padding-left: 1em;
+}
+
+.song-chorus > .song-metadata-name {
 	font-style: italic;
+	line-height: 1.5em;
 }
 
 .song-chorus-recall {
@@ -42,41 +45,18 @@
 }
 
 .song-chords {
-    line-height: 0.8em;
-    color: #888;
+    line-height: 0.5em;
     white-space: pre;
+	font-weight: bold;
 }
 
-.song-line-with-chords {
-	position: relative;
-	white-space: pre;
-}
-
-.song-line-with-chords > .song-chord {
-	position: relative;
-	top: -1em;
-    left: 0.5em;
-
-    line-height: 0.8em;
-    color: #888;
-    white-space: pre;
-
+.song-chords + .song-chords {
+	line-height: 2em
 }
 
 .song-title {
 	font-weight: bold;
 	font-size: 140%;
-}
-
-.song-artist {
-	font-style: italic;
-}
-
-.song-album {
-
-}
-
-.song-year {
 }
 
 .song-metadata-name {
