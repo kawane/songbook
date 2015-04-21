@@ -90,7 +90,10 @@ public class SongUtils {
 								w.append(" itemprop='musicalKey'");
 								break;
 						}
-						w.append(">");
+
+						w.append("data-name='");
+						w.append(propName);
+						w.append("'>");
 						boolean isLink = propName.equals("video") || propName.equals("audio") || propName.equals("link");
 						if (isLink) {
 							w.append("<a href='");
