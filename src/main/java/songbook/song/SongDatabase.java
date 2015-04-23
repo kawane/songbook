@@ -1,12 +1,12 @@
 package songbook.song;
 
+import songbook.server.ChannelUtil;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -47,17 +47,8 @@ public class SongDatabase {
 
     public String getSongContents(String id) {
         try {
-            StringBuilder contents = new StringBuilder();
-
-            ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
-            ReadableByteChannel songChannel = readChannelForSong(id);
-            int read = songChannel.read(buffer);
-            while (read > 0) {
-                contents.append(new String(buffer.array(), StandardCharsets.UTF_8));
-                read = songChannel.read(buffer);
-            }
-
-            return contents.toString();
+            ReadableByteChannel channel = readChannelForSong(id);
+            return channel == null ? null : ChannelUtil.getStringContents(channel);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Can't read song '" + id + "'", e);
             return null;

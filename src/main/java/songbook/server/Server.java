@@ -1,26 +1,19 @@
 package songbook.server;
 
 import io.undertow.Undertow;
-import io.undertow.io.Sender;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.Cookie;
 import io.undertow.server.handlers.CookieImpl;
 import io.undertow.server.handlers.ExceptionHandler;
-import io.undertow.server.handlers.PathTemplateHandler;
+import io.undertow.server.handlers.resource.FileResourceManager;
 import io.undertow.util.*;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
 import songbook.song.IndexDatabase;
 import songbook.song.SongDatabase;
 import songbook.song.SongUtils;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,7 +23,6 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -106,63 +98,34 @@ public class Server {
 	}
 
 	private PathTemplateHandler pathTemplateHandler() {
-		PathTemplateHandler pathHandler = pathTemplate();
+		HttpHandler fallThrough = resource(new FileResourceManager(getWebRoot().toFile(), 1024)); //get(this::serveFile);
+
+		PathTemplateHandler pathHandler = new PathTemplateHandler(fallThrough);
 
 		pathHandler.add("/", get(this::search)); // Home Page
 
 		pathHandler.add("/view/:id", get(this::getSong));
 		pathHandler.add("/edit/:id", adminAccess(get(this::editSong)));
-		pathHandler.add("/delete/:id", adminAccess(get(this::deleteSong)));
+		//pathHandler.add("/delete/:id", adminAccess(get(this::deleteSong)));
 		pathHandler.add("/new", adminAccess(get(this::editSong)));
 
 
 		pathHandler.add("/search/:query", get(this::search));
-		pathHandler.add("/search/", get(this::search));
 		pathHandler.add("/search", get(this::search));
 
-		pathHandler.add("/songs", adminAccess(post(this::createSong)));
-		pathHandler.add("/songs/", adminAccess(post(this::createSong)));
+		//pathHandler.add("/songs", adminAccess(post(this::createSong)));
 
-		pathHandler.add("/songs/:id", get(this::getSong));
-		pathHandler.add("/songs/:id", adminAccess(put(this::modifySong)));
-		pathHandler.add("/songs/:id", adminAccess(delete(this::deleteSong)));
+		pathHandler.add("/songs/{id}", get(this::getSong));
+		//pathHandler.add("/songs/:id", adminAccess(put(this::modifySong)));
+		//pathHandler.add("/songs/:id", adminAccess(delete(this::deleteSong)));
 
-		pathHandler.add("/consoleApi", get(this::consoleApi));
+		//pathHandler.add("/consoleApi", get(this::consoleApi));
 
-		pathHandler.add("/signin", get(this::signin));
-		pathHandler.add("/admin/:section/:command", adminAccess(get(this::adminCommand)));
-		pathHandler.add("/admin", adminAccess(get(this::admin)));
-
-		pathHandler.add("*", get(this::serveFile));
+		//pathHandler.add("/signin", get(this::signin));
+		//pathHandler.add("/admin/:section/:command", adminAccess(get(this::adminCommand)));
+		//pathHandler.add("/admin", adminAccess(get(this::admin)));
 
 		return pathHandler;
-	}
-
-	private void serveFile(final HttpServerExchange exchange) throws IOException {
-		// TODO use ResourceManager and resource handler
-
-		// Serve Files
-		String path = exchange.getRequestPath().equals("/") ? "index.html" : exchange.getRequestPath().substring(1);
-		Path localFilePath = getWebRoot().resolve(path).toAbsolutePath();
-		logger.info("GET " + localFilePath);
-		String type = "text/plain";
-		if (path.endsWith(".js")) {
-			type = "application/javascript";
-		} else if (path.endsWith(".css")) {
-			type = "text/css";
-		} else if (path.endsWith(".html")) {
-			type = "text/html";
-		}
-
-		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, type);
-		send(exchange, () -> {
-			try {
-				return Files.newByteChannel(localFilePath);
-			} catch (IOException e) {
-				error("Can't read file '" + path + "'", e);
-				return null;
-			}
-		});
 	}
 
 	private void search(final HttpServerExchange exchange) throws Exception {
@@ -288,46 +251,44 @@ public class Server {
 			exchange.getResponseSender().send(out.toString());
 		}
 	}
+/*
+	private void createSong(final HttpServerExchange exchange) throws Exception {
 
-	private void createSong(final HttpServerExchange exchange) {
-		request.bodyHandler((body) -> {
-			HttpServerResponse response = request.response();
-			String songData = body.toString();
-			try {
+		String songData = ChannelUtil.getStringContents(exchange.getRequestChannel());
+		try {
 
-				// indexes updated song
-				Document document = SongUtils.indexSong(songData);
-				String title = document.get("title");
-				String artist = document.get("artist");
+			// indexes updated song
+			Document document = SongUtils.indexSong(songData);
+			String title = document.get("title");
+			String artist = document.get("artist");
 
-				if (title == null || title.isEmpty() || artist == null) {
-					response.setStatusCode(400);
-					response.end("You must provide a title and an artist information", "UTF-8");
-					return;
-				}
-				String id = songDb.generateId(title, artist);
-				// prepares new document
-				document.add(new StringField("id", id, Field.Store.YES));
-				indexDb.addOrUpdateDocument(document);
-
-				// writes song to database
-				songDb.writeSong(id, songData, (ar) -> {
-					if (ar.succeeded()) {
-						response.end(id, "UTF-8");
-					} else {
-						error("Failed to create the song", ar.cause());
-						response.setStatusCode(500);
-						response.end();
-					}
-				});
-
-
-			} catch (Exception e) {
-				error("Error indexing song", e);
-				response.setStatusCode(500);
-				response.end();
+			if (title == null || title.isEmpty() || artist == null) {
+				response.setStatusCode(400);
+				response.end("You must provide a title and an artist information", "UTF-8");
+				return;
 			}
-		});
+			String id = songDb.generateId(title, artist);
+			// prepares new document
+			document.add(new StringField("id", id, Field.Store.YES));
+			indexDb.addOrUpdateDocument(document);
+
+			// writes song to database
+			songDb.writeSong(id, songData, (ar) -> {
+				if (ar.succeeded()) {
+					response.end(id, "UTF-8");
+				} else {
+					error("Failed to create the song", ar.cause());
+					response.setStatusCode(500);
+					response.end();
+				}
+			});
+
+
+		} catch (Exception e) {
+			error("Error indexing song", e);
+			response.setStatusCode(500);
+			response.end();
+		}
 	}
 
 	private void modifySong(final HttpServerExchange exchange) {
@@ -500,6 +461,7 @@ public class Server {
 		Templates.footer(out);
 		response.end(out.toString(), "UTF-8");
 	}
+*/
 
 	private Path getWebRoot() {
 		final String webRoot = System.getenv("WEB_ROOT");
@@ -677,12 +639,12 @@ public class Server {
 			exceptionHandler.handleRequest(exchange);
 			long end = System.currentTimeMillis();
 			long time = end - start < 0 ? 0 : end - start;
-			info("[" + exchange.getRequestMethod() + "]" + exchange.getRequestPath() + " in " + time + " ms");
+			info("[" + exchange.getRequestMethod() + "]" + exchange.getRequestURI() + " in " + time + " ms");
 		};
 
 		Undertow.Builder builder = Undertow.builder();
 		builder.addHttpListener(port, "localhost");
-		builder.setHandler(gracefulShutdown(urlDecodingHandler("UTF-8", logHandler)));
+		builder.setHandler(gracefulShutdown(logHandler));
 
 		info("Listens on port " + port);
 
@@ -696,51 +658,6 @@ public class Server {
 
 	protected String createMessage(String message, boolean json) {
 		return json ? "{ \"message\": \"" + message + "\"}" : message;
-	}
-
-	protected void send(HttpServerExchange exchange, Supplier<ReadableByteChannel> readSupplier) {
-		Sender sender = exchange.getResponseSender();
-		try (ReadableByteChannel modelChannel = readSupplier.get()) {
-			ByteBuffer buffer = ByteBuffer.allocateDirect(1024*8);
-
-			int bytesCount = modelChannel.read(buffer);
-			while (bytesCount > 0) {
-				buffer.flip();
-				sender.send(buffer);
-				buffer.clear();
-
-				bytesCount = modelChannel.read(buffer);
-			}
-		} catch (IOException e) {
-			error("Can't read '" + exchange.getRequestPath() + "'", e);
-		} finally {
-			sender.close();
-		}
-	}
-
-	protected void write(HttpServerExchange exchange, Supplier<WritableByteChannel> writeSupplier) {
-		ReadableByteChannel requestChannel = exchange.getRequestChannel();
-		try (WritableByteChannel modelChannel = writeSupplier.get()) {
-
-			ByteBuffer buffer = ByteBuffer.allocateDirect(1024*8);
-
-			int bytesCount = requestChannel.read(buffer);
-			while (bytesCount > 0) {
-				buffer.flip();
-				modelChannel.write(buffer);
-				buffer.clear();
-
-				bytesCount = requestChannel.read(buffer);
-			}
-		} catch (IOException e) {
-			error("Can't write '/" + exchange.getRequestPath() + "'", e);
-		} finally {
-			try {
-				requestChannel.close();
-			} catch (IOException e) {
-				error("Can't write '/" + exchange.getRequestPath() + "'", e);
-			}
-		}
 	}
 
 	protected String getHeader(HttpServerExchange exchange, HttpString header) {
@@ -796,5 +713,10 @@ public class Server {
 
 	private void error(String message, IOException e) {
 		logger.log(Level.SEVERE, message, e);
+	}
+
+	public static void main(String[] args) {
+		Server server = new Server();
+		server.start();
 	}
 }

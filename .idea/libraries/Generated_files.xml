@@ -14,7 +14,7 @@
       <root url="file://$PROJECT_DIR$/src/main/webapp/js/SongApi.js" />
       <root url="file://$PROJECT_DIR$/src/main/webapp/js/consoleApi.js" />
       <root url="file://$PROJECT_DIR$/src/main/webapp/js/search.js" />
-      <root url="file://$PROJECT_DIR$/web/js/view.js" />
+      <root url="file://$PROJECT_DIR$/src/main/webapp/js/view.js" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

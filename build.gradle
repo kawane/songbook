@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'application'
 
 sourceCompatibility = 1.8
 
@@ -17,3 +18,5 @@ dependencies {
 
     testCompile 'junit:junit:4.11'
 }
+
+mainClassName = 'songbook.server.Server'
