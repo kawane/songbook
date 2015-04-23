@@ -16,6 +16,7 @@
 
 package songbook.server;
 
+import io.undertow.server.HttpServerExchange;
 import io.undertow.util.StatusCodes;
 
 /**
@@ -33,7 +34,18 @@ public class ServerException extends Exception {
         this.code = code;
     }
 
-    public int getCode() {
-        return code;
+    public void serveError(String role, HttpServerExchange exchange) {
+        exchange.setResponseCode(code);
+
+        StringBuilder out = new StringBuilder();
+        Templates.header(out, Integer.toString(code), role);
+        errorText(out);
+        Templates.footer(out);
+
+        exchange.getResponseSender().send(out.toString());
+    }
+
+    public void errorText(StringBuilder out) {
+        out.append(getMessage());
     }
 }
