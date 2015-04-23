@@ -104,20 +104,26 @@ public class Server {
 
 		pathHandler.add("/", get(this::search)); // Home Page
 
-		pathHandler.add("/view/:id", get(this::getSong));
-		pathHandler.add("/edit/:id", adminAccess(get(this::editSong)));
-		//pathHandler.add("/delete/:id", adminAccess(get(this::deleteSong)));
+		pathHandler.add("/view/{id}", get(this::getSong));
+		pathHandler.add("/edit/{id}", adminAccess(get(this::editSong)));
+		//pathHandler.add("/delete/{id}", adminAccess(get(this::deleteSong)));
 		pathHandler.add("/new", adminAccess(get(this::editSong)));
 
 
-		pathHandler.add("/search/:query", get(this::search));
+		pathHandler.add("/search/{query}", get(this::search));
 		pathHandler.add("/search", get(this::search));
 
 		//pathHandler.add("/songs", adminAccess(post(this::createSong)));
 
-		pathHandler.add("/songs/{id}", get(this::getSong));
-		//pathHandler.add("/songs/:id", adminAccess(put(this::modifySong)));
-		//pathHandler.add("/songs/:id", adminAccess(delete(this::deleteSong)));
+		pathHandler.add("/songs/{id}",
+			get(this::getSong/*,
+				adminAccess(
+					put(this::modifySong,
+						delete(this::deleteSong)
+					)
+				)
+			*/)
+		);
 
 		//pathHandler.add("/consoleApi", get(this::consoleApi));
 
@@ -290,46 +296,46 @@ public class Server {
 			response.end();
 		}
 	}
-
+*/
+	/*
 	private void modifySong(final HttpServerExchange exchange) {
-		request.bodyHandler((body) -> {
-			HttpServerResponse response = request.response();
-			String songData = body.toString();
-			try {
+		HttpServerResponse response = request.response();
+		String songData = body.toString();
 
-				// indexes updated song
-				Document document = SongUtils.indexSong(songData);
+		try {
 
-				String id = getParameter(exchange, ("id"));
+			// indexes updated song
+			Document document = SongUtils.indexSong(songData);
 
-				// Verify that song exists
-				if (songDb.exists(id)) {
-					// prepares new document
-					document.add(new StringField("id", id, Field.Store.YES));
-					indexDb.addOrUpdateDocument(document);
+			String id = getParameter(exchange, ("id"));
 
-					// writes song to database
-					songDb.writeSong(id, songData, (ar) -> {
-						if (ar.succeeded()) {
-							response.end(id, "UTF-8");
-						} else {
-							error("Failed to update the song", ar.cause());
-							response.setStatusCode(500);
-							response.end();
-						}
-					});
-				} else {
-					response.setStatusCode(400);
-					response.end("The song doesn't exist and cannot be updated", "UTF-8");
-				}
+			// Verify that song exists
+			if (songDb.exists(id)) {
+				// prepares new document
+				document.add(new StringField("id", id, Field.Store.YES));
+				indexDb.addOrUpdateDocument(document);
 
-
-			} catch (Exception e) {
-				error("Error indexing song", e);
-				response.setStatusCode(500);
-				response.end();
+				// writes song to database
+				songDb.writeSong(id, songData, (ar) -> {
+					if (ar.succeeded()) {
+						response.end(id, "UTF-8");
+					} else {
+						error("Failed to update the song", ar.cause());
+						response.setStatusCode(500);
+						response.end();
+					}
+				});
+			} else {
+				response.setStatusCode(400);
+				response.end("The song doesn't exist and cannot be updated", "UTF-8");
 			}
-		});
+
+
+		} catch (Exception e) {
+			error("Error indexing song", e);
+			response.setStatusCode(500);
+			response.end();
+		}
 	}
 
 	private void deleteSong(final HttpServerExchange exchange) {
@@ -375,7 +381,8 @@ public class Server {
 			response.end("Error removing song", "UTF-8");
 		}
 	}
-
+*/
+	/*
 	private void consoleApi(final HttpServerExchange exchange) {
 		HttpServerResponse response = request.response();
 		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
@@ -671,19 +678,24 @@ public class Server {
 	}
 
 	private HttpHandler get(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.GET);
+		return methodFilterHandler(handler, Methods.GET, null);
+	}
+
+
+	private HttpHandler get(HttpHandler handler, HttpHandler next) {
+		return methodFilterHandler(handler, Methods.GET, next);
 	}
 
 	private HttpHandler post(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.POST);
+		return methodFilterHandler(handler, Methods.POST, null);
 	}
 
 	private HttpHandler put(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.PUT);
+		return methodFilterHandler(handler, Methods.PUT, null);
 	}
 
 	private HttpHandler delete(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.DELETE);
+		return methodFilterHandler(handler, Methods.DELETE, null);
 	}
 
 	private HttpHandler adminAccess(HttpHandler handler) {
@@ -697,10 +709,12 @@ public class Server {
 		};
 	}
 
-	private HttpHandler methodFilterHandler(HttpHandler handler, HttpString method) {
+	private HttpHandler methodFilterHandler(HttpHandler handler, HttpString method, HttpHandler next) {
 		return exchange -> {
 			if (method.equals(exchange.getRequestMethod())) {
 				handler.handleRequest(exchange);
+			} else if (next != null) {
+				next.handleRequest(exchange);
 			} else {
 				throw new ServerException(StatusCodes.METHOD_NOT_ALLOWED);
 			}
