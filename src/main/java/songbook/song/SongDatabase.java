@@ -27,9 +27,13 @@ public class SongDatabase {
         this.songDir = songDir;
     }
 
+    public void clearCache() {
+        // TODO to implement when a cache will be needed.
+    }
+
     public Stream<String> listSongIds() {
         try {
-            return Files.walk(songDir, 1).map(SongDatabase::extractId);
+            return Files.list(songDir).map(SongDatabase::extractId);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Can't list songs", e);
             return Stream.empty();
@@ -133,5 +137,4 @@ public class SongDatabase {
             return id;
         }
     }
-
 }

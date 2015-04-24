@@ -34,6 +34,11 @@ public class ServerException extends Exception {
         this.code = code;
     }
 
+    public ServerException(int code, String message) {
+        super(StatusCodes.getReason(code) + ":" + message);
+        this.code = code;
+    }
+
     public void serveError(String role, HttpServerExchange exchange) {
         exchange.setResponseCode(code);
 

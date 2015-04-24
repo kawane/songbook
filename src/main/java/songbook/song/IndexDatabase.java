@@ -81,13 +81,15 @@ public class IndexDatabase {
         songDb.listSongIds().forEach(
             (id) -> {
                 String contents = songDb.getSongContents(id);
-                Document document = SongUtils.indexSong(contents);
-                document.add(new StringField("id", id, Field.Store.YES));
-                try {
-                    indexWriter.addDocument(document);
-                    indexWriter.commit();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Can't index song '" + id + "'", e);
+                if (contents != null) {
+                    Document document = SongUtils.indexSong(contents);
+                    document.add(new StringField("id", id, Field.Store.YES));
+                    try {
+                        indexWriter.addDocument(document);
+                        indexWriter.commit();
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Can't index song '" + id + "'", e);
+                    }
                 }
             }
         );
