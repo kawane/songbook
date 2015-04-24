@@ -64,6 +64,7 @@
     line-height: 0.5em;
     white-space: pre;
 	font-weight: bold;
+	color: rgb(33,128,255);
 }
 
 .song-chords + .song-chords {
@@ -77,7 +78,8 @@
 
 .song-metadata-name {
 	font-weight: bold;
-	text-transform: capitalize;
+	text-transform: capitalize;	
+	color: rgb(0,165,0);
 }
 
 .song-metadata-value {
