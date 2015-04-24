@@ -17,6 +17,8 @@ import songbook.server.Templates;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,6 +26,8 @@ import java.util.stream.Stream;
  * Created by laurent on 08/05/2014.
  */
 public class IndexDatabase {
+
+    private final Logger logger = Logger.getLogger("Songbook");
 
     private final SongDatabase songDb;
 
@@ -74,20 +78,21 @@ public class IndexDatabase {
         indexWriter.deleteAll();
         indexWriter.commit();
 
-        songDb.listSongIds((handler) -> {
-            for (String id : handler.result()) {
-                songDb.readSong(id, songHandler -> {
-                    Document document = SongUtils.indexSong(songHandler.result());
+        songDb.listSongIds().forEach(
+            (id) -> {
+                String contents = songDb.getSongContents(id);
+                if (contents != null) {
+                    Document document = SongUtils.indexSong(contents);
                     document.add(new StringField("id", id, Field.Store.YES));
                     try {
                         indexWriter.addDocument(document);
                         indexWriter.commit();
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        logger.log(Level.WARNING, "Can't index song '" + id + "'", e);
                     }
-                });
+                }
             }
-        });
+        );
         indexWriter.commit();
 
     }

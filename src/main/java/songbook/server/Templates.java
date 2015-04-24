@@ -72,6 +72,10 @@ public class Templates {
         return print(out, "alerts/songDoesNotExist.html", "songId", songId);
 	}
 
+    public static <A extends Appendable> A alertMissingArguments(A out, CharSequence arguments) {
+        return print(out, "alerts/songDoesNotExist.html", "arguments", arguments);
+	}
+
     public static <A extends Appendable> A alertKeyCreation(A out, CharSequence adminSessionKey, CharSequence path) {
         return print(out, "alerts/keyCreation.html", "adminSessionKey", adminSessionKey, "path", path);
 	}

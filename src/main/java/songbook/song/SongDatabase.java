@@ -1,87 +1,85 @@
 package songbook.song;
 
-import org.vertx.java.core.AsyncResult;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.Vertx;
-import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.impl.DefaultFutureResult;
-import org.vertx.java.core.shareddata.ConcurrentSharedMap;
+import songbook.server.ChannelUtil;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.Normalizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 public class SongDatabase {
 
     public static String SONG_EXTENSION = ".song";
 
+    private final Logger logger = Logger.getLogger("Songbook");
+
     private Path songDir;
 
-    private Vertx vertx;
-
-    public SongDatabase(Vertx vertx, Path songDir) {
-        this.vertx = vertx;
+    public SongDatabase(Path songDir) {
         this.songDir = songDir;
     }
 
     public void clearCache() {
-        ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
-        songs.clear();
+        // TODO to implement when a cache will be needed.
     }
 
-    public void listSongIds(Handler<AsyncResult<String[]>> handler) {
-        DefaultFutureResult<String[]> event = new DefaultFutureResult<>();
-        event.setHandler(handler);
-        vertx.fileSystem().readDir(songDir.toString(), ".*\\.song", (e) -> {
-            if (e.succeeded()) {
-                String[] files = e.result();
-                String[] ids = new String[files.length];
-                for (int i = 0; i < ids.length; i++) {
-                    ids[i] = extractId(files[i]);
-                }
-                event.setResult(ids);
-            }
-        });
-    }
-
-    public void readSong(String id, Handler<AsyncResult<String>> handler) {
-        DefaultFutureResult<String> event = new DefaultFutureResult<>();
-        event.setHandler(handler);
+    public Stream<String> listSongIds() {
         try {
-            ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
-            String song = songs.get(id);
-            if (song != null) {
-                event.setResult(song);
-            } else {
-                vertx.fileSystem().readFile(getSongPath(id).toString(), (e) -> {
-                    if (e.succeeded()) {
-                        String songFromFile = e.result().toString("UTF-8");
-                        songs.put(id, songFromFile);
-                        event.setResult(songFromFile);
-                    } else {
-                        event.setFailure(e.cause());
-                    }
-                });
-            }
-        } catch (Throwable e) {
-            event.setFailure(e);
+            return Files.list(songDir).map(SongDatabase::extractId);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Can't list songs", e);
+            return Stream.empty();
         }
     }
 
-    public void writeSong(String id, String songData, Handler<AsyncResult<Void>> handler) {
-        ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
-        songs.put(id, songData);
-        vertx.fileSystem().writeFile(getSongPath(id).toString(), new Buffer(songData, "UTF-8"), handler);
+    public ReadableByteChannel readChannelForSong(String id) {
+        try {
+            return Files.newByteChannel(getSongPath(id));
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Can't read song '" + id + "'", e);
+            return null;
+        }
     }
 
-    public void delete(String id) {
-        vertx.fileSystem().delete(getSongPath(id).toString(), (ar) -> {/* do nothing */});
-        // removes song from vert.x cache (using old title)
-        ConcurrentSharedMap<Object, String> songs = vertx.sharedData().getMap("songs");
-        songs.remove(id);
+    public String getSongContents(String id) {
+        try {
+            ReadableByteChannel channel = readChannelForSong(id);
+            return channel == null ? null : ChannelUtil.getStringContents(channel);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Can't read song '" + id + "'", e);
+            return null;
+        }
+    }
+
+    public WritableByteChannel writeChannelForSong(String id) {
+        try {
+            Path path = getSongPath(id);
+            if (Files.exists(path) == false) {
+                Files.createDirectories(path.getParent());
+            }
+            return Files.newByteChannel(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Can't write or create song '" + id + "'", e);
+            return null;
+        }
+    }
+
+    public boolean delete(String id) {
+        try {
+            Files.delete(getSongPath(id));
+            return true;
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Can't delete song '" + id + "'", e);
+            return false;
+        }
     }
 
     /** Verify if song exists */
@@ -116,11 +114,11 @@ public class SongDatabase {
 
     /**
      * Assuming that file ending with '.song' extension
-     * @param songFile
+     * @param songPath
      * @return
      */
-    private static String extractId(String songFile) {
-        String filename = Paths.get(songFile).getFileName().toString();
+    private static String extractId(Path songPath) {
+        String filename = songPath.getFileName().toString();
         return filename.substring(0, filename.length() - SONG_EXTENSION.length());
     }
 
@@ -139,5 +137,4 @@ public class SongDatabase {
             return id;
         }
     }
-
 }

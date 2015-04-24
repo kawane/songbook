@@ -1,30 +1,38 @@
 package songbook.server;
 
-import io.netty.handler.codec.http.*;
+import io.undertow.Undertow;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.Cookie;
+import io.undertow.server.handlers.CookieImpl;
+import io.undertow.server.handlers.ExceptionHandler;
+import io.undertow.server.handlers.resource.FileResourceManager;
+import io.undertow.util.*;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.vertx.java.core.http.HttpHeaders;
-import org.vertx.java.core.http.*;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.platform.Verticle;
 import songbook.song.IndexDatabase;
 import songbook.song.SongDatabase;
 import songbook.song.SongUtils;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class Server extends Verticle {
+import static io.undertow.Handlers.*;
+
+public class Server {
 
 	public final static int DEFAULT_PORT = 8080;
 
@@ -42,8 +50,11 @@ public class Server extends Verticle {
 	public static final String MIME_TEXT_SONG = "text/song";
 	public static final String SESSION_KEY = "SessionKey";
 
+	public static final AttachmentKey<String> ADMIN_KEY = AttachmentKey.create(String.class);
 
 	private Logger logger;
+
+	private int port = DEFAULT_PORT;
 
 	private SongDatabase songDb;
 
@@ -53,9 +64,8 @@ public class Server extends Verticle {
 	private String administratorKey = null;
 	private String userKey = null;
 
-	@Override
 	public void start() {
-		logger = getContainer().logger();
+		logger = Logger.getLogger("Songbook");
 
 		Path dataRoot = getDataRoot();
 		Templates.setTemplatesPath(getWebRoot().resolve("templates"));
@@ -63,145 +73,119 @@ public class Server extends Verticle {
 		try {
 			if (Files.exists(dataRoot) == false) Files.createDirectories(dataRoot);
 		} catch (IOException e) {
-			logger.error("Cannot start server data root isn't accessible.", e);
+			error("Cannot start server data root isn't accessible.", e);
 			return;
 		}
 
 		readKeys();
 
-		// creates server
-		HttpServer httpServer = vertx.createHttpServer();
-
 		// creates admin key if needed
 		if (administratorKey == null) createAdminKey();
 
 		// initialize songDb
-		songDb = new SongDatabase(vertx, getSongsPath());
+		songDb = new SongDatabase(getSongsPath());
 
 		// initializes index.
 		try {
 			indexDb = new IndexDatabase(getDataRoot().resolve("index"), songDb);
 		} catch (IOException e) {
-			logger.error("Can't initialize index in " + dataRoot.resolve("index"), e);
+			error("Can't initialize index in " + dataRoot.resolve("index"), e);
 		}
 
-		//installs matcher to server song
-		RouteMatcher routeMatcher = new RouteMatcher();
-		matchRequest(routeMatcher);
-		httpServer.requestHandler(routeMatcher);
+		// creates server
+		Undertow undertow = createServer(pathTemplateHandler());
 
 		final int port = getPort();
 		final String host = getHost();
-		logger.info("Starting server on '" + host + ":" + port + "'.");
-		httpServer.listen(port, host);
+		info("Starting server on '" + host + ":" + port + "'.");
+		undertow.start();
 	}
 
-	private void matchRequest(RouteMatcher routeMatcher) {
-		routeMatcher.get("/", this::search); // Home Page
-		routeMatcher.noMatch(this::serveFile);
-		routeMatcher.get("/view/:id", this::getSong);
-		routeMatcher.get("/edit/:id", this::editSong);
-		routeMatcher.get("/delete/:id", this::deleteSong);
-		routeMatcher.get("/new", this::editSong);
+	private HttpHandler pathTemplateHandler() {
+		HttpHandler fallThrough = resource(new FileResourceManager(getWebRoot().toFile(), 1024));
+
+		//// To Update ////
+
+		PathTemplateHandler pathHandler = new PathTemplateHandler(fallThrough);
+
+		pathHandler.add("/", get(this::search)); // Home Page
+
+		pathHandler.add("/view/{id}", get(this::getSong));
+		pathHandler.add("/edit/{id}", adminAccess(get(this::editSong)));
+		pathHandler.add("/delete/{id}", adminAccess(get(this::deleteSong)));
+		pathHandler.add("/new", adminAccess(get(this::editSong)));
 
 
-		routeMatcher.get("/search/:query", this::search);
-		routeMatcher.get("/search/", this::search);
-		routeMatcher.get("/search", this::search);
+		pathHandler.add("/search/{query}", get(this::search));
+		pathHandler.add("/search", get(this::search));
 
-		routeMatcher.get("/songs/:id", this::getSong);
-		routeMatcher.post("/songs", this::createSong);
-		routeMatcher.post("/songs/", this::createSong);
-		routeMatcher.put("/songs/:id", this::modifySong);
-		routeMatcher.delete("/songs/:id", this::deleteSong);
-		routeMatcher.get("/consoleApi", this::consoleApi);
+		pathHandler.add("/songs/{id}",
+			get(this::getSong,
+					adminAccess(
+							post(this::createSong,
+									put(this::modifySong,
+											delete(this::deleteSong)
+						)
+					)
+				)
+			)
+		);
 
-		routeMatcher.get("/signin", this::signin);
-		routeMatcher.get("/admin/:section/:command", this::adminCommand);
-		routeMatcher.get("/admin", this::admin);
+		pathHandler.add("/consoleApi", get(this::consoleApi));
+
+		pathHandler.add("/signin", get(this::signin));
+		pathHandler.add("/admin/{section}/{command}", adminAccess(get(this::adminCommand)));
+		pathHandler.add("/admin", adminAccess(get(this::admin)));
+
+		return pathHandler;
 	}
 
-	private void serveFile(HttpServerRequest request) {
-		//if (checkDeniedAccess(request, false)) return;
-		allowCrossOrigin(request);
-		// Serve Files
-		HttpServerResponse response = request.response();
-		String path = request.path().equals("/") ? "index.html" : request.path().substring(1);
-		Path localFilePath = getWebRoot().resolve(QueryStringDecoder.decodeComponent(path)).toAbsolutePath();
-		logger.info("GET " + localFilePath);
-		String type = "text/plain";
-		if (path.endsWith(".js")) {
-			type = "application/javascript";
-		} else if (path.endsWith(".css")) {
-			type = "text/css";
-		} else if (path.endsWith(".html")) {
-			type = "text/html";
-		}
-
-		response.putHeader(HttpHeaders.CONTENT_TYPE, type);
-		response.sendFile(localFilePath.toString());
-	}
-
-	private void search(HttpServerRequest request) {
-		String sessionKey = sessionKey(request);
-		if (checkDeniedAccess(request, sessionKey, false)) return;
-
+	private void search(final HttpServerExchange exchange) throws Exception {
 		// Serve all songs
-		String query = QueryStringDecoder.decodeComponent(request.params().get("query"));
+		String query = getParameter(exchange, "query");
 		String title = "My SongBook";
 		if (query != null && !query.isEmpty()) {
 			title = query + " - " + title;
 		}
 
-		HttpServerResponse response = request.response();
-		try {
-			StringBuilder out = new StringBuilder();
-			String mimeType = MimeParser.bestMatch(request.headers().get(HttpHeaders.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
-			switch (mimeType) {
-				case MIME_TEXT_HTML:
-					response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+		StringBuilder out = new StringBuilder();
+		String mimeType = MimeParser.bestMatch(getHeader(exchange, Headers.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
+		switch (mimeType) {
+			case MIME_TEXT_HTML:
+				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
 
-					String role = isAdministrator(sessionKey) ? "admin" : "user";
-					Templates.header(out, title, role);
-					if (showKeyCreationAlert) {
-						Templates.alertKeyCreation(out, administratorKey, request.path());
-					}
-					indexDb.search(query, out, mimeType);
-					Templates.footer(out);
-					break;
-				default:
-					indexDb.search(query, out, mimeType);
-					break;
-			}
-			response.end(out.toString(), "UTF-8");
-		} catch (ParseException e) {
-			e.printStackTrace();
-			response.end("Wrong Query Syntax", "UTF-8");
-		} catch (IOException e) {
-			e.printStackTrace();
-			response.end("Internal Error", "UTF-8");
+				Templates.header(out, title, getRole(exchange));
+				if (showKeyCreationAlert) {
+					Templates.alertKeyCreation(out, administratorKey, exchange.getRequestPath());
+				}
+				indexDb.search(query, out, mimeType);
+				Templates.footer(out);
+				break;
+			default:
+				indexDb.search(query, out, mimeType);
+				break;
 		}
-
+		exchange.getResponseSender().send(out.toString());
 	}
 
-	private String sessionKey(HttpServerRequest request) {
+	private String sessionKey(final HttpServerExchange exchange) {
+		// TODO handle session inside a handler
+
 		String sessionKey = null;
-		String cookieStr = request.headers().get(HttpHeaders.COOKIE);
-		if (cookieStr != null) {
-			Set<Cookie> cookies = CookieDecoder.decode(cookieStr);
-			for (Cookie cookie : cookies) {
-				if (SESSION_KEY.equals(cookie.getName())) {
-					sessionKey = cookie.getValue();
-				}
+		Map<String, Cookie> cookies = Cookies.parseRequestCookies(10, false, exchange.getRequestHeaders().get(Headers.COOKIE));
+		for (Cookie cookie : cookies.values()) {
+			if (SESSION_KEY.equals(cookie.getName())) {
+				sessionKey = cookie.getValue();
 			}
 		}
-		String key = request.params().get("key");
+
+		String key = getParameter(exchange, "key");
 		if (key != null && !key.isEmpty() && !key.equals(sessionKey)) {
 			sessionKey = key;
 			// Set Cookie
-			Cookie cookie = new DefaultCookie(SESSION_KEY, sessionKey);
+			Cookie cookie = new CookieImpl(SESSION_KEY, sessionKey);
 			cookie.setMaxAge(Integer.MAX_VALUE);
-			request.response().headers().add(HttpHeaders.SET_COOKIE, ServerCookieEncoder.encode(cookie));
+			exchange.getResponseHeaders().put(Headers.SET_COOKIE, cookie.getValue());
 		}
 		if (isAdministrator(sessionKey)) {
 			// gets administrator key, remove alert (if present)
@@ -210,56 +194,41 @@ public class Server extends Verticle {
 				try {
 					Files.createFile(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
 				} catch (IOException e) {
-					logger.error("Can't create file '" + ADMINISTRATOR_ACTIVATED_PATH + "'", e);
+					error("Can't create file '" + ADMINISTRATOR_ACTIVATED_PATH + "'", e);
 				}
 			}
 		}
 		return sessionKey;
 	}
 
-	private void getSong(HttpServerRequest request) {
-		allowCrossOrigin(request);
-		String sessionKey = sessionKey(request);
-		if (checkDeniedAccess(request, sessionKey, false)) return;
-		String id = request.params().get("id");
+	private void getSong(final HttpServerExchange exchange) throws Exception {
+		String id = getParameter(exchange, ("id"));
 
 		// Serves song
-		HttpServerResponse response = request.response();
-		songDb.readSong(id, (handler) -> {
-			if (handler.succeeded()) {
-				String mimeType = MimeParser.bestMatch(request.headers().get(HttpHeaders.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
-				switch (mimeType) {
-					case MIME_TEXT_HTML:
-						response.putHeader(HttpHeaders.CONTENT_TYPE, mimeType);
-						response.end(htmlSong(sessionKey, id, handler.result(), request.path()), "UTF-8");
-						break;
-					default:
-					case MIME_TEXT_PLAIN:
-					case MIME_TEXT_SONG:
-						response.putHeader(HttpHeaders.CONTENT_TYPE, mimeType);
-						response.end(handler.result(), "UTF-8");
-						break;
-				}
-				logger.trace("Serve Song " + id);
-			} else {
-				logger.error("Failed to read song " + id, handler.cause());
-				response.setStatusCode(404);
-				StringBuilder out = new StringBuilder();
-				String role = isAdministrator(sessionKey) ? "admin" : "user";
-				Templates.header(out, "404", role);
-				Templates.alertSongDoesNotExist(out, id);
-				Templates.footer(out);
-				response.end(out.toString(), "UTF-8");
-			}
-		});
+		String songContents = songDb.getSongContents(id);
+		if (songContents == null) throw new SongNotFoundException(id);
+
+		String mimeType = MimeParser.bestMatch(getHeader(exchange, Headers.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, mimeType);
+		switch (mimeType) {
+			case MIME_TEXT_HTML:
+				exchange.getResponseSender().send(htmlSong(exchange, id, songContents, exchange.getRequestPath()));
+				break;
+			default:
+			case MIME_TEXT_PLAIN:
+			case MIME_TEXT_SONG:
+				exchange.getResponseSender().send(songContents);
+				break;
+		}
+
+		logger.info("Serve Song " + id);
 	}
 
-	private String htmlSong(String sessionKey, String id, String songData, String path) {
+	private String htmlSong(HttpServerExchange exchange, String id, String songData, String path) {
 		StringBuilder out = new StringBuilder();
 		// Todo use a songmark object to extract title and then generate html
 		String title = SongUtils.getTitle(songData);
-		String role = isAdministrator(sessionKey) ? "admin" : "user";
-		Templates.header(out, title + " - My SongBook", role);
+		Templates.header(out, title + " - My SongBook", getRole(exchange));
 		if (showKeyCreationAlert) Templates.alertKeyCreation(out, administratorKey, path);
 		Templates.viewSong(out, id, SongUtils.writeHtml(new StringBuilder(), songData));
 
@@ -267,240 +236,152 @@ public class Server extends Verticle {
 		return out.toString();
 	}
 
-	private void editSong(HttpServerRequest request) {
-		String sessionKey = sessionKey(request);
-		if (checkDeniedAccess(request, sessionKey, true)) return;
-
-		String id = request.params().get("id");
+	private void editSong(final HttpServerExchange exchange) throws Exception{
+		String id = getParameter(exchange, ("id"));
 
 		// Serves song
-		HttpServerResponse response = request.response();
-		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
 
 		StringBuilder out = new StringBuilder();
-		String role = isAdministrator(sessionKey) ? "admin" : "user";
+		String role = getRole(exchange);
 
 		if (id != null && !id.isEmpty()) {
-			songDb.readSong(id, (handler) -> {
-				if (handler.succeeded()) {
-					String songData = handler.result();
-					String title = SongUtils.getTitle(songData);
-					Templates.header(out, "Edit - " + title + " - My SongBook", role);
-					Templates.editSong(out, id, handler.result());
-					Templates.footer(out);
-				} else {
-					logger.error("Failed to read song " + id, handler.cause());
-					response.setStatusCode(404);
 
-					Templates.header(out, "Edit - My SongBook", role);
-					Templates.alertSongDoesNotExist(out, id);
-					Templates.footer(out);
-				}
-				response.end(out.toString(), "UTF-8");
-			});
+			String songContents = songDb.getSongContents(id);
+			if (songContents == null) throw new SongNotFoundException(id);
+			String title = SongUtils.getTitle(songContents);
+			Templates.header(out, "Edit - " + title + " - My SongBook", role);
+			Templates.editSong(out, id, songContents);
+			Templates.footer(out);
+
+			exchange.getResponseSender().send(out.toString());
+
 		} else {
 			Templates.header(out, "Create Song - My SongBook", role);
 			Templates.editSong(out, "", Templates.newSong(new StringBuilder()));
 			Templates.footer(out);
-			response.end(out.toString(), "UTF-8");
+			exchange.getResponseSender().send(out.toString());
 		}
 	}
 
-	private void createSong(HttpServerRequest request) {
-		allowCrossOrigin(request);
-		String sessionKey = sessionKey(request);
-		if (checkDeniedAccess(request, sessionKey, true)) return;
-		request.bodyHandler((body) -> {
-			HttpServerResponse response = request.response();
-			String songData = body.toString();
-			try {
+	private void createSong(final HttpServerExchange exchange) throws Exception {
+		String songData = ChannelUtil.getStringContents(exchange.getRequestChannel());
 
-				// indexes updated song
-				Document document = SongUtils.indexSong(songData);
-				String title = document.get("title");
-				String artist = document.get("artist");
+		// indexes updated song
+		Document document = SongUtils.indexSong(songData);
+		String title = document.get("title");
+		String artist = document.get("artist");
 
-				if (title == null || title.isEmpty() || artist == null) {
-					response.setStatusCode(400);
-					response.end("You must provide a title and an artist information", "UTF-8");
-					return;
-				}
-				String id = songDb.generateId(title, artist);
-				// prepares new document
-				document.add(new StringField("id", id, Field.Store.YES));
-				indexDb.addOrUpdateDocument(document);
+		if (title == null || title.isEmpty() || artist == null) {
+			throw new MissingArgumentsException("title", "artist");
+		}
 
-				// writes song to database
-				songDb.writeSong(id, songData, (ar) -> {
-					if (ar.succeeded()) {
-						response.end(id, "UTF-8");
-					} else {
-						logger.error("Failed to create the song", ar.cause());
-						response.setStatusCode(500);
-						response.end();
-					}
-				});
+		String id = songDb.generateId(title, artist);
+		// prepares new document
+		document.add(new StringField("id", id, Field.Store.YES));
+		indexDb.addOrUpdateDocument(document);
 
+		WritableByteChannel songChannel = songDb.writeChannelForSong(id);
+		if (songChannel == null) throw new ServerException(500, "Can't write song");
 
-			} catch (Exception e) {
-				logger.error("Error indexing song", e);
-				response.setStatusCode(500);
-				response.end();
-			}
-		});
+		ChannelUtil.writeStringContents(songData, songChannel);
+
+		exchange.getResponseSender().send(id);
 	}
 
-	private void modifySong(HttpServerRequest request) {
-		allowCrossOrigin(request);
-		String sessionKey = sessionKey(request);
-		if (checkDeniedAccess(request, sessionKey, true)) return;
-		request.bodyHandler((body) -> {
-			HttpServerResponse response = request.response();
-			String songData = body.toString();
-			try {
+	private void modifySong(final HttpServerExchange exchange) throws Exception {
+		String songData = ChannelUtil.getStringContents(exchange.getRequestChannel());
 
-				// indexes updated song
-				Document document = SongUtils.indexSong(songData);
+		// indexes updated song
+		Document document = SongUtils.indexSong(songData);
 
-				String id = request.params().get("id");
+		String id = getParameter(exchange, ("id"));
 
-				// Verify that song exists
-				if (songDb.exists(id)) {
-					// prepares new document
-					document.add(new StringField("id", id, Field.Store.YES));
-					indexDb.addOrUpdateDocument(document);
+		// Verify that song exists
+		if (songDb.exists(id) == false) throw ServerException.NOT_FOUND;
 
-					// writes song to database
-					songDb.writeSong(id, songData, (ar) -> {
-						if (ar.succeeded()) {
-							response.end(id, "UTF-8");
-						} else {
-							logger.error("Failed to update the song", ar.cause());
-							response.setStatusCode(500);
-							response.end();
-						}
-					});
-				} else {
-					response.setStatusCode(400);
-					response.end("The song doesn't exist and cannot be updated", "UTF-8");
-				}
+		// prepares new document
+		document.add(new StringField("id", id, Field.Store.YES));
+		indexDb.addOrUpdateDocument(document);
 
+		WritableByteChannel songChannel = songDb.writeChannelForSong(id);
+		if (songChannel == null) throw new ServerException(500, "Can't write song");
 
-			} catch (Exception e) {
-				logger.error("Error indexing song", e);
-				response.setStatusCode(500);
-				response.end();
-			}
-		});
+		ChannelUtil.writeStringContents(songData, songChannel);
+
+		exchange.getResponseSender().send(id);
 	}
 
-	private void deleteSong(HttpServerRequest request) {
-		allowCrossOrigin(request);
-		String sessionKey = sessionKey(request);
-		if (checkDeniedAccess(request, sessionKey, true)) return;
+	private void deleteSong(final HttpServerExchange exchange) throws Exception {
+		String id = getParameter(exchange, "id");
 
-		HttpServerResponse response = request.response();
-		try {
-			String id = request.params().get("id");
+		// Verify that song exists
+		if (songDb.exists(id) == false) throw ServerException.NOT_FOUND;
 
-			// Verify that song exists
-			if (songDb.exists(id)) {
-				// removes file
-				songDb.delete(id);
+		// removes file
+		songDb.delete(id);
 
-				String title = indexDb.getTitle(id);
+		String title = indexDb.getTitle(id);
 
-				// removes document from index
-				indexDb.removeDocument(id);
+		// removes document from index
+		indexDb.removeDocument(id);
 
-
-				response.setStatusCode(200);
-
-				String mimeType = MimeParser.bestMatch(request.headers().get(HttpHeaders.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
-				switch (mimeType) {
-					case MIME_TEXT_HTML:
-						StringBuilder out = new StringBuilder();
-						String role = isAdministrator(sessionKey) ? "admin" : "user";
-						Templates.header(out, "My SongBook", role);
-						// show home page with message
-						Templates.alertSongRemovedSuccessfully(out, title == null ? id : title);
-						Templates.footer(out);
-						response.end(out.toString(), "UTF-8");
-						break;
-					case MIME_TEXT_PLAIN:
-						response.end(id, "UTF-8");
-						break;
-				}
-			} else {
-				response.setStatusCode(400);
-				response.end("The song doesn't exist and cannot be deleted", "UTF-8");
-			}
-		} catch (Exception e) {
-			logger.error("Error removing song", e);
-			response.setStatusCode(500);
-			response.end("Error removing song", "UTF-8");
+		String mimeType = MimeParser.bestMatch(getHeader(exchange, Headers.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, mimeType);
+		switch (mimeType) {
+			case MIME_TEXT_HTML:
+				StringBuilder out = new StringBuilder();
+				Templates.header(out, "My SongBook", getRole(exchange));
+				// show home page with message
+				Templates.alertSongRemovedSuccessfully(out, title == null ? id : title);
+				Templates.footer(out);
+				exchange.getResponseSender().send(out.toString());
+				break;
+			default:
+			case MIME_TEXT_PLAIN:
+			case MIME_TEXT_SONG:
+				exchange.getResponseSender().send(id);
+				break;
 		}
 	}
 
-	private void consoleApi(HttpServerRequest request) {
-		String sessionKey = sessionKey(request);
-		if (checkDeniedAccess(request, sessionKey, false)) return;
-
-		HttpServerResponse response = request.response();
-		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+	private void consoleApi(final HttpServerExchange exchange) {
 		StringBuilder out = new StringBuilder();
-
-		String role = isAdministrator(sessionKey) ? "admin" : "user";
-		Templates.header(out, "Song Console Api", role);
+		Templates.header(out, "Song Console Api", getRole(exchange));
 		Templates.consoleApi(out);
 		Templates.footer(out);
-		response.end(out.toString(), "UTF-8");
+
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, MIME_TEXT_HTML);
+		exchange.getResponseSender().send(out.toString());
 	}
 
-	private void signin(HttpServerRequest request) {
-		String sessionKey = sessionKey(request);
-		if (checkDeniedAccess(request, sessionKey, false)) return;
-
-		HttpServerResponse response = request.response();
-		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+	private void signin(final HttpServerExchange exchange) {
 		StringBuilder out = new StringBuilder();
-
-		String role = isAdministrator(sessionKey) ? "admin" : "user";
-		Templates.header(out, "SongBook Admin Page", role);
+		Templates.header(out, "SongBook Admin Page", getRole(exchange));
 		Templates.signin(out);
 		Templates.footer(out);
-		response.end(out.toString(), "UTF-8");
+
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, MIME_TEXT_HTML);
+		exchange.getResponseSender().send(out.toString());
 	}
 
-	private void admin(HttpServerRequest request) {
-		String sessionKey = sessionKey(request);
-		if (checkDeniedAccess(request, sessionKey, true)) return;
-
-		HttpServerResponse response = request.response();
-		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+	private void admin(final HttpServerExchange exchange) {
 		StringBuilder out = new StringBuilder();
-
-		String role = isAdministrator(sessionKey) ? "admin" : "user";
-		Templates.header(out, "SongBook Admin Page", role);
+		Templates.header(out, "SongBook Admin Page", getRole(exchange));
 		Templates.admin(out);
 		Templates.footer(out);
-		response.end(out.toString(), "UTF-8");
+
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, MIME_TEXT_HTML);
+		exchange.getResponseSender().send(out.toString());
 	}
 
-	private void adminCommand(HttpServerRequest request) {
-		String sessionKey = sessionKey(request);
-		if (checkDeniedAccess(request, sessionKey, true)) return;
-
-		HttpServerResponse response = request.response();
-		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-
+	private void adminCommand(final HttpServerExchange exchange) throws Exception {
 		StringBuilder out = new StringBuilder();
 
-		String role = isAdministrator(sessionKey) ? "admin" : "user";
-		Templates.header(out, "Administration - My SongBook", role);
+		Templates.header(out, "Administration - My SongBook", getRole(exchange));
 
-		String section = QueryStringDecoder.decodeComponent(request.params().get("section"));
-		String command = QueryStringDecoder.decodeComponent(request.params().get("command"));
+		String section = getParameter(exchange, "section");
+		String command = getParameter(exchange, "command");
 		switch (section) {
 			case "index":
 				switch (command) {
@@ -514,30 +395,26 @@ public class Server extends Verticle {
 							logger.info("Opened index in " + (end - start) + " milliseconds.");
 							Templates.alertSongReindexed(out);
 							Templates.admin(out);
-							response.setStatusCode(200);
 						} catch (IOException e) {
-							logger.error("Can't initialize index in " + getDataRoot().resolve("index"), e);
+							error("Can't initialize index in " + getDataRoot().resolve("index"), e);
 							Templates.alertIndexingError(out);
 							Templates.admin(out);
-							response.setStatusCode(500);
 						}
 						break;
 					default:
 						Templates.alertCommandNotSupported(out);
 						Templates.admin(out);
-						response.setStatusCode(500);
 						break;
 				}
 				break;
 			default:
-				Templates.alertCommandNotSupported(out);
-				Templates.admin(out);
-				response.setStatusCode(500);
-				break;
+				throw ServerException.BAD_REQUEST;
 
 		}
 		Templates.footer(out);
-		response.end(out.toString(), "UTF-8");
+
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, MIME_TEXT_HTML);
+		exchange.getResponseSender().send(out.toString());
 	}
 
 	private Path getWebRoot() {
@@ -577,13 +454,7 @@ public class Server extends Verticle {
 
 	// Security
 
-	private void allowCrossOrigin(HttpServerRequest request) {
-		String origin = request.headers().get("Origin");
-		if (origin != null) {
-			HttpServerResponse response = request.response();
-			response.putHeader("Access-Control-Allow-Origin", origin);
-		}
-	}
+
 
 	private void createAdminKey() {
 		// creates administrator key when it's null
@@ -615,7 +486,7 @@ public class Server extends Verticle {
 				}
 			}
 		} catch (IOException e) {
-			logger.error("Could not read administrator key", e);
+			error("Could not read administrator key", e);
 		}
 
 		try {
@@ -627,7 +498,7 @@ public class Server extends Verticle {
 				}
 			}
 		} catch (IOException e) {
-			logger.error("Could not read user key", e);
+			error("Could not read user key", e);
 		}
 	}
 
@@ -646,7 +517,7 @@ public class Server extends Verticle {
 					Files.delete(administratorActivatedPath);
 				}
 			} catch (IOException e) {
-				logger.error("Could not write administrator key", e);
+				error("Could not write administrator key", e);
 			}
 		}
 
@@ -656,7 +527,7 @@ public class Server extends Verticle {
 				Files.write(userKeyPath, Collections.singleton(userKey));
 				showKeyCreationAlert = true;
 			} catch (IOException e) {
-				logger.error("Could not write user key", e);
+				error("Could not write user key", e);
 			}
 		}
 	}
@@ -675,29 +546,146 @@ public class Server extends Verticle {
 		return userKey == null || userKey.equals(requestKey);
 	}
 
-	/**
-	 * Checks if request need to be denied, returns true if access is denied.
-	 */
-	private boolean checkDeniedAccess(HttpServerRequest request, String sessionKey, boolean needAdmin) {
-		if (isAdministrator(sessionKey)) {
-			return false;
-		}
-		if (isUser(sessionKey) && needAdmin == false) {
-			return false;
-		}
-		forbiddenAccess(request);
-		return true;
+	private String getRole(HttpServerExchange exchange) {
+		return isAdministrator(exchange.getAttachment(ADMIN_KEY)) ? "admin" : "user";
 	}
 
-	private void forbiddenAccess(HttpServerRequest request) {
-		HttpServerResponse response = request.response();
-		response.setStatusCode(403);
-		response.putHeader(HttpHeaders.CONTENT_TYPE, "text/html");
-		StringBuilder out = new StringBuilder();
+	protected Undertow createServer(HttpHandler pathHandler) {
 
-		Templates.header(out, "Forbidden - My SongBook", "user");
-		Templates.alertAccessForbidden(out, request.path());
-		Templates.footer(out);
-		response.end(out.toString(), "UTF-8");
+		// Adds admin attribute and checks user attribute
+		HttpHandler administrationHandler = exchange -> {
+			String sessionKey = sessionKey(exchange);
+
+			if ( isUser(sessionKey) ) {
+				exchange.putAttachment(ADMIN_KEY, sessionKey);
+				pathHandler.handleRequest(exchange);
+			} else {
+				throw new ServerException(StatusCodes.UNAUTHORIZED);
+			}
+		};
+
+		// Adds Cross Origin is needed
+		HttpHandler allowCrossOriginHandler = exchange -> {
+            String origin = getHeader(exchange, Headers.ORIGIN);
+            if (origin != null) {
+                exchange.getResponseHeaders().put(Headers.ORIGIN, origin);
+            }
+            administrationHandler.handleRequest(exchange);
+        };
+
+		// Handles exceptions (including ServerException)
+		ExceptionHandler exceptionHandler = exceptionHandler(allowCrossOriginHandler);
+		exceptionHandler.addExceptionHandler(ServerException.class, (exchange) -> {
+			Throwable exception = exchange.getAttachment(ExceptionHandler.THROWABLE);
+			if (exception instanceof ServerException) {
+				((ServerException) exception).serveError(getRole(exchange), exchange);
+			} else {
+				// TODO create real error message
+				String message = exception.getMessage();
+				exchange.setResponseCode(StatusCodes.INTERNAL_SERVER_ERROR);
+				exchange.getResponseSender().send(createMessage(message, isAskingForJson(exchange)));
+			}
+		});
+
+		// Logs all requests
+		HttpHandler logHandler = (HttpServerExchange exchange) -> {
+			long start = System.currentTimeMillis();
+			exceptionHandler.handleRequest(exchange);
+			long end = System.currentTimeMillis();
+			long time = end - start < 0 ? 0 : end - start;
+			info("[" + exchange.getRequestMethod() + "]" + exchange.getRequestURI() + " in " + time + " ms");
+		};
+
+		Undertow.Builder builder = Undertow.builder();
+		builder.addHttpListener(port, "localhost");
+		builder.setHandler(gracefulShutdown(logHandler));
+
+		info("Listens on port " + port);
+
+		return builder.build();
+	}
+
+	protected boolean isAskingForJson(HttpServerExchange exchange) {
+		HeaderValues values = exchange.getRequestHeaders().get(Headers.ACCEPT);
+		return values != null && values.getFirst().contains("application/json");
+	}
+
+	protected String createMessage(String message, boolean json) {
+		return json ? "{ \"message\": \"" + message + "\"}" : message;
+	}
+
+	protected String getHeader(HttpServerExchange exchange, HttpString header) {
+		Deque<String> deque = exchange.getRequestHeaders().get(header);
+		return deque == null ? null : deque.element();
+	}
+
+	protected String getParameter(HttpServerExchange exchange, String parameter) {
+		Deque<String> deque = exchange.getQueryParameters().get(parameter);
+		return deque == null ? null : deque.element();
+	}
+
+	private HttpHandler get(HttpHandler handler) {
+		return methodFilterHandler(handler, Methods.GET, null);
+	}
+
+
+	private HttpHandler get(HttpHandler handler, HttpHandler next) {
+		return methodFilterHandler(handler, Methods.GET, next);
+	}
+
+	private HttpHandler post(HttpHandler handler) {
+		return methodFilterHandler(handler, Methods.POST, null);
+	}
+
+	private HttpHandler post(HttpHandler handler, HttpHandler next) {
+		return methodFilterHandler(handler, Methods.POST, next);
+	}
+
+	private HttpHandler put(HttpHandler handler) {
+		return methodFilterHandler(handler, Methods.PUT, null);
+	}
+
+	private HttpHandler put(HttpHandler handler, HttpHandler next) {
+		return methodFilterHandler(handler, Methods.PUT, next);
+	}
+
+	private HttpHandler delete(HttpHandler handler) {
+		return methodFilterHandler(handler, Methods.DELETE, null);
+	}
+
+	private HttpHandler adminAccess(HttpHandler handler) {
+		return exchange -> {
+			String sessionKey = exchange.getAttachment(ADMIN_KEY);
+			if (isAdministrator(sessionKey)) {
+				handler.handleRequest(exchange);
+			} else {
+				throw new ServerException(StatusCodes.UNAUTHORIZED);
+			}
+		};
+	}
+
+	private HttpHandler methodFilterHandler(HttpHandler handler, HttpString method, HttpHandler next) {
+		return exchange -> {
+			if (method.equals(exchange.getRequestMethod())) {
+				handler.handleRequest(exchange);
+			} else if (next != null) {
+				next.handleRequest(exchange);
+			} else {
+				throw new ServerException(StatusCodes.METHOD_NOT_ALLOWED);
+			}
+		};
+	}
+
+	private void info(String message) {
+		logger.log(Level.INFO, message);
+	}
+
+	private void error(String message, IOException e) {
+		logger.log(Level.SEVERE, message, e);
+	}
+
+	public static void main(String[] args) {
+		Server server = new Server();
+		server.start();
 	}
 }
