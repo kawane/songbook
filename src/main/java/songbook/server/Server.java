@@ -285,6 +285,8 @@ public class Server {
 		if (songChannel == null) throw new ServerException(500, "Can't write song");
 
 		ChannelUtil.writeStringContents(songData, songChannel);
+
+		exchange.getResponseSender().send(id);
 	}
 
 	private void modifySong(final HttpServerExchange exchange) throws Exception {
@@ -306,6 +308,8 @@ public class Server {
 		if (songChannel == null) throw new ServerException(500, "Can't write song");
 
 		ChannelUtil.writeStringContents(songData, songChannel);
+
+		exchange.getResponseSender().send(id);
 	}
 
 	private void deleteSong(final HttpServerExchange exchange) throws Exception {
