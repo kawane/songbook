@@ -12,8 +12,8 @@ build/
 
 # Idea project files to ignore
 *.iws
-.idea/workspace.xml
-.idea/tasks.xml
+*.iml
+.idea/
 
 # Package Files #
 # *.jar
