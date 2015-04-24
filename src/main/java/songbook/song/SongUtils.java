@@ -58,6 +58,7 @@ public class SongUtils {
 			boolean verse = false;
 			for (int i = 1; i < songLines.length; i++) {
 				String line = songLines[i];
+				String lowercaseLine = line.trim().toLowerCase();
 				int indexOfCol = line.indexOf(":");
 
 				if (indexOfCol != -1) {
@@ -71,7 +72,7 @@ public class SongUtils {
 						}
 					}
 					w.append("<div class='song-");
-					w.append(propName);
+					w.append(propName.replace(" ", "-"));
 					w.append("'>\n");
 					w.append("<span class='song-metadata-name'>");
 					w.append(propName);
@@ -111,12 +112,23 @@ public class SongUtils {
 						verse = true;
 					}
 
-				} else if (line.trim().isEmpty()) {
+				} else if (lowercaseLine.isEmpty()) {
 					if (verse) {
 						// close verse
 						w.append("</div>\n");
 						verse = false;
 					}
+				} else if ("chorus".equals(lowercaseLine.toLowerCase())
+						|| "intro".equals(lowercaseLine.toLowerCase())
+						|| "bridge".equals(lowercaseLine.toLowerCase())) { // chorus, intro, or bridge recall
+					if (verse) {
+						// close verse
+						w.append("</div>\n");
+						verse = false;
+					}
+					w.append("<div class='song-" + lowercaseLine +"-recall'>");
+					w.append(line);
+					w.append("</div>");
 				} else {
 					String[] tokens = line.replace("|", " ").split(" ");
 					boolean isChord = true;

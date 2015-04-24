@@ -9,8 +9,21 @@
     border: 1px solid darkgray;
 }
 
+.song-intro,
 .song-verse,
-.song-chorus
+.song-chorus,
+.song-solo,
+.song-guitar-solo,
+.song-bridge,
+.song-verse-1,
+.song-verse-2,
+.song-verse-3,
+.song-verse-4,
+.song-verse-5,
+.song-verse-6,
+.song-verse-7,
+.song-verse-8,
+.song-verse-9
 {
 	margin: 2.5ex 0;
 }
@@ -24,7 +37,10 @@
 	line-height: 1.5em;
 }
 
-.song-chorus-recall {
+.song-intro-recall,
+.song-chorus-recall,
+.song-bridge-recall
+{
 	padding-left: 1em;
 	font-style: italic;
 	font-weight: bold;
