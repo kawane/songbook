@@ -12,6 +12,7 @@ build/
 
 # Idea project files to ignore
 *.iws
+*.iml
 .idea/
 
 # Package Files #
