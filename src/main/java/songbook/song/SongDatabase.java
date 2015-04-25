@@ -23,8 +23,12 @@ public class SongDatabase {
 
     private Path songDir;
 
-    public SongDatabase(Path songDir) {
+    public SongDatabase(Path songDir) throws IOException {
         this.songDir = songDir;
+
+        if (Files.exists(songDir) == false) {
+            Files.createDirectories(songDir);
+        }
     }
 
     public void clearCache() {

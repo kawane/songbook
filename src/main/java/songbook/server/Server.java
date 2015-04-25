@@ -82,14 +82,19 @@ public class Server {
 		// creates admin key if needed
 		if (administratorKey == null) createAdminKey();
 
-		// initialize songDb
-		songDb = new SongDatabase(getSongsPath());
-
-		// initializes index.
 		try {
-			indexDb = new IndexDatabase(getDataRoot().resolve("index"), songDb);
+			// initializes songDb
+			songDb = new SongDatabase(getSongsPath());
 		} catch (IOException e) {
-			error("Can't initialize index in " + dataRoot.resolve("index"), e);
+			error("Can't initialize songs database in " + getSongsPath(), e);
+		}
+
+		Path index = getDataRoot().resolve("index");
+		try {
+			// initializes index.
+			indexDb = new IndexDatabase(index, songDb);
+		} catch (IOException e) {
+			error("Can't initialize index in " +index , e);
 		}
 
 		// creates server
