@@ -22,76 +22,38 @@ Here are some tutorials for some distributions:
 Linux
 -----
 
-Create a directory where to install songbook
-
-```Shell
-mkdir songbook
-cd songbook
-```
-
-Download and unzip Vert.x.
-
-```Shell
-wget http://dl.bintray.com/vertx/downloads/vert.x-2.1.2.tar.gz
-tar xfz vert.x-2.1.2.tar.gz
-rm -f vert.x-2.1.2.tar.gz
-```
-
 Download and unzip Songbook.
 
 ```Shell
-wget https://github.com/kawane/songbook/release/download/0.2.0/songbook.zip
-unzip songbook.zip
-rm -f songbook.zip
+wget https://drone.io/github.com/kawane/songbook/files/build/distributions/songbook-0.4.zip
+unzip songbook-0.4.zip
+rm -f songbook-0.4.zip
+cd songbook-0.4
 ```
 
 Run Songbook
 
 ```Shell
-export HOST=localhost
-export PORT=8080
-export WEB_ROOT=$PWD/songbook/web
-export DATA_ROOT=$PWD/songbook/data
-export CLASSPATH=:$PWD/songbook/jar/songbook.jar
-./vert.x-2.1.2/bin/vertx run songbook.server.Server
+./bin/songbook
 ```
 
 MacOS X
 --------
-
-Create a directory where to install songbook
-
-```Shell
-mkdir songbook
-cd songbook
-```
-
-Download and unzip Vert.x.
-
-```Shell
-curl -O http://dl.bintray.com/vertx/downloads/vert.x-2.1.2.zip
-unzip vert.x-2.1.2.zip
-rm -f vert.x-2.1.2.zip
-```
-
 Download and unzip Songbook.
 
 ```Shell
-curl -O https://github.com/kawane/songbook/release/download/0.2.0/songbook.zip
-unzip songbook.zip
-rm -f songbook.zip
+wget https://drone.io/github.com/kawane/songbook/files/build/distributions/songbook-0.4.zip
+unzip songbook-0.4.zip
+rm -f songbook-0.4.zip
+cd songbook-0.4
 ```
 
 Run Songbook
 
 ```Shell
-export HOST=localhost
-export PORT=8080
-export WEB_ROOT=$PWD/songbook/web
-export DATA_ROOT=$PWD/songbook/data
-export CLASSPATH=:$PWD/songbook/jar/songbook.jar
-./vert.x-2.1.2/bin/vertx run songbook.server.Server
+./bin/songbook
 ```
+
 
 Windows
 -------
