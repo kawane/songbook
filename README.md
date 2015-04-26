@@ -64,7 +64,7 @@ Songbook is a Java 8 application.
 
 Songbook uses these third party libraries:
 
-* [Vert.x](http://vertx.io/) as HTTP server.
+* [Undertow](http://undertow.io) as HTTP server.
 * [Apache Lucene](http://lucene.apache.org/) for indexes and searches.
 
 
