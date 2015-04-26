@@ -80,7 +80,7 @@ Songbook is under Apache license check the LICENSE file for more information.
 
 Apache lucene is under Apache licence.
 
-Vert.x is under the Apache licence.
+Undertow is under the Apache licence.
 
 Links
 =====
