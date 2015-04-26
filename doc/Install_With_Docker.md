@@ -9,6 +9,7 @@ Kawane proposes a Songbook distribution with Docker ([kawane/songbook](https://r
 To use it:
 
 * Install docker on your server (documentation [here](https://docs.docker.com/installation/)).
-* Run ```docker run -p 80:80 kawane/songbook```.
+* Creates a folder where to store data for instance ```/data_on_host```.
+* Run ```docker run -p 80:80 -v /data_on_host:/data kawane/songbook```.
 
 Now your server is up and running, check the [Getting Started](Getting_Started.md) to add your songs.
