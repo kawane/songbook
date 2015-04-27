@@ -18,22 +18,34 @@ var fullScreenButton = document.getElementById("fullScreenButton");
 fullScreenButton.addEventListener("click", (e) => {
     if (isFullScreen()) {
         exitFullScreen();
-        (<HTMLElement>fullScreenButton.firstElementChild).classList.remove("active");
     } else {
         requestFullScreen(document.body);
-        (<HTMLElement>fullScreenButton.firstElementChild).classList.add("active");
     }
 });
+
+var fullscreenChange = () => {
+    if (isFullScreen()) {
+        (<HTMLElement>fullScreenButton.firstElementChild).classList.add("active");
+    } else {
+        (<HTMLElement>fullScreenButton.firstElementChild).classList.remove("active");
+    }
+};
+
+document.addEventListener("fullscreenchange ", fullscreenChange);
+document.addEventListener("webkitfullscreenchange", fullscreenChange);
+document.addEventListener("mozfullscreenchange", fullscreenChange);
+document.addEventListener("MSFullscreenChange", fullscreenChange);
 
 function isFullScreen(): boolean {
     if (document["isFullScreen"]) {
         return document["isFullScreen"]
     } else if (document["webkitIsFullScreen"]) {
         return document["webkitIsFullScreen"]
-    } else if (document["mozIsFullScreen"]) {
-        return document["mozIsFullScreen"]
+    } else if (document["mozFullScreen"]) {
+        return document["mozFullScreen"]
     }
 }
+
 function exitFullScreen(): boolean {
     if (document["exitFullscreen"]) {
         return document["exitFullscreen"]()

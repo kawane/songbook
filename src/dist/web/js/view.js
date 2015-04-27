@@ -15,13 +15,23 @@ var fullScreenButton = document.getElementById("fullScreenButton");
 fullScreenButton.addEventListener("click", function (e) {
     if (isFullScreen()) {
         exitFullScreen();
-        fullScreenButton.firstElementChild.classList.remove("active");
     }
     else {
         requestFullScreen(document.body);
-        fullScreenButton.firstElementChild.classList.add("active");
     }
 });
+var fullscreenChange = function () {
+    if (isFullScreen()) {
+        fullScreenButton.firstElementChild.classList.add("active");
+    }
+    else {
+        fullScreenButton.firstElementChild.classList.remove("active");
+    }
+};
+document.addEventListener("fullscreenchange ", fullscreenChange);
+document.addEventListener("webkitfullscreenchange", fullscreenChange);
+document.addEventListener("mozfullscreenchange", fullscreenChange);
+document.addEventListener("MSFullscreenChange", fullscreenChange);
 function isFullScreen() {
     if (document["isFullScreen"]) {
         return document["isFullScreen"];
@@ -29,8 +39,8 @@ function isFullScreen() {
     else if (document["webkitIsFullScreen"]) {
         return document["webkitIsFullScreen"];
     }
-    else if (document["mozIsFullScreen"]) {
-        return document["mozIsFullScreen"];
+    else if (document["mozFullScreen"]) {
+        return document["mozFullScreen"];
     }
 }
 function exitFullScreen() {
