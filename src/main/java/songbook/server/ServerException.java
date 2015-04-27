@@ -26,6 +26,7 @@ public class ServerException extends Exception {
 
     public static final ServerException NOT_FOUND = new ServerException(StatusCodes.NOT_FOUND);
     public static final ServerException BAD_REQUEST = new ServerException(StatusCodes.BAD_REQUEST);
+    public static final ServerException METHOD_NOT_ALLOWED = new ServerException(StatusCodes.METHOD_NOT_ALLOWED);
 
     private final int code;
 

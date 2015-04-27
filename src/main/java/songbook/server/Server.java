@@ -239,39 +239,32 @@ public class Server {
 		//// To Update ////
 		PathTemplateHandler pathHandler = new PathTemplateHandler(fallThrough);
 
-		pathHandler.add("/", get(this::search)); // Home Page
+		pathHandler.add("/", this::search); // Home Page
 
-		pathHandler.add("/view/{id}", get(this::getSong));
-		pathHandler.add("/edit/{id}", adminAccess(get(this::editSong)));
-		pathHandler.add("/delete/{id}", adminAccess(get(this::deleteSong)));
-		pathHandler.add("/new", adminAccess(get(this::editSong)));
+		pathHandler.add("/view/{id}", this::getSong);
+		pathHandler.add("/edit/{id}", adminAccess(this::editSong));
+		pathHandler.add("/delete/{id}", adminAccess(this::deleteSong));
+		pathHandler.add("/new", adminAccess(this::editSong));
 
 
-		pathHandler.add("/search/{query}", get(this::search));
-		pathHandler.add("/search", get(this::search));
+		pathHandler.add("/search/{query}", this::search);
+		pathHandler.add("/search", this::search);
 
-		pathHandler.add("/songs/{id}",
-			get(this::getSong,
-					adminAccess(
-							post(this::createSong,
-									put(this::modifySong,
-											delete(this::deleteSong)
-						)
-					)
-				)
-			)
-		);
+		pathHandler.add("/songs/{id}", this::restSong);
 
-		pathHandler.add("/consoleApi", get(this::consoleApi));
+		pathHandler.add("/consoleApi", this::consoleApi);
 
-		pathHandler.add("/signin", get(this::signin));
-		pathHandler.add("/admin/{section}/{command}", adminAccess(get(this::adminCommand)));
-		pathHandler.add("/admin", adminAccess(get(this::admin)));
+		pathHandler.add("/signin", this::signin);
+		pathHandler.add("/admin/{section}/{command}", adminAccess(this::adminCommand));
+		pathHandler.add("/admin", adminAccess(this::admin));
 
 		return pathHandler;
 	}
 
 	private void search(final HttpServerExchange exchange) throws Exception {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		// Serve all songs
 		String query = getParameter(exchange, "query");
 		String title = "My SongBook";
@@ -299,7 +292,29 @@ public class Server {
 		exchange.getResponseSender().send(out.toString());
 	}
 
+	private void restSong(final HttpServerExchange exchange) throws Exception {
+		switch (exchange.getRequestMethod().toString()) {
+			case Methods.GET_STRING:
+				this.getSong(exchange);
+				break;
+			case Methods.POST_STRING:
+				adminAccess(this::createSong).handleRequest(exchange);
+				break;
+			case Methods.PUT_STRING:
+				adminAccess(this::modifySong).handleRequest(exchange);
+				break;
+			case Methods.DELETE_STRING:
+				adminAccess(this::deleteSong).handleRequest(exchange);
+				break;
+			default:
+				throw ServerException.METHOD_NOT_ALLOWED;
+		}
+	}
+
 	private void getSong(final HttpServerExchange exchange) throws Exception {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		String id = getParameter(exchange, ("id"));
 
 		// Serves song
@@ -335,6 +350,9 @@ public class Server {
 	}
 
 	private void editSong(final HttpServerExchange exchange) throws Exception{
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		String id = getParameter(exchange, ("id"));
 
 		// Serves song
@@ -411,6 +429,9 @@ public class Server {
 	}
 
 	private void deleteSong(final HttpServerExchange exchange) throws Exception {
+		if (!exchange.getRequestMethod().equals(Methods.DELETE)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		String id = getParameter(exchange, "id");
 
 		// Verify that song exists
@@ -443,7 +464,10 @@ public class Server {
 		}
 	}
 
-	private void consoleApi(final HttpServerExchange exchange) {
+	private void consoleApi(final HttpServerExchange exchange) throws ServerException {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		StringBuilder out = new StringBuilder();
 		Templates.header(out, "Song Console Api", getRole(exchange));
 		Templates.consoleApi(out);
@@ -453,7 +477,10 @@ public class Server {
 		exchange.getResponseSender().send(out.toString());
 	}
 
-	private void signin(final HttpServerExchange exchange) {
+	private void signin(final HttpServerExchange exchange) throws ServerException {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		StringBuilder out = new StringBuilder();
 		Templates.header(out, "SongBook Admin Page", getRole(exchange));
 		Templates.signin(out);
@@ -463,7 +490,10 @@ public class Server {
 		exchange.getResponseSender().send(out.toString());
 	}
 
-	private void admin(final HttpServerExchange exchange) {
+	private void admin(final HttpServerExchange exchange) throws ServerException {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		StringBuilder out = new StringBuilder();
 		Templates.header(out, "SongBook Admin Page", getRole(exchange));
 		Templates.admin(out);
@@ -474,6 +504,9 @@ public class Server {
 	}
 
 	private void adminCommand(final HttpServerExchange exchange) throws Exception {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		StringBuilder out = new StringBuilder();
 
 		Templates.header(out, "Administration - My SongBook", getRole(exchange));
@@ -661,35 +694,6 @@ public class Server {
 	protected String getParameter(HttpServerExchange exchange, String parameter) {
 		Deque<String> deque = exchange.getQueryParameters().get(parameter);
 		return deque == null ? null : deque.element();
-	}
-
-	private HttpHandler get(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.GET, null);
-	}
-
-
-	private HttpHandler get(HttpHandler handler, HttpHandler next) {
-		return methodFilterHandler(handler, Methods.GET, next);
-	}
-
-	private HttpHandler post(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.POST, null);
-	}
-
-	private HttpHandler post(HttpHandler handler, HttpHandler next) {
-		return methodFilterHandler(handler, Methods.POST, next);
-	}
-
-	private HttpHandler put(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.PUT, null);
-	}
-
-	private HttpHandler put(HttpHandler handler, HttpHandler next) {
-		return methodFilterHandler(handler, Methods.PUT, next);
-	}
-
-	private HttpHandler delete(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.DELETE, null);
 	}
 
 	private HttpHandler adminAccess(HttpHandler handler) {
