@@ -1,5 +1,6 @@
 package songbook.server;
 
+import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
@@ -30,7 +31,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static io.undertow.Handlers.*;
 
 public class Server {
 
@@ -48,6 +48,7 @@ public class Server {
 	public static final String MIME_TEXT_HTML = "text/html";
 	public static final String MIME_TEXT_PLAIN = "text/plain";
 	public static final String MIME_TEXT_SONG = "text/song";
+
 	public static final String SESSION_KEY = "SessionKey";
 
 	public static final AttachmentKey<String> ADMIN_KEY = AttachmentKey.create(String.class);
@@ -61,7 +62,9 @@ public class Server {
 	private IndexDatabase indexDb;
 
 	private boolean showKeyCreationAlert = false;
+
 	private String administratorKey = null;
+
 	private String userKey = null;
 
 	public void start() {
@@ -107,10 +110,9 @@ public class Server {
 	}
 
 	private HttpHandler pathTemplateHandler() {
-		HttpHandler fallThrough = resource(new FileResourceManager(getWebRoot().toFile(), 1024));
+		HttpHandler fallThrough = Handlers.resource(new FileResourceManager(getWebRoot().toFile(), 1024));
 
 		//// To Update ////
-
 		PathTemplateHandler pathHandler = new PathTemplateHandler(fallThrough);
 
 		pathHandler.add("/", get(this::search)); // Home Page
@@ -456,11 +458,7 @@ public class Server {
 		return host == null ? DEFAULT_HOST : host;
 	}
 
-
 	// Security
-
-
-
 	private void createAdminKey() {
 		// creates administrator key when it's null
 		long timestamp = System.currentTimeMillis();
@@ -579,7 +577,7 @@ public class Server {
         };
 
 		// Handles exceptions (including ServerException)
-		ExceptionHandler exceptionHandler = exceptionHandler(allowCrossOriginHandler);
+		ExceptionHandler exceptionHandler = Handlers.exceptionHandler(allowCrossOriginHandler);
 		exceptionHandler.addExceptionHandler(ServerException.class, (exchange) -> {
 			Throwable exception = exchange.getAttachment(ExceptionHandler.THROWABLE);
 			if (exception instanceof ServerException) {
@@ -603,7 +601,7 @@ public class Server {
 
 		Undertow.Builder builder = Undertow.builder();
 		builder.addHttpListener(port, "localhost");
-		builder.setHandler(gracefulShutdown(logHandler));
+		builder.setHandler(Handlers.gracefulShutdown(logHandler));
 
 		info("Listens on port " + port);
 
@@ -693,4 +691,5 @@ public class Server {
 		Server server = new Server();
 		server.start();
 	}
+
 }
