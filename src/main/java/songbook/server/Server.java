@@ -7,6 +7,7 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.Cookie;
 import io.undertow.server.handlers.CookieImpl;
 import io.undertow.server.handlers.ExceptionHandler;
+import io.undertow.server.handlers.GracefulShutdownHandler;
 import io.undertow.server.handlers.resource.FileResourceManager;
 import io.undertow.util.*;
 import org.apache.lucene.document.Document;
@@ -109,6 +110,128 @@ public class Server {
 		undertow.start();
 	}
 
+	/**
+	 * Create And initialize undertow and handlers stack
+	 * @param next
+	 * @return
+	 */
+	protected Undertow createServer(HttpHandler next) {
+		// Fifth Handler Session
+		HttpHandler sessionHandler = sessionHandler(next);
+		// Fourth Handler crossOrigin
+		HttpHandler crossOriginHandler = allowCrossOriginHandler(sessionHandler);
+		// Third Handler exception
+		HttpHandler exceptionHandler = exceptionHandler(crossOriginHandler);
+		// Second Handler log
+		HttpHandler logHandler = log(exceptionHandler);
+		// First Handler GracefulShutdown
+		GracefulShutdownHandler gracefulShutdownHandler = Handlers.gracefulShutdown(logHandler);
+
+		Undertow.Builder builder = Undertow.builder();
+		builder.addHttpListener(port, "localhost");
+		builder.setHandler(gracefulShutdownHandler);
+
+		info("Listens on port " + port);
+
+		return builder.build();
+	}
+
+	/**
+	 * Log All requests
+	 * @param next
+	 * @return
+	 */
+	protected  HttpHandler log(HttpHandler next) {
+		return (exchange) -> {
+			long start = System.currentTimeMillis();
+			next.handleRequest(exchange);
+			long end = System.currentTimeMillis();
+			long time = end - start < 0 ? 0 : end - start;
+			info("[" + exchange.getRequestMethod() + "]" + exchange.getRequestURI() + " in " + time + " ms");
+		};
+	}
+
+	/**
+	 * Handles exceptions (including ServerException)
+	 * @param next
+	 * @return
+	 */
+	protected  HttpHandler exceptionHandler(HttpHandler next) {
+		ExceptionHandler exceptionHandler = Handlers.exceptionHandler(next);
+		exceptionHandler.addExceptionHandler(ServerException.class, (exchange) -> {
+			Throwable exception = exchange.getAttachment(ExceptionHandler.THROWABLE);
+			if (exception instanceof ServerException) {
+				((ServerException) exception).serveError(getRole(exchange), exchange);
+			} else {
+				// TODO create real error message
+				String message = exception.getMessage();
+				exchange.setResponseCode(StatusCodes.INTERNAL_SERVER_ERROR);
+				exchange.getResponseSender().send(createMessage(message, isAskingForJson(exchange)));
+			}
+		});
+		return exceptionHandler;
+	}
+
+	/**
+	 * Adds Cross Origin if needed
+	 * @param next
+	 * @return
+	 */
+	protected  HttpHandler allowCrossOriginHandler(HttpHandler next) {
+		return (exchange) -> {
+			String origin = getHeader(exchange, Headers.ORIGIN);
+			if (origin != null) {
+				exchange.getResponseHeaders().put(Headers.ORIGIN, origin);
+			}
+			next.handleRequest(exchange);
+		};
+	}
+
+	/**
+	 *  Adds admin attribute and checks user attribute
+	 * @param next
+	 * @return
+	 */
+	protected  HttpHandler sessionHandler(HttpHandler next) {
+		return exchange -> {
+			String sessionKey = null;
+			Map<String, Cookie> cookies = Cookies.parseRequestCookies(10, false, exchange.getRequestHeaders().get(Headers.COOKIE));
+			for (Cookie cookie : cookies.values()) {
+				if (SESSION_KEY.equals(cookie.getName())) {
+					sessionKey = cookie.getValue();
+				}
+			}
+
+			String key = getParameter(exchange, "key");
+			if (key != null && !key.isEmpty() && !key.equals(sessionKey)) {
+				sessionKey = key;
+				// Set Cookie
+				Cookie cookie = new CookieImpl(SESSION_KEY, sessionKey);
+				cookie.setMaxAge(Integer.MAX_VALUE);
+				exchange.getResponseHeaders().put(Headers.SET_COOKIE, cookie.getValue());
+			}
+			if (isAdministrator(sessionKey)) {
+				// gets administrator key, remove alert (if present)
+				if (showKeyCreationAlert) {
+					showKeyCreationAlert = false;
+					try {
+						Files.createFile(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
+					} catch (IOException e) {
+						error("Can't create file '" + ADMINISTRATOR_ACTIVATED_PATH + "'", e);
+					}
+				}
+			}
+
+			if ( isUser(sessionKey) ) {
+				// Need to understand this what's the difference between ADMIN_KEY and SESSION_KEY
+				exchange.putAttachment(ADMIN_KEY, sessionKey);
+				next.handleRequest(exchange);
+			} else { // It's too early to decide if we are authorize or not
+				throw new ServerException(StatusCodes.UNAUTHORIZED);
+			}
+		};
+	}
+
 	private HttpHandler pathTemplateHandler() {
 		HttpHandler fallThrough = Handlers.resource(new FileResourceManager(getWebRoot().toFile(), 1024));
 
@@ -173,39 +296,6 @@ public class Server {
 				break;
 		}
 		exchange.getResponseSender().send(out.toString());
-	}
-
-	private String sessionKey(final HttpServerExchange exchange) {
-		// TODO handle session inside a handler
-
-		String sessionKey = null;
-		Map<String, Cookie> cookies = Cookies.parseRequestCookies(10, false, exchange.getRequestHeaders().get(Headers.COOKIE));
-		for (Cookie cookie : cookies.values()) {
-			if (SESSION_KEY.equals(cookie.getName())) {
-				sessionKey = cookie.getValue();
-			}
-		}
-
-		String key = getParameter(exchange, "key");
-		if (key != null && !key.isEmpty() && !key.equals(sessionKey)) {
-			sessionKey = key;
-			// Set Cookie
-			Cookie cookie = new CookieImpl(SESSION_KEY, sessionKey);
-			cookie.setMaxAge(Integer.MAX_VALUE);
-			exchange.getResponseHeaders().put(Headers.SET_COOKIE, cookie.getValue());
-		}
-		if (isAdministrator(sessionKey)) {
-			// gets administrator key, remove alert (if present)
-			if (showKeyCreationAlert) {
-				showKeyCreationAlert = false;
-				try {
-					Files.createFile(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
-				} catch (IOException e) {
-					error("Can't create file '" + ADMINISTRATOR_ACTIVATED_PATH + "'", e);
-				}
-			}
-		}
-		return sessionKey;
 	}
 
 	private void getSong(final HttpServerExchange exchange) throws Exception {
@@ -551,61 +641,6 @@ public class Server {
 
 	private String getRole(HttpServerExchange exchange) {
 		return isAdministrator(exchange.getAttachment(ADMIN_KEY)) ? "admin" : "user";
-	}
-
-	protected Undertow createServer(HttpHandler pathHandler) {
-
-		// Adds admin attribute and checks user attribute
-		HttpHandler administrationHandler = exchange -> {
-			String sessionKey = sessionKey(exchange);
-
-			if ( isUser(sessionKey) ) {
-				exchange.putAttachment(ADMIN_KEY, sessionKey);
-				pathHandler.handleRequest(exchange);
-			} else {
-				throw new ServerException(StatusCodes.UNAUTHORIZED);
-			}
-		};
-
-		// Adds Cross Origin is needed
-		HttpHandler allowCrossOriginHandler = exchange -> {
-            String origin = getHeader(exchange, Headers.ORIGIN);
-            if (origin != null) {
-                exchange.getResponseHeaders().put(Headers.ORIGIN, origin);
-            }
-            administrationHandler.handleRequest(exchange);
-        };
-
-		// Handles exceptions (including ServerException)
-		ExceptionHandler exceptionHandler = Handlers.exceptionHandler(allowCrossOriginHandler);
-		exceptionHandler.addExceptionHandler(ServerException.class, (exchange) -> {
-			Throwable exception = exchange.getAttachment(ExceptionHandler.THROWABLE);
-			if (exception instanceof ServerException) {
-				((ServerException) exception).serveError(getRole(exchange), exchange);
-			} else {
-				// TODO create real error message
-				String message = exception.getMessage();
-				exchange.setResponseCode(StatusCodes.INTERNAL_SERVER_ERROR);
-				exchange.getResponseSender().send(createMessage(message, isAskingForJson(exchange)));
-			}
-		});
-
-		// Logs all requests
-		HttpHandler logHandler = (HttpServerExchange exchange) -> {
-			long start = System.currentTimeMillis();
-			exceptionHandler.handleRequest(exchange);
-			long end = System.currentTimeMillis();
-			long time = end - start < 0 ? 0 : end - start;
-			info("[" + exchange.getRequestMethod() + "]" + exchange.getRequestURI() + " in " + time + " ms");
-		};
-
-		Undertow.Builder builder = Undertow.builder();
-		builder.addHttpListener(port, "localhost");
-		builder.setHandler(Handlers.gracefulShutdown(logHandler));
-
-		info("Listens on port " + port);
-
-		return builder.build();
 	}
 
 	protected boolean isAskingForJson(HttpServerExchange exchange) {
