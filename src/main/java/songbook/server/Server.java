@@ -242,9 +242,9 @@ public class Server {
 		pathHandler.add("/", this::search); // Home Page
 
 		pathHandler.add("/view/{id}", this::getSong);
-		pathHandler.add("/edit/{id}", adminAccess(this::editSong));
+		pathHandler.add("/edit/{id}", adminAccess(this::editSongPage));
 		pathHandler.add("/delete/{id}", adminAccess(this::deleteSong));
-		pathHandler.add("/new", adminAccess(this::editSong));
+		pathHandler.add("/new", adminAccess(this::editSongPage));
 
 
 		pathHandler.add("/search/{query}", this::search);
@@ -252,11 +252,11 @@ public class Server {
 
 		pathHandler.add("/songs/{id}", this::restSong);
 
-		pathHandler.add("/consoleApi", this::consoleApi);
+		pathHandler.add("/consoleApi", this::consoleApiPage);
 
-		pathHandler.add("/signin", this::signin);
+		pathHandler.add("/signin", this::signinPage);
 		pathHandler.add("/admin/{section}/{command}", adminAccess(this::adminCommand));
-		pathHandler.add("/admin", adminAccess(this::admin));
+		pathHandler.add("/admin", adminAccess(this::adminPage));
 
 		return pathHandler;
 	}
@@ -349,7 +349,7 @@ public class Server {
 		return out.toString();
 	}
 
-	private void editSong(final HttpServerExchange exchange) throws Exception{
+	private void editSongPage(final HttpServerExchange exchange) throws Exception{
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
@@ -464,7 +464,7 @@ public class Server {
 		}
 	}
 
-	private void consoleApi(final HttpServerExchange exchange) throws ServerException {
+	private void consoleApiPage(final HttpServerExchange exchange) throws ServerException {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
@@ -477,7 +477,7 @@ public class Server {
 		exchange.getResponseSender().send(out.toString());
 	}
 
-	private void signin(final HttpServerExchange exchange) throws ServerException {
+	private void signinPage(final HttpServerExchange exchange) throws ServerException {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
@@ -490,7 +490,7 @@ public class Server {
 		exchange.getResponseSender().send(out.toString());
 	}
 
-	private void admin(final HttpServerExchange exchange) throws ServerException {
+	private void adminPage(final HttpServerExchange exchange) throws ServerException {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
