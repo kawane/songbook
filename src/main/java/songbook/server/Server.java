@@ -141,7 +141,7 @@ public class Server {
 	 * @param next
 	 * @return
 	 */
-	protected  HttpHandler log(HttpHandler next) {
+	protected HttpHandler log(HttpHandler next) {
 		return (exchange) -> {
 			long start = System.currentTimeMillis();
 			next.handleRequest(exchange);
@@ -156,7 +156,7 @@ public class Server {
 	 * @param next
 	 * @return
 	 */
-	protected  HttpHandler exceptionHandler(HttpHandler next) {
+	protected HttpHandler exceptionHandler(HttpHandler next) {
 		ExceptionHandler exceptionHandler = Handlers.exceptionHandler(next);
 		exceptionHandler.addExceptionHandler(ServerException.class, (exchange) -> {
 			Throwable exception = exchange.getAttachment(ExceptionHandler.THROWABLE);
@@ -177,7 +177,7 @@ public class Server {
 	 * @param next
 	 * @return
 	 */
-	protected  HttpHandler allowCrossOriginHandler(HttpHandler next) {
+	protected HttpHandler allowCrossOriginHandler(HttpHandler next) {
 		return (exchange) -> {
 			String origin = getHeader(exchange, Headers.ORIGIN);
 			if (origin != null) {
@@ -192,7 +192,7 @@ public class Server {
 	 * @param next
 	 * @return
 	 */
-	protected  HttpHandler sessionHandler(HttpHandler next) {
+	protected HttpHandler sessionHandler(HttpHandler next) {
 		return exchange -> {
 			String sessionKey = null;
 			Map<String, Cookie> cookies = Cookies.parseRequestCookies(10, false, exchange.getRequestHeaders().get(Headers.COOKIE));
@@ -208,7 +208,7 @@ public class Server {
 				// Set Cookie
 				Cookie cookie = new CookieImpl(SESSION_KEY, sessionKey);
 				cookie.setMaxAge(Integer.MAX_VALUE);
-				exchange.getResponseHeaders().put(Headers.SET_COOKIE, cookie.getValue());
+				exchange.setResponseCookie(cookie);
 			}
 			if (isAdministrator(sessionKey)) {
 				// gets administrator key, remove alert (if present)
