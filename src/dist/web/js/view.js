@@ -13,19 +13,66 @@ smallerButton.addEventListener("click", function (e) {
 // FullScreen
 var fullScreenButton = document.getElementById("fullScreenButton");
 fullScreenButton.addEventListener("click", function (e) {
-    if (document.body["requestFullScreen"]) {
-        document.body["requestFullScreen"]();
+    if (isFullScreen()) {
+        exitFullScreen();
+        fullScreenButton.firstElementChild.classList.remove("active");
     }
-    else if (document.body["webkitRequestFullScreen"]) {
-        document.body["webkitRequestFullScreen"]();
+    else {
+        requestFullScreen(document.body);
+        fullScreenButton.firstElementChild.classList.add("active");
     }
-    else if (document.body["mozRequestFullScreen"]) {
-        document.body["mozRequestFullScreen"]();
+});
+function isFullScreen() {
+    if (document["isFullScreen"]) {
+        return document["isFullScreen"];
     }
+    else if (document["webkitIsFullScreen"]) {
+        return document["webkitIsFullScreen"];
+    }
+    else if (document["mozIsFullScreen"]) {
+        return document["mozIsFullScreen"];
+    }
+}
+function exitFullScreen() {
+    if (document["exitFullscreen"]) {
+        return document["exitFullscreen"]();
+    }
+    else if (document["webkitExitFullscreen"]) {
+        return document["webkitExitFullscreen"]();
+    }
+    else if (document["mozCancelFullScreen"]) {
+        return document["mozCancelFullScreen"]();
+    }
+}
+function requestFullScreen(element) {
+    if (element["requestFullScreen"]) {
+        element["requestFullScreen"]();
+    }
+    else if (element["webkitRequestFullScreen"]) {
+        element["webkitRequestFullScreen"]();
+    }
+    else if (element["mozRequestFullScreen"]) {
+        element["mozRequestFullScreen"]();
+    }
+}
+// Restore two column current user pref
+var twoColumnButton = document.getElementById("twoColumnButton");
+if (localStorage.getItem("song-column") === "true") {
+    song.classList.add("song-column");
+    twoColumnButton.firstElementChild.classList.add("active");
+}
+else {
+    song.classList.remove("song-column");
+    twoColumnButton.classList.remove("active");
+    twoColumnButton.firstElementChild.classList.remove("active");
+}
+twoColumnButton.addEventListener("click", function (e) {
+    var songColumn = song.classList.toggle("song-column");
+    twoColumnButton.firstElementChild.classList.toggle("active");
+    localStorage.setItem("song-column", songColumn + "");
 });
 // Transposition
 var transposeCount = 0;
-var displayMusicalKeyName = false;
 var musicalKey = null;
 var transposeDisplay = document.getElementById("transposeDisplay");
 var musicalKeyElt = song.querySelector(".song-metadata-value[itemprop=musicalKey]");

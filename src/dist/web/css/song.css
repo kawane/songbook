@@ -5,6 +5,16 @@
 	white-space: nowrap;
 }
 
+.song-column {
+	-webkit-column-count: 2; /* Chrome, Safari, Opera */
+	-moz-column-count: 2; /* Firefox */
+	column-count: 2;
+
+	-webkit-column-rule: 1px dashed #dddddd; /* Chrome, Safari, Opera */
+	-moz-column-rule: 1px dashed #dddddd; /* Firefox */
+	column-rule: 1px dashed #dddddd;
+}
+
 .song.edited {
     border: 1px solid darkgray;
 }
@@ -26,6 +36,9 @@
 .song-verse-9
 {
 	margin: 2.5ex 0;
+	-webkit-column-break-inside: avoid;
+	page-break-inside: avoid;
+	column-break-inside: avoid;
 }
 
 .song-chorus {
@@ -61,7 +74,11 @@
 }
 
 .song-chords {
-    line-height: 0.5em;
+
+}
+.song-chords {
+    margin-bottom: -6px;
+    margin-top: -6px;
     white-space: pre;
 	font-weight: bold;
 	color: rgb(33,128,255);
