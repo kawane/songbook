@@ -193,6 +193,7 @@ public class Server {
 	 * @return
 	 */
 	protected HttpHandler sessionHandler(HttpHandler next) {
+		// TODO may be use SessionCookieConfig if it helps
 		return exchange -> {
 			String sessionKey = null;
 			Map<String, Cookie> cookies = Cookies.parseRequestCookies(10, false, exchange.getRequestHeaders().get(Headers.COOKIE));
