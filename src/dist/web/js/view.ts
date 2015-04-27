@@ -18,22 +18,34 @@ var fullScreenButton = document.getElementById("fullScreenButton");
 fullScreenButton.addEventListener("click", (e) => {
     if (isFullScreen()) {
         exitFullScreen();
-        (<HTMLElement>fullScreenButton.firstElementChild).classList.remove("active");
     } else {
         requestFullScreen(document.body);
-        (<HTMLElement>fullScreenButton.firstElementChild).classList.add("active");
     }
 });
+
+var fullscreenChange = () => {
+    if (isFullScreen()) {
+        (<HTMLElement>fullScreenButton.firstElementChild).classList.add("active");
+    } else {
+        (<HTMLElement>fullScreenButton.firstElementChild).classList.remove("active");
+    }
+};
+
+document.addEventListener("fullscreenchange ", fullscreenChange);
+document.addEventListener("webkitfullscreenchange", fullscreenChange);
+document.addEventListener("mozfullscreenchange", fullscreenChange);
+document.addEventListener("MSFullscreenChange", fullscreenChange);
 
 function isFullScreen(): boolean {
     if (document["isFullScreen"]) {
         return document["isFullScreen"]
     } else if (document["webkitIsFullScreen"]) {
         return document["webkitIsFullScreen"]
-    } else if (document["mozIsFullScreen"]) {
-        return document["mozIsFullScreen"]
+    } else if (document["mozFullScreen"]) {
+        return document["mozFullScreen"]
     }
 }
+
 function exitFullScreen(): boolean {
     if (document["exitFullscreen"]) {
         return document["exitFullscreen"]()
@@ -55,21 +67,19 @@ function requestFullScreen(element: HTMLElement) {
 }
 
 // Restore two column current user pref
-var twoColumnButton = document.getElementById("twoColumnButton");
-if (localStorage.getItem("song-column") === "true") {
-    song.classList.add("song-column");
-    (<HTMLElement>twoColumnButton.firstElementChild).classList.add("active");
-} else {
-    song.classList.remove("song-column");
-    twoColumnButton.classList.remove("active");
-    (<HTMLElement>twoColumnButton.firstElementChild).classList.remove("active");
-}
-
-twoColumnButton.addEventListener("click", (e) => {
-    var songColumn = song.classList.toggle("song-column");
-    (<HTMLElement>twoColumnButton.firstElementChild).classList.toggle("active");
-    localStorage.setItem("song-column", songColumn + "");
-});
+var songWidth = song.clientWidth;
+var songHeight = song.clientHeight;
+var updateColumn = () => {
+    var needColumn = songWidth < window.innerWidth /2;
+    needColumn = needColumn && songHeight > window.innerHeight;
+    if (needColumn) {
+        song.classList.add("song-column");
+    } else {
+        song.classList.remove("song-column");
+    }
+};
+window.addEventListener("resize", updateColumn);
+updateColumn();
 
 // Transposition
 var transposeCount = 0;

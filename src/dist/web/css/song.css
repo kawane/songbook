@@ -1,5 +1,9 @@
 
 
+#song {
+	display: inline-block;
+}
+
 .song {
 	font-family: consolas, monospace;
 	white-space: nowrap;
