@@ -10,6 +10,20 @@ smallerButton.addEventListener("click", function (e) {
     fontSize -= 10;
     song.style.fontSize = fontSize + "%";
 });
+// FullScreen
+var fullScreenButton = document.getElementById("fullScreenButton");
+fullScreenButton.addEventListener("click", function (e) {
+    if (document.body["requestFullScreen"]) {
+        document.body["requestFullScreen"]();
+    }
+    else if (document.body["webkitRequestFullScreen"]) {
+        document.body["webkitRequestFullScreen"]();
+    }
+    else if (document.body["mozRequestFullScreen"]) {
+        document.body["mozRequestFullScreen"]();
+    }
+});
+// Transposition
 var transposeCount = 0;
 var displayMusicalKeyName = false;
 var musicalKey = null;
