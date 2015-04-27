@@ -239,16 +239,15 @@ public class Server {
 		//// To Update ////
 		PathTemplateHandler pathHandler = new PathTemplateHandler(fallThrough);
 
-		pathHandler.add("/", this::search); // Home Page
+		pathHandler.add("/", this::homePage); // Home Page
 
-		pathHandler.add("/view/{id}", this::getSong);
+		pathHandler.add("/view/{id}", this::viewSongPage);
 		pathHandler.add("/edit/{id}", adminAccess(this::editSongPage));
-		pathHandler.add("/delete/{id}", adminAccess(this::deleteSong));
+		pathHandler.add("/delete/{id}", adminAccess(this::deleteSongPage));
 		pathHandler.add("/new", adminAccess(this::editSongPage));
 
-
-		pathHandler.add("/search/{query}", this::search);
-		pathHandler.add("/search", this::search);
+		pathHandler.add("/search/{query}", this::searchPage);
+		pathHandler.add("/search", this::searchPage);
 
 		pathHandler.add("/songs/{id}", this::restSong);
 
@@ -261,7 +260,50 @@ public class Server {
 		return pathHandler;
 	}
 
-	private void search(final HttpServerExchange exchange) throws Exception {
+	private void homePage(HttpServerExchange exchange) throws Exception {
+		searchPage(exchange);
+	}
+
+	private void viewSongPage(HttpServerExchange exchange) throws Exception {
+		getSong(exchange);
+	}
+
+	private void editSongPage(final HttpServerExchange exchange) throws Exception{
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
+		String id = getParameter(exchange, ("id"));
+
+		// Serves song
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
+
+		StringBuilder out = new StringBuilder();
+		String role = getRole(exchange);
+
+		if (id != null && !id.isEmpty()) {
+
+			String songContents = songDb.getSongContents(id);
+			if (songContents == null) throw new SongNotFoundException(id);
+			String title = SongUtils.getTitle(songContents);
+			Templates.header(out, "Edit - " + title + " - My SongBook", role);
+			Templates.editSong(out, id, songContents);
+			Templates.footer(out);
+
+			exchange.getResponseSender().send(out.toString());
+
+		} else {
+			Templates.header(out, "Create Song - My SongBook", role);
+			Templates.editSong(out, "", Templates.newSong(new StringBuilder()));
+			Templates.footer(out);
+			exchange.getResponseSender().send(out.toString());
+		}
+	}
+
+	private void deleteSongPage(HttpServerExchange exchange) throws Exception {
+		deleteSong(exchange);
+	}
+
+	private void searchPage(final HttpServerExchange exchange) throws Exception {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
@@ -347,37 +389,6 @@ public class Server {
 
 		Templates.footer(out);
 		return out.toString();
-	}
-
-	private void editSongPage(final HttpServerExchange exchange) throws Exception{
-		if (!exchange.getRequestMethod().equals(Methods.GET)) {
-			throw ServerException.METHOD_NOT_ALLOWED;
-		}
-		String id = getParameter(exchange, ("id"));
-
-		// Serves song
-		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
-
-		StringBuilder out = new StringBuilder();
-		String role = getRole(exchange);
-
-		if (id != null && !id.isEmpty()) {
-
-			String songContents = songDb.getSongContents(id);
-			if (songContents == null) throw new SongNotFoundException(id);
-			String title = SongUtils.getTitle(songContents);
-			Templates.header(out, "Edit - " + title + " - My SongBook", role);
-			Templates.editSong(out, id, songContents);
-			Templates.footer(out);
-
-			exchange.getResponseSender().send(out.toString());
-
-		} else {
-			Templates.header(out, "Create Song - My SongBook", role);
-			Templates.editSong(out, "", Templates.newSong(new StringBuilder()));
-			Templates.footer(out);
-			exchange.getResponseSender().send(out.toString());
-		}
 	}
 
 	private void createSong(final HttpServerExchange exchange) throws Exception {
