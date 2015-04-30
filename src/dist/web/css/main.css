@@ -3,14 +3,17 @@
     display: inline-block;
 }
 
-.song-edit {
-	position: absolute;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-	width: 100%;
+#song-edit {
+    overflow: hidden;
+    margin: 0;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
 	font-family: consolas, "monospace";
 	white-space: pre;
+    font-size: 10pt;
 }
 
 .user-admin, .admin-user {

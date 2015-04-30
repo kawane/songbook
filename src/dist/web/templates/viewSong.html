@@ -1,11 +1,15 @@
 <div class="song-navbar btn-toolbar" role="toolbar" aria-label="Toolbar">
-    <div class="btn-group" role="group" aria-label="Navigation">
-        <a href="/" title="Back to list" class="btn btn-default glyphicon glyphicon-chevron-left"></a>
-    </div>
+
 </div>
 
 <div id="toolbar" class="song-toolbar btn-toolbar" role="toolbar" aria-label="Toolbar">
-
+    <div class="btn-group" role="group" aria-label="Navigation">
+        <a href="/" title="Back to list" class="btn btn-default glyphicon glyphicon-chevron-left"></a>
+    </div>
+    <div class="btn-group ${role}-admin" role="group" aria-label="Edition">
+        <a id="editButton" href="/edit/${songId}" title="Edit" class="btn btn-default glyphicon glyphicon-pencil"></a>
+        <a id="deleteButton" href="/delete/${songId}" title="Delete" class="btn btn-default glyphicon glyphicon-trash"></a>
+    </div>
     <div class="btn-group" role="group" aria-label="Resize Text">
         <button id="biggerButton" title="Bigger" class="btn btn-default glyphicon glyphicon-zoom-in"></button>
         <button id="smallerButton" title="Smaller" class="btn btn-default glyphicon glyphicon-zoom-out"></button>
@@ -24,11 +28,6 @@
 </div>
 
 <script>
-    var adminToolbar = document.getElementById('adminToolbar');
-    if (adminToolbar) {
-        adminToolbar.innerHTML += '<a id="editButton" href="/edit/${songId}"><span id="" title="Edit" class="btn btn-default navbar-btn glyphicon glyphicon-pencil"></span></a> ';
-        adminToolbar.innerHTML += '<a id="deleteButton" href="/delete/${songId}"><span title="Delete" class="btn btn-default navbar-btn glyphicon glyphicon-trash"></span></a> ';
-    }
     require(["./view"], function() {});
 </script>
 

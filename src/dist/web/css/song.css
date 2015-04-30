@@ -8,6 +8,7 @@
 .song-toolbar {
     position: fixed;
     right: 0;
+    z-index: 2;
 }
 
 .song-navbar {
