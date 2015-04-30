@@ -16,6 +16,13 @@
     left: 0;
 }
 
+@media print {
+    .song-toolbar, .song-navbar {
+        visibility: hidden;
+        display: none;
+    }
+}
+
 .song-header {
 }
 
