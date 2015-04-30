@@ -1,4 +1,4 @@
-var song = document.getElementById("song");
+var song = document.getElementById("song-view");
 var fontSize = 100;
 var biggerButton = document.getElementById("biggerButton");
 biggerButton.addEventListener("click", function (e) {
@@ -22,10 +22,10 @@ fullScreenButton.addEventListener("click", function (e) {
 });
 var fullscreenChange = function () {
     if (isFullScreen()) {
-        fullScreenButton.firstElementChild.classList.add("active");
+        fullScreenButton.classList.add("active");
     }
     else {
-        fullScreenButton.firstElementChild.classList.remove("active");
+        fullScreenButton.classList.remove("active");
     }
 };
 document.addEventListener("fullscreenchange ", fullscreenChange);
@@ -71,11 +71,12 @@ var songHeight = song.clientHeight;
 var updateColumn = function () {
     var needColumn = songWidth < window.innerWidth / 2;
     needColumn = needColumn && songHeight > window.innerHeight;
+    var songContent = song.querySelector(".song-content");
     if (needColumn) {
-        song.classList.add("song-column");
+        songContent.classList.add("song-column");
     }
     else {
-        song.classList.remove("song-column");
+        songContent.classList.remove("song-column");
     }
 };
 window.addEventListener("resize", updateColumn);

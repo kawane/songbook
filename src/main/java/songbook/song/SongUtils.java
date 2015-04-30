@@ -53,9 +53,12 @@ public class SongUtils {
 		try {
 			String[] songLines = SongUtils.getSongLines(songData);
 			w.append("<div class='song' itemscope='' itemtype='http://schema.org/MusicComposition'>\n");
+
 			w.append("<div class='song-title' itemprop='name'>");
 			w.append(songLines[0]);
 			w.append("</div>\n");
+            w.append("<div class='song-header'>");
+            boolean songHeader = true;
 			boolean verse = false;
 			for (int i = 1; i < songLines.length; i++) {
 				String line = songLines[i];
@@ -71,7 +74,12 @@ public class SongUtils {
 							w.append("</div>\n");
 							verse = false;
 						}
-					}
+					} else {
+                        if (songHeader) {
+                            songHeader = false;
+                            w.append("</div>\n<div class='song-content'>\n");
+                        }
+                    }
 					w.append("<div class='song-");
 					w.append(propName.replace(" ", "-"));
 					w.append("'>\n");
@@ -140,6 +148,10 @@ public class SongUtils {
 					}
 					if (isChord) {
 						if (!verse) {
+                            if (songHeader) {
+                                songHeader = false;
+                                w.append("</div>\n<div class='song-content'>\n");
+                            }
 							w.append("<div class='song-verse'>");
 							verse = true;
 						}
@@ -148,6 +160,10 @@ public class SongUtils {
 						w.append("</div>\n");
 					} else {
 						if (!verse) {
+                            if (songHeader) {
+                                songHeader = false;
+                                w.append("</div>\n<div class='song-content'>\n");
+                            }
 							w.append("<div class='song-verse'>");
 							verse = true;
 						}
@@ -163,7 +179,7 @@ public class SongUtils {
 				w.append("</div>\n");
 				verse = false;
 			}
-			w.append("</div>\n");
+			w.append("</div>\n</div>\n");
 		} catch (IOException e) {
 			System.err.println("An appendable must not failed here!");
 		}

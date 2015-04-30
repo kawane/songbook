@@ -286,14 +286,14 @@ public class Server {
 			if (songContents == null) throw new SongNotFoundException(id);
 			String title = SongUtils.getTitle(songContents);
 			Templates.header(out, "Edit - " + title + " - My SongBook", role);
-			Templates.editSong(out, id, songContents);
+			Templates.editSong(out, id, songContents, role);
 			Templates.footer(out);
 
 			exchange.getResponseSender().send(out.toString());
 
 		} else {
 			Templates.header(out, "Create Song - My SongBook", role);
-			Templates.editSong(out, "", Templates.newSong(new StringBuilder()));
+			Templates.editSong(out, "", Templates.newSong(new StringBuilder()), role);
 			Templates.footer(out);
 			exchange.getResponseSender().send(out.toString());
 		}
@@ -320,11 +320,15 @@ public class Server {
 			case MIME_TEXT_HTML:
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
 
-				Templates.header(out, title, getRole(exchange));
+				String role = getRole(exchange);
+				Templates.header(out, title, role);
 				if (showKeyCreationAlert) {
 					Templates.alertKeyCreation(out, administratorKey, exchange.getRequestPath());
 				}
-				indexDb.search(query, out, mimeType);
+				StringBuilder result = new StringBuilder();
+				indexDb.search(query, result, mimeType);
+				Templates.search(out,result, role);
+
 				Templates.footer(out);
 				break;
 			default:
@@ -383,9 +387,10 @@ public class Server {
 		StringBuilder out = new StringBuilder();
 		// Todo use a songmark object to extract title and then generate html
 		String title = SongUtils.getTitle(songData);
+		String role = getRole(exchange);
 		Templates.header(out, title + " - My SongBook", getRole(exchange));
 		if (showKeyCreationAlert) Templates.alertKeyCreation(out, administratorKey, path);
-		Templates.viewSong(out, id, SongUtils.writeHtml(new StringBuilder(), songData));
+		Templates.viewSong(out, id, SongUtils.writeHtml(new StringBuilder(), songData), role);
 
 		Templates.footer(out);
 		return out.toString();

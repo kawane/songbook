@@ -32,12 +32,16 @@ public class Templates {
         return print(out, "footer.html");
 	}
 
-    public static <A extends Appendable> A editSong(A out, CharSequence songId, CharSequence song) {
-        return print(out, "editSong.html", "songId", songId, "song", song);
+    public static <A extends Appendable> A search(A out, CharSequence searchResult, CharSequence role) {
+        return print(out, "search.html", "searchResult", searchResult, "role", role);
     }
 
-    public static <A extends Appendable> A viewSong(A out, CharSequence songId, CharSequence song) {
-        return print(out, "viewSong.html", "songId", songId, "song", song);
+    public static <A extends Appendable> A editSong(A out, CharSequence songId, CharSequence song, CharSequence role) {
+        return print(out, "editSong.html", "songId", songId, "song", song, "role", role);
+    }
+
+    public static <A extends Appendable> A viewSong(A out, CharSequence songId, CharSequence song, CharSequence role) {
+        return print(out, "viewSong.html", "songId", songId, "song", song, "role", role);
     }
 
     public static <A extends Appendable> A newSong(A out) {

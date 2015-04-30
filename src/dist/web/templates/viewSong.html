@@ -1,19 +1,33 @@
+<div class="song-navbar btn-toolbar" role="toolbar" aria-label="Toolbar">
 
-<div id="song" class="container-fluid">
+</div>
+
+<div id="toolbar" class="song-toolbar btn-toolbar" role="toolbar" aria-label="Toolbar">
+    <div class="btn-group" role="group" aria-label="Navigation">
+        <a href="/" title="Back to list" class="btn btn-default glyphicon glyphicon-chevron-left"></a>
+    </div>
+    <div class="btn-group ${role}-admin" role="group" aria-label="Edition">
+        <a id="editButton" href="/edit/${songId}" title="Edit" class="btn btn-default glyphicon glyphicon-pencil"></a>
+        <a id="deleteButton" href="/delete/${songId}" title="Delete" class="btn btn-default glyphicon glyphicon-trash"></a>
+    </div>
+    <div class="btn-group" role="group" aria-label="Resize Text">
+        <button id="biggerButton" title="Bigger" class="btn btn-default glyphicon glyphicon-zoom-in"></button>
+        <button id="smallerButton" title="Smaller" class="btn btn-default glyphicon glyphicon-zoom-out"></button>
+    </div>
+    <div class="btn-group" role="group" aria-label="Transposition">
+        <button id="transposeLessButton" title="transpose halph-tone less" class="btn btn-default glyphicon glyphicon-arrow-down"></button>
+        <button id="transposeDisplay" title="Current transposition" class="btn btn-default glyphicon">0</button>
+        <button id="transposeMoreButton" title="transpose halph-tone more" class="btn btn-default glyphicon glyphicon-arrow-up"></button>
+    </div>
+    <div class="btn-group" role="group" aria-label="Screen">
+        <button id="fullScreenButton" title="FullScreen" class="btn btn-default glyphicon glyphicon-fullscreen"></button>
+    </div>
+</div>
+<div id="song-view" class="container-fluid">
     ${song}
 </div>
 
 <script>
-    var adminToolbar = document.getElementById('adminToolbar');
-    var toolbar = document.getElementById('toolbar');
-    adminToolbar.innerHTML += '<a id="editButton" href="/edit/${songId}"><span id="" title="Edit" class="btn btn-default navbar-btn glyphicon glyphicon-pencil"></span></a> ';
-    adminToolbar.innerHTML += '<a id="deleteButton" href="/delete/${songId}"><span title="Delete" class="btn btn-default navbar-btn glyphicon glyphicon-trash"></span></a> ';
-    toolbar.innerHTML += '<a id="biggerButton"><span title="Bigger" class="btn btn-default navbar-btn glyphicon glyphicon-zoom-in"></span></a> ';
-    toolbar.innerHTML += '<a id="smallerButton"><span title="Smaller" class="btn btn-default navbar-btn glyphicon glyphicon-zoom-out"></span></a> ';
-    toolbar.innerHTML += '<a id="transposeLessButton"><span title="transpose halph-tone less" class="btn btn-default navbar-btn glyphicon glyphicon-chevron-left"></span></a> ';
-    toolbar.innerHTML += '<a><span id="transposeDisplay" title="Current transposition" class="btn btn-default navbar-btn">0</span></a> ';
-    toolbar.innerHTML += '<a id="transposeMoreButton"><span title="transpose halph-tone more" class="btn btn-default navbar-btn glyphicon glyphicon-chevron-right"></span></a> ';
-    toolbar.innerHTML += '<a id="fullScreenButton"><span title="FullScreen" class="btn btn-default navbar-btn glyphicon glyphicon-fullscreen"></span></a> ';
     require(["./view"], function() {});
 </script>
 

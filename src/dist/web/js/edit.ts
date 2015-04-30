@@ -4,11 +4,11 @@ import SongApi = require("./SongApi");
 // JavaScript imports
 declare var ace;
 
-var songTextEdit = ace.edit("song");
+var songTextEdit = ace.edit("song-edit");
 songTextEdit.getSession().setMode("ace/mode/song");
 songTextEdit.renderer.setShowGutter(false);
 songTextEdit.setOptions({
-    maxLines: Infinity
+   // maxLines: Infinity
 });
 songTextEdit.resize();
 

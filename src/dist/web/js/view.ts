@@ -1,5 +1,5 @@
 
-var song = document.getElementById("song");
+var song = document.getElementById("song-view");
 
 var fontSize = 100;
 var biggerButton = document.getElementById("biggerButton");
@@ -25,9 +25,9 @@ fullScreenButton.addEventListener("click", (e) => {
 
 var fullscreenChange = () => {
     if (isFullScreen()) {
-        (<HTMLElement>fullScreenButton.firstElementChild).classList.add("active");
+        (<HTMLElement>fullScreenButton).classList.add("active");
     } else {
-        (<HTMLElement>fullScreenButton.firstElementChild).classList.remove("active");
+        (<HTMLElement>fullScreenButton).classList.remove("active");
     }
 };
 
@@ -72,10 +72,11 @@ var songHeight = song.clientHeight;
 var updateColumn = () => {
     var needColumn = songWidth < window.innerWidth /2;
     needColumn = needColumn && songHeight > window.innerHeight;
+    var songContent = <HTMLElement>song.querySelector(".song-content");
     if (needColumn) {
-        song.classList.add("song-column");
+        songContent.classList.add("song-column");
     } else {
-        song.classList.remove("song-column");
+        songContent.classList.remove("song-column");
     }
 };
 window.addEventListener("resize", updateColumn);
