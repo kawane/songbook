@@ -324,7 +324,10 @@ public class Server {
 				if (showKeyCreationAlert) {
 					Templates.alertKeyCreation(out, administratorKey, exchange.getRequestPath());
 				}
-				indexDb.search(query, out, mimeType);
+				StringBuilder result = new StringBuilder();
+				indexDb.search(query, result, mimeType);
+				Templates.search(out,result);
+
 				Templates.footer(out);
 				break;
 			default:
