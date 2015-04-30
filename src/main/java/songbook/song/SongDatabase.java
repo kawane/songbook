@@ -69,7 +69,7 @@ public class SongDatabase {
             if (Files.exists(path) == false) {
                 Files.createDirectories(path.getParent());
             }
-            return Files.newByteChannel(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            return Files.newByteChannel(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.SYNC);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Can't write or create song '" + id + "'", e);
             return null;

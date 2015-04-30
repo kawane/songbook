@@ -1,9 +1,8 @@
 package songbook.server;
 
-import io.undertow.websockets.core.UTF8Output;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.StandardCharsets;
@@ -18,20 +17,17 @@ public class ChannelUtil {
     public static String getStringContents(ReadableByteChannel channel) throws IOException {
         // TODO Checks if a supplier would be nice
         try {
-            UTF8Output utf8Output = new UTF8Output();
             ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
-
+            StringBuilder sb = new StringBuilder();
             int bytesRead = channel.read(buffer);
             while (bytesRead != -1) {
                 buffer.flip();
-                while (buffer.hasRemaining()) {
-                    utf8Output.write(buffer);
-
-                }
+                CharBuffer charBuffer = StandardCharsets.UTF_8.decode(buffer);
+                sb.append(charBuffer.toString());
                 buffer.clear();
                 bytesRead = channel.read(buffer);
             }
-            return utf8Output.extract();
+            return sb.toString();
         } finally {
             channel.close();
         }
@@ -42,9 +38,7 @@ public class ChannelUtil {
         // TODO Checks if a supplier would be nice
         try {
             ByteBuffer buffer = ByteBuffer.wrap(contents.getBytes(StandardCharsets.UTF_8));
-            while (buffer.hasRemaining()) {
-                channel.write(buffer);
-            }
+            channel.write(buffer);
         } finally {
             channel.close();
         }
