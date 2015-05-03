@@ -1,11 +1,13 @@
 package songbook.server;
 
+import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.Cookie;
 import io.undertow.server.handlers.CookieImpl;
 import io.undertow.server.handlers.ExceptionHandler;
+import io.undertow.server.handlers.GracefulShutdownHandler;
 import io.undertow.server.handlers.resource.FileResourceManager;
 import io.undertow.util.*;
 import org.apache.lucene.document.Document;
@@ -30,7 +32,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static io.undertow.Handlers.*;
 
 public class Server {
 
@@ -48,6 +49,7 @@ public class Server {
 	public static final String MIME_TEXT_HTML = "text/html";
 	public static final String MIME_TEXT_PLAIN = "text/plain";
 	public static final String MIME_TEXT_SONG = "text/song";
+
 	public static final String SESSION_KEY = "SessionKey";
 
 	public static final AttachmentKey<String> ADMIN_KEY = AttachmentKey.create(String.class);
@@ -61,7 +63,9 @@ public class Server {
 	private IndexDatabase indexDb;
 
 	private boolean showKeyCreationAlert = false;
+
 	private String administratorKey = null;
+
 	private String userKey = null;
 
 	public void start() {
@@ -106,46 +110,203 @@ public class Server {
 		undertow.start();
 	}
 
+	/**
+	 * Create And initialize undertow and handlers stack
+	 * @param next
+	 * @return
+	 */
+	protected Undertow createServer(HttpHandler next) {
+		// Fifth Handler Session
+		HttpHandler sessionHandler = sessionHandler(next);
+		// Fourth Handler crossOrigin
+		HttpHandler crossOriginHandler = allowCrossOriginHandler(sessionHandler);
+		// Third Handler exception
+		HttpHandler exceptionHandler = exceptionHandler(crossOriginHandler);
+		// Second Handler log
+		HttpHandler logHandler = log(exceptionHandler);
+		// First Handler GracefulShutdown
+		GracefulShutdownHandler gracefulShutdownHandler = Handlers.gracefulShutdown(logHandler);
+
+		Undertow.Builder builder = Undertow.builder();
+		builder.addHttpListener(port, "localhost");
+		builder.setHandler(gracefulShutdownHandler);
+
+		info("Listens on port " + port);
+
+		return builder.build();
+	}
+
+	/**
+	 * Log All requests
+	 * @param next
+	 * @return
+	 */
+	protected HttpHandler log(HttpHandler next) {
+		return (exchange) -> {
+			long start = System.currentTimeMillis();
+			next.handleRequest(exchange);
+			long end = System.currentTimeMillis();
+			long time = end - start < 0 ? 0 : end - start;
+			info("[" + exchange.getRequestMethod() + "]" + exchange.getRequestURI() + " in " + time + " ms");
+		};
+	}
+
+	/**
+	 * Handles exceptions (including ServerException)
+	 * @param next
+	 * @return
+	 */
+	protected HttpHandler exceptionHandler(HttpHandler next) {
+		ExceptionHandler exceptionHandler = Handlers.exceptionHandler(next);
+		exceptionHandler.addExceptionHandler(ServerException.class, (exchange) -> {
+			Throwable exception = exchange.getAttachment(ExceptionHandler.THROWABLE);
+			if (exception instanceof ServerException) {
+				((ServerException) exception).serveError(getRole(exchange), exchange);
+			} else {
+				// TODO create real error message
+				String message = exception.getMessage();
+				exchange.setResponseCode(StatusCodes.INTERNAL_SERVER_ERROR);
+				exchange.getResponseSender().send(createMessage(message, isAskingForJson(exchange)));
+			}
+		});
+		return exceptionHandler;
+	}
+
+	/**
+	 * Adds Cross Origin if needed
+	 * @param next
+	 * @return
+	 */
+	protected HttpHandler allowCrossOriginHandler(HttpHandler next) {
+		return (exchange) -> {
+			String origin = getHeader(exchange, Headers.ORIGIN);
+			if (origin != null) {
+				exchange.getResponseHeaders().put(Headers.ORIGIN, origin);
+			}
+			next.handleRequest(exchange);
+		};
+	}
+
+	/**
+	 *  Adds admin attribute and checks user attribute
+	 * @param next
+	 * @return
+	 */
+	protected HttpHandler sessionHandler(HttpHandler next) {
+		// TODO may be use SessionCookieConfig if it helps
+		return exchange -> {
+			String sessionKey = null;
+			Map<String, Cookie> cookies = Cookies.parseRequestCookies(10, false, exchange.getRequestHeaders().get(Headers.COOKIE));
+			for (Cookie cookie : cookies.values()) {
+				if (SESSION_KEY.equals(cookie.getName())) {
+					sessionKey = cookie.getValue();
+				}
+			}
+
+			String key = getParameter(exchange, "key");
+			if (key != null && !key.isEmpty() && !key.equals(sessionKey)) {
+				sessionKey = key;
+				// Set Cookie
+				Cookie cookie = new CookieImpl(SESSION_KEY, sessionKey);
+				cookie.setMaxAge(Integer.MAX_VALUE);
+				exchange.setResponseCookie(cookie);
+			}
+			if (isAdministrator(sessionKey)) {
+				// gets administrator key, remove alert (if present)
+				if (showKeyCreationAlert) {
+					showKeyCreationAlert = false;
+					try {
+						Files.createFile(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
+					} catch (IOException e) {
+						error("Can't create file '" + ADMINISTRATOR_ACTIVATED_PATH + "'", e);
+					}
+				}
+			}
+
+			if ( isUser(sessionKey) ) {
+				// Need to understand this what's the difference between ADMIN_KEY and SESSION_KEY
+				exchange.putAttachment(ADMIN_KEY, sessionKey);
+				next.handleRequest(exchange);
+			} else { // It's too early to decide if we are authorize or not
+				throw new ServerException(StatusCodes.UNAUTHORIZED);
+			}
+		};
+	}
+
 	private HttpHandler pathTemplateHandler() {
-		HttpHandler fallThrough = resource(new FileResourceManager(getWebRoot().toFile(), 1024));
+		HttpHandler fallThrough = Handlers.resource(new FileResourceManager(getWebRoot().toFile(), 1024));
 
 		//// To Update ////
-
 		PathTemplateHandler pathHandler = new PathTemplateHandler(fallThrough);
 
-		pathHandler.add("/", get(this::search)); // Home Page
+		pathHandler.add("/", this::homePage); // Home Page
 
-		pathHandler.add("/view/{id}", get(this::getSong));
-		pathHandler.add("/edit/{id}", adminAccess(get(this::editSong)));
-		pathHandler.add("/delete/{id}", adminAccess(get(this::deleteSong)));
-		pathHandler.add("/new", adminAccess(get(this::editSong)));
+		pathHandler.add("/view/{id}", this::viewSongPage);
+		pathHandler.add("/edit/{id}", adminAccess(this::editSongPage));
+		pathHandler.add("/delete/{id}", adminAccess(this::deleteSongPage));
+		pathHandler.add("/new", adminAccess(this::editSongPage));
 
+		pathHandler.add("/search/{query}", this::searchPage);
+		pathHandler.add("/search", this::searchPage);
 
-		pathHandler.add("/search/{query}", get(this::search));
-		pathHandler.add("/search", get(this::search));
+		pathHandler.add("/songs/{id}", this::restSong);
 
-		pathHandler.add("/songs/{id}",
-			get(this::getSong,
-					adminAccess(
-							post(this::createSong,
-									put(this::modifySong,
-											delete(this::deleteSong)
-						)
-					)
-				)
-			)
-		);
+		pathHandler.add("/consoleApi", this::consoleApiPage);
 
-		pathHandler.add("/consoleApi", get(this::consoleApi));
-
-		pathHandler.add("/signin", get(this::signin));
-		pathHandler.add("/admin/{section}/{command}", adminAccess(get(this::adminCommand)));
-		pathHandler.add("/admin", adminAccess(get(this::admin)));
+		pathHandler.add("/signin", this::signinPage);
+		pathHandler.add("/admin/{section}/{command}", adminAccess(this::adminCommand));
+		pathHandler.add("/admin", adminAccess(this::adminPage));
 
 		return pathHandler;
 	}
 
-	private void search(final HttpServerExchange exchange) throws Exception {
+	private void homePage(HttpServerExchange exchange) throws Exception {
+		searchPage(exchange);
+	}
+
+	private void viewSongPage(HttpServerExchange exchange) throws Exception {
+		getSong(exchange);
+	}
+
+	private void editSongPage(final HttpServerExchange exchange) throws Exception{
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
+		String id = getParameter(exchange, ("id"));
+
+		// Serves song
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
+
+		StringBuilder out = new StringBuilder();
+		String role = getRole(exchange);
+
+		if (id != null && !id.isEmpty()) {
+
+			String songContents = songDb.getSongContents(id);
+			if (songContents == null) throw new SongNotFoundException(id);
+			String title = SongUtils.getTitle(songContents);
+			Templates.header(out, "Edit - " + title + " - My SongBook", role);
+			Templates.editSong(out, id, songContents, role);
+			Templates.footer(out);
+
+			exchange.getResponseSender().send(out.toString());
+
+		} else {
+			Templates.header(out, "Create Song - My SongBook", role);
+			Templates.editSong(out, "", Templates.newSong(new StringBuilder()), role);
+			Templates.footer(out);
+			exchange.getResponseSender().send(out.toString());
+		}
+	}
+
+	private void deleteSongPage(HttpServerExchange exchange) throws Exception {
+		deleteSong(exchange);
+	}
+
+	private void searchPage(final HttpServerExchange exchange) throws Exception {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		// Serve all songs
 		String query = getParameter(exchange, "query");
 		String title = "My SongBook";
@@ -159,11 +320,15 @@ public class Server {
 			case MIME_TEXT_HTML:
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
 
-				Templates.header(out, title, getRole(exchange));
+				String role = getRole(exchange);
+				Templates.header(out, title, role);
 				if (showKeyCreationAlert) {
 					Templates.alertKeyCreation(out, administratorKey, exchange.getRequestPath());
 				}
-				indexDb.search(query, out, mimeType);
+				StringBuilder result = new StringBuilder();
+				indexDb.search(query, result, mimeType);
+				Templates.search(out,result, role);
+
 				Templates.footer(out);
 				break;
 			default:
@@ -173,40 +338,29 @@ public class Server {
 		exchange.getResponseSender().send(out.toString());
 	}
 
-	private String sessionKey(final HttpServerExchange exchange) {
-		// TODO handle session inside a handler
-
-		String sessionKey = null;
-		Map<String, Cookie> cookies = Cookies.parseRequestCookies(10, false, exchange.getRequestHeaders().get(Headers.COOKIE));
-		for (Cookie cookie : cookies.values()) {
-			if (SESSION_KEY.equals(cookie.getName())) {
-				sessionKey = cookie.getValue();
-			}
+	private void restSong(final HttpServerExchange exchange) throws Exception {
+		switch (exchange.getRequestMethod().toString()) {
+			case Methods.GET_STRING:
+				this.getSong(exchange);
+				break;
+			case Methods.POST_STRING:
+				adminAccess(this::createSong).handleRequest(exchange);
+				break;
+			case Methods.PUT_STRING:
+				adminAccess(this::modifySong).handleRequest(exchange);
+				break;
+			case Methods.DELETE_STRING:
+				adminAccess(this::deleteSong).handleRequest(exchange);
+				break;
+			default:
+				throw ServerException.METHOD_NOT_ALLOWED;
 		}
-
-		String key = getParameter(exchange, "key");
-		if (key != null && !key.isEmpty() && !key.equals(sessionKey)) {
-			sessionKey = key;
-			// Set Cookie
-			Cookie cookie = new CookieImpl(SESSION_KEY, sessionKey);
-			cookie.setMaxAge(Integer.MAX_VALUE);
-			exchange.getResponseHeaders().put(Headers.SET_COOKIE, cookie.getValue());
-		}
-		if (isAdministrator(sessionKey)) {
-			// gets administrator key, remove alert (if present)
-			if (showKeyCreationAlert) {
-				showKeyCreationAlert = false;
-				try {
-					Files.createFile(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
-				} catch (IOException e) {
-					error("Can't create file '" + ADMINISTRATOR_ACTIVATED_PATH + "'", e);
-				}
-			}
-		}
-		return sessionKey;
 	}
 
 	private void getSong(final HttpServerExchange exchange) throws Exception {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		String id = getParameter(exchange, ("id"));
 
 		// Serves song
@@ -233,40 +387,13 @@ public class Server {
 		StringBuilder out = new StringBuilder();
 		// Todo use a songmark object to extract title and then generate html
 		String title = SongUtils.getTitle(songData);
+		String role = getRole(exchange);
 		Templates.header(out, title + " - My SongBook", getRole(exchange));
 		if (showKeyCreationAlert) Templates.alertKeyCreation(out, administratorKey, path);
-		Templates.viewSong(out, id, SongUtils.writeHtml(new StringBuilder(), songData));
+		Templates.viewSong(out, id, SongUtils.writeHtml(new StringBuilder(), songData), role);
 
 		Templates.footer(out);
 		return out.toString();
-	}
-
-	private void editSong(final HttpServerExchange exchange) throws Exception{
-		String id = getParameter(exchange, ("id"));
-
-		// Serves song
-		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
-
-		StringBuilder out = new StringBuilder();
-		String role = getRole(exchange);
-
-		if (id != null && !id.isEmpty()) {
-
-			String songContents = songDb.getSongContents(id);
-			if (songContents == null) throw new SongNotFoundException(id);
-			String title = SongUtils.getTitle(songContents);
-			Templates.header(out, "Edit - " + title + " - My SongBook", role);
-			Templates.editSong(out, id, songContents);
-			Templates.footer(out);
-
-			exchange.getResponseSender().send(out.toString());
-
-		} else {
-			Templates.header(out, "Create Song - My SongBook", role);
-			Templates.editSong(out, "", Templates.newSong(new StringBuilder()));
-			Templates.footer(out);
-			exchange.getResponseSender().send(out.toString());
-		}
 	}
 
 	private void createSong(final HttpServerExchange exchange) throws Exception {
@@ -318,6 +445,9 @@ public class Server {
 	}
 
 	private void deleteSong(final HttpServerExchange exchange) throws Exception {
+		if (!exchange.getRequestMethod().equals(Methods.DELETE)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		String id = getParameter(exchange, "id");
 
 		// Verify that song exists
@@ -350,7 +480,10 @@ public class Server {
 		}
 	}
 
-	private void consoleApi(final HttpServerExchange exchange) {
+	private void consoleApiPage(final HttpServerExchange exchange) throws ServerException {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		StringBuilder out = new StringBuilder();
 		Templates.header(out, "Song Console Api", getRole(exchange));
 		Templates.consoleApi(out);
@@ -360,7 +493,10 @@ public class Server {
 		exchange.getResponseSender().send(out.toString());
 	}
 
-	private void signin(final HttpServerExchange exchange) {
+	private void signinPage(final HttpServerExchange exchange) throws ServerException {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		StringBuilder out = new StringBuilder();
 		Templates.header(out, "SongBook Admin Page", getRole(exchange));
 		Templates.signin(out);
@@ -370,7 +506,10 @@ public class Server {
 		exchange.getResponseSender().send(out.toString());
 	}
 
-	private void admin(final HttpServerExchange exchange) {
+	private void adminPage(final HttpServerExchange exchange) throws ServerException {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		StringBuilder out = new StringBuilder();
 		Templates.header(out, "SongBook Admin Page", getRole(exchange));
 		Templates.admin(out);
@@ -381,6 +520,9 @@ public class Server {
 	}
 
 	private void adminCommand(final HttpServerExchange exchange) throws Exception {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
 		StringBuilder out = new StringBuilder();
 
 		Templates.header(out, "Administration - My SongBook", getRole(exchange));
@@ -456,11 +598,7 @@ public class Server {
 		return host == null ? DEFAULT_HOST : host;
 	}
 
-
 	// Security
-
-
-
 	private void createAdminKey() {
 		// creates administrator key when it's null
 		long timestamp = System.currentTimeMillis();
@@ -555,61 +693,6 @@ public class Server {
 		return isAdministrator(exchange.getAttachment(ADMIN_KEY)) ? "admin" : "user";
 	}
 
-	protected Undertow createServer(HttpHandler pathHandler) {
-
-		// Adds admin attribute and checks user attribute
-		HttpHandler administrationHandler = exchange -> {
-			String sessionKey = sessionKey(exchange);
-
-			if ( isUser(sessionKey) ) {
-				exchange.putAttachment(ADMIN_KEY, sessionKey);
-				pathHandler.handleRequest(exchange);
-			} else {
-				throw new ServerException(StatusCodes.UNAUTHORIZED);
-			}
-		};
-
-		// Adds Cross Origin is needed
-		HttpHandler allowCrossOriginHandler = exchange -> {
-            String origin = getHeader(exchange, Headers.ORIGIN);
-            if (origin != null) {
-                exchange.getResponseHeaders().put(Headers.ORIGIN, origin);
-            }
-            administrationHandler.handleRequest(exchange);
-        };
-
-		// Handles exceptions (including ServerException)
-		ExceptionHandler exceptionHandler = exceptionHandler(allowCrossOriginHandler);
-		exceptionHandler.addExceptionHandler(ServerException.class, (exchange) -> {
-			Throwable exception = exchange.getAttachment(ExceptionHandler.THROWABLE);
-			if (exception instanceof ServerException) {
-				((ServerException) exception).serveError(getRole(exchange), exchange);
-			} else {
-				// TODO create real error message
-				String message = exception.getMessage();
-				exchange.setResponseCode(StatusCodes.INTERNAL_SERVER_ERROR);
-				exchange.getResponseSender().send(createMessage(message, isAskingForJson(exchange)));
-			}
-		});
-
-		// Logs all requests
-		HttpHandler logHandler = (HttpServerExchange exchange) -> {
-			long start = System.currentTimeMillis();
-			exceptionHandler.handleRequest(exchange);
-			long end = System.currentTimeMillis();
-			long time = end - start < 0 ? 0 : end - start;
-			info("[" + exchange.getRequestMethod() + "]" + exchange.getRequestURI() + " in " + time + " ms");
-		};
-
-		Undertow.Builder builder = Undertow.builder();
-		builder.addHttpListener(port, "localhost");
-		builder.setHandler(gracefulShutdown(logHandler));
-
-		info("Listens on port " + port);
-
-		return builder.build();
-	}
-
 	protected boolean isAskingForJson(HttpServerExchange exchange) {
 		HeaderValues values = exchange.getRequestHeaders().get(Headers.ACCEPT);
 		return values != null && values.getFirst().contains("application/json");
@@ -627,35 +710,6 @@ public class Server {
 	protected String getParameter(HttpServerExchange exchange, String parameter) {
 		Deque<String> deque = exchange.getQueryParameters().get(parameter);
 		return deque == null ? null : deque.element();
-	}
-
-	private HttpHandler get(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.GET, null);
-	}
-
-
-	private HttpHandler get(HttpHandler handler, HttpHandler next) {
-		return methodFilterHandler(handler, Methods.GET, next);
-	}
-
-	private HttpHandler post(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.POST, null);
-	}
-
-	private HttpHandler post(HttpHandler handler, HttpHandler next) {
-		return methodFilterHandler(handler, Methods.POST, next);
-	}
-
-	private HttpHandler put(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.PUT, null);
-	}
-
-	private HttpHandler put(HttpHandler handler, HttpHandler next) {
-		return methodFilterHandler(handler, Methods.PUT, next);
-	}
-
-	private HttpHandler delete(HttpHandler handler) {
-		return methodFilterHandler(handler, Methods.DELETE, null);
 	}
 
 	private HttpHandler adminAccess(HttpHandler handler) {
@@ -693,4 +747,5 @@ public class Server {
 		Server server = new Server();
 		server.start();
 	}
+
 }

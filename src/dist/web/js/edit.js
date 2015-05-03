@@ -1,10 +1,8 @@
 define(["require", "exports", "./SongApi"], function (require, exports, SongApi) {
-    var songTextEdit = ace.edit("song");
+    var songTextEdit = ace.edit("song-edit");
     songTextEdit.getSession().setMode("ace/mode/song");
     songTextEdit.renderer.setShowGutter(false);
-    songTextEdit.setOptions({
-        maxLines: Infinity
-    });
+    songTextEdit.setOptions({});
     songTextEdit.resize();
     var api = new SongApi("/songs/");
     var saveButton = document.getElementById("saveButton");

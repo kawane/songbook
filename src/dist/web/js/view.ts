@@ -1,5 +1,5 @@
 
-var song = document.getElementById("song");
+var song = document.getElementById("song-view");
 
 var fontSize = 100;
 var biggerButton = document.getElementById("biggerButton");
@@ -13,8 +13,77 @@ smallerButton.addEventListener("click", (e) => {
     song.style.fontSize = fontSize + "%";
 });
 
+// FullScreen
+var fullScreenButton = document.getElementById("fullScreenButton");
+fullScreenButton.addEventListener("click", (e) => {
+    if (isFullScreen()) {
+        exitFullScreen();
+    } else {
+        requestFullScreen(document.body);
+    }
+});
+
+var fullscreenChange = () => {
+    if (isFullScreen()) {
+        (<HTMLElement>fullScreenButton).classList.add("active");
+    } else {
+        (<HTMLElement>fullScreenButton).classList.remove("active");
+    }
+};
+
+document.addEventListener("fullscreenchange ", fullscreenChange);
+document.addEventListener("webkitfullscreenchange", fullscreenChange);
+document.addEventListener("mozfullscreenchange", fullscreenChange);
+document.addEventListener("MSFullscreenChange", fullscreenChange);
+
+function isFullScreen(): boolean {
+    if (document["isFullScreen"]) {
+        return document["isFullScreen"]
+    } else if (document["webkitIsFullScreen"]) {
+        return document["webkitIsFullScreen"]
+    } else if (document["mozFullScreen"]) {
+        return document["mozFullScreen"]
+    }
+}
+
+function exitFullScreen(): boolean {
+    if (document["exitFullscreen"]) {
+        return document["exitFullscreen"]()
+    } else if (document["webkitExitFullscreen"]) {
+        return document["webkitExitFullscreen"]()
+    } else if (document["mozCancelFullScreen"]) {
+        return document["mozCancelFullScreen"]()
+    }
+}
+
+function requestFullScreen(element: HTMLElement) {
+    if (element["requestFullScreen"]) {
+        element["requestFullScreen"]()
+    } else if (element["webkitRequestFullScreen"]) {
+        element["webkitRequestFullScreen"]()
+    } else if (element["mozRequestFullScreen"]) {
+        element["mozRequestFullScreen"]()
+    }
+}
+
+// Restore two column current user pref
+var songWidth = song.clientWidth;
+var songHeight = song.clientHeight;
+var updateColumn = () => {
+    var needColumn = songWidth < window.innerWidth /2;
+    needColumn = needColumn && songHeight > window.innerHeight;
+    var songContent = <HTMLElement>song.querySelector(".song-content");
+    if (needColumn) {
+        songContent.classList.add("song-column");
+    } else {
+        songContent.classList.remove("song-column");
+    }
+};
+window.addEventListener("resize", updateColumn);
+updateColumn();
+
+// Transposition
 var transposeCount = 0;
-var displayMusicalKeyName = false;
 var musicalKey = null
 var transposeDisplay = document.getElementById("transposeDisplay");
 var musicalKeyElt = song.querySelector(".song-metadata-value[itemprop=musicalKey]");

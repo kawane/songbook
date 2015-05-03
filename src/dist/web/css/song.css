@@ -1,12 +1,62 @@
 
-
 .song {
 	font-family: consolas, monospace;
 	white-space: nowrap;
 }
 
-.song.edited {
-    border: 1px solid darkgray;
+
+.song-toolbar {
+    position: fixed;
+    right: 0;
+    z-index: 2;
+}
+
+.song-navbar {
+    position: fixed;
+    left: 0;
+}
+
+@media print {
+    .song-toolbar, .song-navbar {
+        visibility: hidden;
+        display: none;
+    }
+}
+
+.song-header {
+}
+
+.song-header .song-metadata-name {
+    text-align: left;
+}
+
+
+.song-content {
+}
+
+.song-column {
+	-webkit-column-count: 2; /* Chrome, Safari, Opera */
+	-moz-column-count: 2; /* Firefox */
+	column-count: 2;
+
+	-webkit-column-rule: 1px dashed #dddddd; /* Chrome, Safari, Opera */
+	-moz-column-rule: 1px dashed #dddddd; /* Firefox */
+	column-rule: 1px dashed #dddddd;
+}
+
+.song-title {
+    font-weight: bold;
+    font-size: 180%;
+}
+
+.song-metadata-name {
+    font-weight: bold;
+    text-transform: capitalize;
+    color: rgb(0,165,0);
+}
+
+.song-metadata-value {
+    font-style: italic;
 }
 
 .song-intro,
@@ -25,7 +75,10 @@
 .song-verse-8,
 .song-verse-9
 {
-	margin: 2.5ex 0;
+	margin-top: 2.5ex;
+	-webkit-column-break-inside: avoid;
+	page-break-inside: avoid;
+	column-break-inside: avoid;
 }
 
 .song-chorus {
@@ -47,21 +100,13 @@
 	font-size: 120%;
 }
 
-.song-comment {
-	font-style: italic;
-	font-weight: bold;
-    margin: 0 0;
-}
-
-.song-chorus-comment {
-}
-
 .song-line {
     white-space: pre;
 }
 
 .song-chords {
-    line-height: 0.5em;
+    margin-bottom: -6px;
+    margin-top: -6px;
     white-space: pre;
 	font-weight: bold;
 	color: rgb(33,128,255);
@@ -71,20 +116,6 @@
 	line-height: 2em
 }
 
-.song-title {
-	font-weight: bold;
-	font-size: 140%;
-}
-
-.song-metadata-name {
-	font-weight: bold;
-	text-transform: capitalize;	
-	color: rgb(0,165,0);
-}
-
-.song-metadata-value {
-	font-style: italic;
-}
 
 
 

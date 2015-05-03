@@ -1,4 +1,4 @@
-var song = document.getElementById("song");
+var song = document.getElementById("song-view");
 var fontSize = 100;
 var biggerButton = document.getElementById("biggerButton");
 biggerButton.addEventListener("click", function (e) {
@@ -10,8 +10,79 @@ smallerButton.addEventListener("click", function (e) {
     fontSize -= 10;
     song.style.fontSize = fontSize + "%";
 });
+// FullScreen
+var fullScreenButton = document.getElementById("fullScreenButton");
+fullScreenButton.addEventListener("click", function (e) {
+    if (isFullScreen()) {
+        exitFullScreen();
+    }
+    else {
+        requestFullScreen(document.body);
+    }
+});
+var fullscreenChange = function () {
+    if (isFullScreen()) {
+        fullScreenButton.classList.add("active");
+    }
+    else {
+        fullScreenButton.classList.remove("active");
+    }
+};
+document.addEventListener("fullscreenchange ", fullscreenChange);
+document.addEventListener("webkitfullscreenchange", fullscreenChange);
+document.addEventListener("mozfullscreenchange", fullscreenChange);
+document.addEventListener("MSFullscreenChange", fullscreenChange);
+function isFullScreen() {
+    if (document["isFullScreen"]) {
+        return document["isFullScreen"];
+    }
+    else if (document["webkitIsFullScreen"]) {
+        return document["webkitIsFullScreen"];
+    }
+    else if (document["mozFullScreen"]) {
+        return document["mozFullScreen"];
+    }
+}
+function exitFullScreen() {
+    if (document["exitFullscreen"]) {
+        return document["exitFullscreen"]();
+    }
+    else if (document["webkitExitFullscreen"]) {
+        return document["webkitExitFullscreen"]();
+    }
+    else if (document["mozCancelFullScreen"]) {
+        return document["mozCancelFullScreen"]();
+    }
+}
+function requestFullScreen(element) {
+    if (element["requestFullScreen"]) {
+        element["requestFullScreen"]();
+    }
+    else if (element["webkitRequestFullScreen"]) {
+        element["webkitRequestFullScreen"]();
+    }
+    else if (element["mozRequestFullScreen"]) {
+        element["mozRequestFullScreen"]();
+    }
+}
+// Restore two column current user pref
+var songWidth = song.clientWidth;
+var songHeight = song.clientHeight;
+var updateColumn = function () {
+    var needColumn = songWidth < window.innerWidth / 2;
+    needColumn = needColumn && songHeight > window.innerHeight;
+    var songContent = song.querySelector(".song-content");
+    if (needColumn) {
+        songContent.classList.add("song-column");
+    }
+    else {
+        songContent.classList.remove("song-column");
+    }
+};
+window.addEventListener("resize", updateColumn);
+updateColumn();
+// Transposition
 var transposeCount = 0;
-var displayMusicalKeyName = false;
 var musicalKey = null;
 var transposeDisplay = document.getElementById("transposeDisplay");
 var musicalKeyElt = song.querySelector(".song-metadata-value[itemprop=musicalKey]");
