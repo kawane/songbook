@@ -58,7 +58,14 @@ Run Songbook
 Windows
 -------
 
-TODO
+Download and unzip Songbook from `https://drone.io/github.com/kawane/songbook/files/build/distributions/songbook-0.4.zip`.
+
+Run Songbook
+```Shell
+./bin/songbook.bat
+```
+
+
 
 Songbook
 --------
