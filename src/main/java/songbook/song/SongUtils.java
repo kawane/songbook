@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  */
 public class SongUtils {
 
-	public static String  CHORD_REGEXP_STR = "(C|D|E|F|G|A|B)(b|#)?(m|M|min|maj)?((sus|add)?(b|#)?(2|4|5|6|7|9|10|11|13)?)*(\\+|aug|alt)?(\\/(C|D|E|F|G|A|B)(b|#)?)?";
+	public static String  CHORD_REGEXP_STR = "(C|D|E|F|G|A|B)(b|#)?(m|M|min|maj|dim|Δ|°|ø|Ø)?((sus|add)?(b|#)?(2|4|5|6|7|9|10|11|13)?)*(\\+|aug|alt)?(\\/(C|D|E|F|G|A|B)(b|#)?)?";
 	public static Pattern CHORD_REGEXP = Pattern.compile(CHORD_REGEXP_STR);
 
 	public static String getTitle(String songData) {
