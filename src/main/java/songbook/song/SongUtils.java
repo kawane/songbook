@@ -17,6 +17,8 @@ public class SongUtils {
 
 	public static Pattern CHORD_REGEXP = Pattern.compile(CHORD_REGEXP_STR);
 
+	public static Pattern REPEAT_REGEXP = Pattern.compile("\\(x[0-9]+\\)");
+
 	public static String getTitle(String songData) {
 		int indexOfFirstLine = songData.replace("\r\n", "\n").replace("\r", "\n").indexOf("\n");
 		if (indexOfFirstLine != -1) {
@@ -140,13 +142,13 @@ public class SongUtils {
 					w.append("</div>");
 				} else {
 					String[] tokens = line.replace("|", " ").split(" ");
-					boolean isChord = true;
-					for (int j = 0; isChord && j < tokens.length; j++) {
+					boolean isLineChords = true;
+					for (int j = 0; isLineChords && j < tokens.length; j++) {
 						if (!tokens[j].isEmpty()) {
-							isChord = isChord && CHORD_REGEXP.matcher(tokens[j]).matches();
+							isLineChords = isLineChords && (CHORD_REGEXP.matcher(tokens[j]).matches() || REPEAT_REGEXP.matcher(tokens[j]).matches());
 						}
 					}
-					if (isChord) {
+					if (isLineChords) {
 						if (!verse) {
                             if (songHeader) {
                                 songHeader = false;
