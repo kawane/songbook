@@ -32,7 +32,7 @@ define('ace/mode/song_highlight_rules', function(require, exports, module) {
                 },
                 {
                     token : "variable", // single line
-                    regex : '^(\\s*[A-G](b|#)?(m|M|min|maj|dim|Δ|°|ø|Ø)?((sus|add)?(b|#)?(2|4|5|6|7|9|10|11|13)?)*(\\+|aug|alt)?(\/[A-G](b|#)?)?\\s*)*(\(x[1-9][0-9]*\))?$'
+                    regex : '^(\\s*[A-G](b|#)?(m|M|min|maj|dim|Δ|°|ø|Ø)?((sus|add)?(b|#)?(2|4|5|6|7|9|10|11|13)?)*(\\+|aug|alt)?(/[A-G](b|#)?)?\\s*)*(\\(x[1-9][0-9]*\\))?$'
                 }
             ]
         };
