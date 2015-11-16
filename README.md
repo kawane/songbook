@@ -1,6 +1,8 @@
 Songbook
 ========
 
+[![Join the chat at https://gitter.im/kawane/songbook](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kawane/songbook?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://drone.io/github.com/kawane/songbook/status.png)](https://drone.io/github.com/kawane/songbook/latest)
 
 Songbook is an extremely simple server that allows you to store and edit songs with chords and lyrics on your own server.
