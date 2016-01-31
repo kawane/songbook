@@ -19,6 +19,7 @@ import songbook.song.SongUtils;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URLEncoder;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -249,6 +250,7 @@ public class Server {
 		pathHandler.add("/search/{query}", this::searchPage);
 		pathHandler.add("/search", this::searchPage);
 
+		pathHandler.add("/artists/{artist}", this::songsByArtistPage);
 		pathHandler.add("/artists", this::listArtistPage);
 
 		pathHandler.add("/songs/{id}", this::restSong);
@@ -274,7 +276,10 @@ public class Server {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
-		String id = getParameter(exchange, ("id"));
+		String id = getParameter(exchange, "id");
+        if (id != null) {
+            id = URLEncoder.encode(id, "utf-8");
+        }
 
 		// Serves song
 		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
@@ -363,7 +368,7 @@ public class Server {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
-		String id = getParameter(exchange, ("id"));
+		String id = URLEncoder.encode(getParameter(exchange, "id"), "utf-8");
 
 		// Serves song
 		String songContents = songDb.getSongContents(id);
@@ -429,7 +434,7 @@ public class Server {
 		// indexes updated song
 		Document document = SongUtils.indexSong(songData);
 
-		String id = getParameter(exchange, ("id"));
+		String id = URLEncoder.encode(getParameter(exchange, "id"), "utf-8");
 
 		// Verify that song exists
 		if (!songDb.exists(id)) throw ServerException.NOT_FOUND;
@@ -450,7 +455,7 @@ public class Server {
 		if (!exchange.getRequestMethod().equals(Methods.DELETE)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
-		String id = getParameter(exchange, "id");
+		String id = URLEncoder.encode(getParameter(exchange, "id"), "utf-8");
 
 		// Verify that song exists
 		if (!songDb.exists(id)) throw ServerException.NOT_FOUND;
@@ -481,6 +486,24 @@ public class Server {
 				break;
 		}
 	}
+
+    private void songsByArtistPage(final HttpServerExchange exchange) throws Exception {
+        if (!exchange.getRequestMethod().equals(Methods.GET)) {
+            throw ServerException.METHOD_NOT_ALLOWED;
+        }
+        String artist = getParameter(exchange, "artist");
+        StringBuilder out = new StringBuilder();
+        String role = getRole(exchange);
+        Templates.header(out, "Artists", role);
+        StringBuilder result = new StringBuilder();
+        indexDb.songsByArtist(artist, result, MIME_TEXT_HTML);
+        Templates.search(out, result, role);
+
+        Templates.footer(out);
+
+        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, MIME_TEXT_HTML);
+        exchange.getResponseSender().send(out.toString());
+    }
 
 	private void listArtistPage(final HttpServerExchange exchange) throws Exception {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
@@ -728,8 +751,13 @@ public class Server {
 	}
 
 	protected String getParameter(HttpServerExchange exchange, String parameter) {
-		Deque<String> deque = exchange.getQueryParameters().get(parameter);
-		return deque == null ? null : deque.element();
+        StringBuilder sb = new StringBuilder();
+        Deque<String> deque = exchange.getQueryParameters().get(parameter);
+        if (deque != null) {
+            URLUtils.decode(deque.element(), "utf-8", true, sb);
+            return sb.toString();
+        }
+        return null;
 	}
 
 	private HttpHandler adminAccess(HttpHandler handler) {

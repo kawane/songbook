@@ -1,9 +1,7 @@
 package songbook.song;
 
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.*;
+import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
@@ -31,16 +29,20 @@ public class SongUtils {
 		Document document = new Document();
 		String[] songLines = getSongLines(songData);
 		document.add(new TextField("song", songData, Field.Store.NO));
-		document.add(new StringField("title", songLines[0], Field.Store.YES));
-		for (int i = 1; i < songLines.length; i++) {
+
+        document.add(new SortedDocValuesField("title", new BytesRef(songLines[0])));
+        document.add(new StringField("title", songLines[0], Field.Store.YES));
+
+        for (int i = 1; i < songLines.length; i++) {
 			String line = songLines[i].trim();
-			int indexOfCol = line.indexOf(":");
+            int indexOfCol = line.indexOf(":");
 
 			if (indexOfCol != -1) {
 				String propName = line.substring(0, indexOfCol).toLowerCase().trim();
 				String propValue = line.substring(indexOfCol + 1).trim();
 				if (!propValue.isEmpty()) {
-					document.add(new StringField(propName, propValue, Field.Store.YES));
+
+                    document.add(new StringField(propName, propValue, Field.Store.YES));
 				}
 			}
 		}

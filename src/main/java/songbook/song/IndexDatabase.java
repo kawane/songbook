@@ -12,7 +12,6 @@ import org.apache.lucene.search.SortField.Type;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.Version;
 import songbook.server.Server;
 import songbook.server.Templates;
 
@@ -44,9 +43,9 @@ public class IndexDatabase {
     public IndexDatabase(Path indexFolder, SongDatabase songDb) throws IOException {
         this.songDb = songDb;
 
-        analyzer = new StandardAnalyzer(Version.LUCENE_48);
-        index = new NIOFSDirectory(indexFolder.toFile());
-        indexWriter = new IndexWriter(index, new IndexWriterConfig(Version.LUCENE_48, analyzer));
+        analyzer = new StandardAnalyzer();
+        index = new NIOFSDirectory(indexFolder);
+        indexWriter = new IndexWriter(index, new IndexWriterConfig(analyzer));
         if (!DirectoryReader.indexExists(index)) {
             analyzeSongs();
         }
@@ -105,7 +104,7 @@ public class IndexDatabase {
         DirectoryReader reader = DirectoryReader.open(index);
         Fields fields = MultiFields.getFields(reader);
         Terms artists = fields.terms("artist");
-        TermsEnum termsEnum = artists.iterator(null);
+        TermsEnum termsEnum = artists.iterator();
         BytesRef term;
         if (Server.MIME_TEXT_HTML.equals(mimeType)) {
             Templates.startItems(out);
@@ -127,6 +126,8 @@ public class IndexDatabase {
         }
     }
 
+
+
     public void search(String querystr, Appendable out, String mimeType) throws ParseException, IOException {
         int hitsPerPage = 500;
         IndexReader reader = DirectoryReader.open(index);
@@ -138,13 +139,51 @@ public class IndexDatabase {
             TopFieldDocs topFieldDocs = searcher.search(query, hitsPerPage, new Sort(new SortField("title", Type.STRING)));
             hits = topFieldDocs.scoreDocs;
         } else {
-            // the "lyrics" arg specifies the default field to use
+            // the "song" arg specifies the default field to use
             // when no field is explicitly specified in the query.
-            Query query = new QueryParser(Version.LUCENE_48, "song", analyzer).parse(querystr);
-            TopScoreDocCollector collector = TopScoreDocCollector.create(hitsPerPage, true);
+            Query query = new QueryParser("song", analyzer).parse(querystr);
+            TopScoreDocCollector collector = TopScoreDocCollector.create(hitsPerPage);
             searcher.search(query, collector);
             hits = collector.topDocs().scoreDocs;
         }
+
+        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+            Templates.startItems(out);
+        }
+        for (ScoreDoc hit : hits) {
+            int docId = hit.doc;
+            Document doc = searcher.doc(docId);
+            switch (mimeType) {
+                case Server.MIME_TEXT_HTML:
+                    String artists = Stream.of(doc.getValues("artist")).collect(Collectors.joining(", "));
+                    Templates.songItem(out, doc.get("id"), doc.get("title"), artists);
+                    break;
+                case Server.MIME_TEXT_PLAIN:
+                default:
+                    out.append(doc.get("id")).append("\n");
+                    break;
+            }
+        }
+        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+            Templates.endItems(out);
+        }
+
+        // reader can only be closed when there
+        // is no need to access the documents any more.
+        reader.close();
+    }
+
+    public void songsByArtist(String artist, Appendable out, String mimeType) throws ParseException, IOException {
+        int hitsPerPage = 500;
+        IndexReader reader = DirectoryReader.open(index);
+        IndexSearcher searcher = new IndexSearcher(reader);
+
+        ScoreDoc[] hits;
+
+        TopScoreDocCollector collector = TopScoreDocCollector.create(hitsPerPage);
+        Query tq = new TermQuery(new Term("artist", artist));
+        searcher.search(tq, collector);
+        hits = collector.topDocs().scoreDocs;
 
         if (Server.MIME_TEXT_HTML.equals(mimeType)) {
             Templates.startItems(out);
