@@ -23,6 +23,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
+ *
+ * Index songs
+ *
  * Created by laurent on 08/05/2014.
  */
 public class IndexDatabase {
@@ -43,7 +46,7 @@ public class IndexDatabase {
         analyzer = new StandardAnalyzer(Version.LUCENE_48);
         index = new NIOFSDirectory(indexFolder.toFile());
         indexWriter = new IndexWriter(index, new IndexWriterConfig(Version.LUCENE_48, analyzer));
-        if (DirectoryReader.indexExists(index) == false) {
+        if (!DirectoryReader.indexExists(index)) {
             analyzeSongs();
         }
     }
@@ -98,7 +101,7 @@ public class IndexDatabase {
     }
 
     public void search(String querystr, Appendable out, String mimeType) throws ParseException, IOException {
-        int hitsPerPage = 50;
+        int hitsPerPage = 500;
         IndexReader reader = DirectoryReader.open(index);
         IndexSearcher searcher = new IndexSearcher(reader);
 
@@ -119,8 +122,8 @@ public class IndexDatabase {
         if (Server.MIME_TEXT_HTML.equals(mimeType)) {
             Templates.startSongItems(out);
         }
-        for (int i = 0; i < hits.length; ++i) {
-            int docId = hits[i].doc;
+        for (ScoreDoc hit : hits) {
+            int docId = hit.doc;
             Document doc = searcher.doc(docId);
             switch (mimeType) {
                 case Server.MIME_TEXT_HTML:
@@ -129,7 +132,7 @@ public class IndexDatabase {
                     break;
                 case Server.MIME_TEXT_PLAIN:
                 default:
-                    out.append(doc.get("id") + "\n");
+                    out.append(doc.get("id")).append("\n");
                     break;
             }
         }
