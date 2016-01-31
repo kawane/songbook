@@ -11,9 +11,9 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.apache.lucene', name: 'lucene-core', version: '4.8.0'
-    compile group: 'org.apache.lucene', name: 'lucene-queryparser', version: '4.8.0'
-    compile group: 'org.apache.lucene', name: 'lucene-analyzers-common', version: '4.8.0'
+    compile group: 'org.apache.lucene', name: 'lucene-core', version: '5.4.0'
+    compile group: 'org.apache.lucene', name: 'lucene-queryparser', version: '5.4.0'
+    compile group: 'org.apache.lucene', name: 'lucene-analyzers-common', version: '5.4.0'
 
     compile group: 'io.undertow', name: 'undertow-core', version: '1.1.2.Final'
 
