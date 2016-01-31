@@ -75,7 +75,7 @@ public class Server {
 		Templates.setTemplatesPath(getWebRoot().resolve("templates"));
 
 		try {
-			if (Files.exists(dataRoot) == false) Files.createDirectories(dataRoot);
+			if (!Files.exists(dataRoot)) Files.createDirectories(dataRoot);
 		} catch (IOException e) {
 			error("Cannot start server data root isn't accessible.", e);
 			return;
@@ -112,12 +112,12 @@ public class Server {
 
 	/**
 	 * Create And initialize undertow and handlers stack
-	 * @param next
+	 * @param appHandler application handler to use for this server
 	 * @return
 	 */
-	protected Undertow createServer(HttpHandler next) {
+	protected Undertow createServer(HttpHandler appHandler) {
 		// Fifth Handler Session
-		HttpHandler sessionHandler = sessionHandler(next);
+		HttpHandler sessionHandler = sessionHandler(appHandler);
 		// Fourth Handler crossOrigin
 		HttpHandler crossOriginHandler = allowCrossOriginHandler(sessionHandler);
 		// Third Handler exception
@@ -174,7 +174,7 @@ public class Server {
 
 	/**
 	 * Adds Cross Origin if needed
-	 * @param next
+	 * @param next Handler in the stack
 	 * @return
 	 */
 	protected HttpHandler allowCrossOriginHandler(HttpHandler next) {
@@ -189,7 +189,7 @@ public class Server {
 
 	/**
 	 *  Adds admin attribute and checks user attribute
-	 * @param next
+	 * @param next next Handler in the stack
 	 * @return
 	 */
 	protected HttpHandler sessionHandler(HttpHandler next) {
@@ -248,6 +248,8 @@ public class Server {
 
 		pathHandler.add("/search/{query}", this::searchPage);
 		pathHandler.add("/search", this::searchPage);
+
+		pathHandler.add("/artists", this::listArtistPage);
 
 		pathHandler.add("/songs/{id}", this::restSong);
 
@@ -430,7 +432,7 @@ public class Server {
 		String id = getParameter(exchange, ("id"));
 
 		// Verify that song exists
-		if (songDb.exists(id) == false) throw ServerException.NOT_FOUND;
+		if (!songDb.exists(id)) throw ServerException.NOT_FOUND;
 
 		// prepares new document
 		document.add(new StringField("id", id, Field.Store.YES));
@@ -451,7 +453,7 @@ public class Server {
 		String id = getParameter(exchange, "id");
 
 		// Verify that song exists
-		if (songDb.exists(id) == false) throw ServerException.NOT_FOUND;
+		if (!songDb.exists(id)) throw ServerException.NOT_FOUND;
 
 		// removes file
 		songDb.delete(id);
@@ -479,6 +481,24 @@ public class Server {
 				break;
 		}
 	}
+
+	private void listArtistPage(final HttpServerExchange exchange) throws Exception {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
+		StringBuilder out = new StringBuilder();
+        String role = getRole(exchange);
+        Templates.header(out, "Artists", role);
+        StringBuilder result = new StringBuilder();
+        indexDb.listArtists(result, MIME_TEXT_HTML);
+        Templates.search(out, result, role);
+
+		Templates.footer(out);
+
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, MIME_TEXT_HTML);
+		exchange.getResponseSender().send(out.toString());
+	}
+
 
 	private void consoleApiPage(final HttpServerExchange exchange) throws ServerException {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
@@ -622,10 +642,10 @@ public class Server {
 			final Path administratorKeyPath = getDataRoot().resolve(ADMINISTRATOR_KEY_PATH);
 			if (Files.exists(administratorKeyPath)) {
 				final List<String> allLines = Files.readAllLines(administratorKeyPath);
-				if (allLines.isEmpty() == false) {
+				if (!allLines.isEmpty()) {
 					administratorKey = allLines.get(allLines.size() - 1);
 
-					showKeyCreationAlert = Files.exists(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH)) == false;
+					showKeyCreationAlert = !Files.exists(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
 				}
 			}
 		} catch (IOException e) {
@@ -636,7 +656,7 @@ public class Server {
 			final Path userKeyPath = getDataRoot().resolve("user.key");
 			if (Files.exists(userKeyPath)) {
 				final List<String> allLines = Files.readAllLines(userKeyPath);
-				if (allLines.isEmpty() == false) {
+				if (!allLines.isEmpty()) {
 					userKey = allLines.get(allLines.size() - 1);
 				}
 			}

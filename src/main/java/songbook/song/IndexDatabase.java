@@ -11,6 +11,7 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.SortField.Type;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 import songbook.server.Server;
 import songbook.server.Templates;
@@ -57,7 +58,7 @@ public class IndexDatabase {
     }
 
 
-
+    /** Returns the title of a song*/
     public String getTitle(String id) throws IOException {
         DirectoryReader reader = DirectoryReader.open(index);
         IndexSearcher searcher = new IndexSearcher(reader);
@@ -100,6 +101,32 @@ public class IndexDatabase {
 
     }
 
+    public void listArtists(Appendable out, String mimeType) throws IOException, ParseException {
+        DirectoryReader reader = DirectoryReader.open(index);
+        Fields fields = MultiFields.getFields(reader);
+        Terms artists = fields.terms("artist");
+        TermsEnum termsEnum = artists.iterator(null);
+        BytesRef term;
+        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+            Templates.startItems(out);
+        }
+        while ((term = termsEnum.next()) != null) {
+            String artist = term.utf8ToString();
+            switch (mimeType) {
+                case Server.MIME_TEXT_HTML:
+                    Templates.artistItem(out, artist, termsEnum.docFreq());
+                    break;
+                case Server.MIME_TEXT_PLAIN:
+                default:
+                    out.append(artist).append(": ").append(Integer.toString(termsEnum.docFreq()));
+                    break;
+            }
+        }
+        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+            Templates.endItems(out);
+        }
+    }
+
     public void search(String querystr, Appendable out, String mimeType) throws ParseException, IOException {
         int hitsPerPage = 500;
         IndexReader reader = DirectoryReader.open(index);
@@ -120,7 +147,7 @@ public class IndexDatabase {
         }
 
         if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            Templates.startSongItems(out);
+            Templates.startItems(out);
         }
         for (ScoreDoc hit : hits) {
             int docId = hit.doc;
@@ -137,7 +164,7 @@ public class IndexDatabase {
             }
         }
         if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            Templates.endSongItems(out);
+            Templates.endItems(out);
         }
 
         // reader can only be closed when there

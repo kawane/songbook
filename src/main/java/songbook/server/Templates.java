@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Contains functions that generate a string from a template
  * Created by j5r on 01/05/2014.
  */
 public class Templates {
@@ -18,9 +19,7 @@ public class Templates {
     private static Path TEMPLATES_PATH = Paths.get("web/templates");
 
     public static void setTemplatesPath(Path templatesPath) {
-        if (cache != null) {
-            cache.clear();
-        }
+        cache.clear();
         TEMPLATES_PATH = templatesPath;
     }
 
@@ -48,17 +47,22 @@ public class Templates {
         return print(out, "newSong.song");
     }
 
-    public static <A extends Appendable> A startSongItems(A out) {
-        return print(out, "startSongItems.html");
+    public static <A extends Appendable> A startItems(A out) {
+        return print(out, "startItems.html");
 	}
 
     public static <A extends Appendable> A songItem(A out, CharSequence songId, CharSequence songTitle, CharSequence songArtist) {
         return print(out, "songItem.html", "songId", songId, "songTitle", songTitle, "songArtist", songArtist);
 	}
 
-    public static <A extends Appendable> A endSongItems(A out) {
-        return print(out, "endSongItems.html");
+    public static <A extends Appendable> A artistItem(A out, CharSequence artist, int songCount) {
+        return print(out, "artistItem.html", "artist", artist, "songCount", Integer.toString(songCount));
+    }
+
+    public static <A extends Appendable> A endItems(A out) {
+        return print(out, "endItems.html");
 	}
+
 
     public static <A extends Appendable> A signin(A out) {
         return print(out, "signin.html");
