@@ -57,8 +57,6 @@ public class Server {
 
 	private Logger logger;
 
-	private int port = DEFAULT_PORT;
-
 	private SongDatabase songDb;
 
 	private IndexDatabase indexDb;
@@ -104,10 +102,6 @@ public class Server {
 
 		// creates server
 		Undertow undertow = createServer(pathTemplateHandler());
-
-		final int port = getPort();
-		final String host = getHost();
-		info("Starting server on '" + host + ":" + port + "'.");
 		undertow.start();
 	}
 
@@ -129,10 +123,12 @@ public class Server {
 		GracefulShutdownHandler gracefulShutdownHandler = Handlers.gracefulShutdown(logHandler);
 
 		Undertow.Builder builder = Undertow.builder();
-		builder.addHttpListener(port, "localhost");
+		final int port = getPort();
+		final String host = getHost();
+		builder.addHttpListener(port, host);
 		builder.setHandler(gracefulShutdownHandler);
 
-		info("Listens on port " + port);
+		info("Listens on '" + host + ":" + port + "'");
 
 		return builder.build();
 	}
