@@ -7,7 +7,8 @@ import io.undertow.util.StatusCodes;
  */
 public class MissingArgumentsException extends ServerException {
 
-    private final String[] arguments;
+    private static final long serialVersionUID = 8897585263772580341L;
+	private final String[] arguments;
 
     public MissingArgumentsException(String ... arguments) {
         super(StatusCodes.BAD_REQUEST);

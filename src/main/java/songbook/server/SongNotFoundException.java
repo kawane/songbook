@@ -7,7 +7,8 @@ import io.undertow.util.StatusCodes;
  */
 public class SongNotFoundException extends ServerException {
 
-    private final String id;
+    private static final long serialVersionUID = 1203265853316984170L;
+	private final String id;
 
     public SongNotFoundException(String id) {
         super(StatusCodes.NOT_FOUND);
