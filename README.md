@@ -73,6 +73,21 @@ Songbook uses these third party libraries:
 
 thanks to Elena.
 
+Docker
+======
+
+Build the image to launch songbook
+
+```
+docker build -t songbook .
+```
+
+Launch a container
+```
+docker run -v "/srv/web/songbook/songs:/songs" -v "/srv/web/songbook/data:/data" -p 8000:8000 songbook
+```
+
+
 License
 =======
 
