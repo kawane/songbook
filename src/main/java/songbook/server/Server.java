@@ -1,22 +1,5 @@
 package songbook.server;
 
-import io.undertow.Handlers;
-import io.undertow.Undertow;
-import io.undertow.server.HttpHandler;
-import io.undertow.server.HttpServerExchange;
-import io.undertow.server.handlers.Cookie;
-import io.undertow.server.handlers.CookieImpl;
-import io.undertow.server.handlers.ExceptionHandler;
-import io.undertow.server.handlers.GracefulShutdownHandler;
-import io.undertow.server.handlers.resource.FileResourceManager;
-import io.undertow.util.*;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
-import songbook.song.IndexDatabase;
-import songbook.song.SongDatabase;
-import songbook.song.SongUtils;
-
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
@@ -28,11 +11,35 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+
+import io.undertow.Handlers;
+import io.undertow.Undertow;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.Cookie;
+import io.undertow.server.handlers.CookieImpl;
+import io.undertow.server.handlers.ExceptionHandler;
+import io.undertow.server.handlers.GracefulShutdownHandler;
+import io.undertow.server.handlers.resource.FileResourceManager;
+import io.undertow.util.AttachmentKey;
+import io.undertow.util.Cookies;
+import io.undertow.util.HeaderValues;
+import io.undertow.util.Headers;
+import io.undertow.util.HttpString;
+import io.undertow.util.Methods;
+import io.undertow.util.StatusCodes;
+import io.undertow.util.URLUtils;
+import songbook.song.IndexDatabase;
+import songbook.song.SongDatabase;
+import songbook.song.SongUtils;
 
 public class Server {
 
@@ -74,7 +81,8 @@ public class Server {
 		Templates.setTemplatesPath(getWebRoot().resolve("templates"));
 
 		try {
-			if (!Files.exists(dataRoot)) Files.createDirectories(dataRoot);
+			if (!Files.exists(dataRoot))
+				Files.createDirectories(dataRoot);
 		} catch (IOException e) {
 			error("Cannot start server data root isn't accessible.", e);
 			return;
@@ -83,7 +91,8 @@ public class Server {
 		readKeys();
 
 		// creates admin key if needed
-		if (administratorKey == null) createAdminKey();
+		if (administratorKey == null)
+			createAdminKey();
 
 		try {
 			// initializes songDb
@@ -97,7 +106,7 @@ public class Server {
 			// initializes index.
 			indexDb = new IndexDatabase(index, songDb);
 		} catch (IOException e) {
-			error("Can't initialize index in " +index , e);
+			error("Can't initialize index in " + index, e);
 		}
 
 		// creates server
@@ -107,6 +116,7 @@ public class Server {
 
 	/**
 	 * Create And initialize undertow and handlers stack
+	 * 
 	 * @param appHandler application handler to use for this server
 	 * @return
 	 */
@@ -135,6 +145,7 @@ public class Server {
 
 	/**
 	 * Log All requests
+	 * 
 	 * @param next
 	 * @return
 	 */
@@ -150,6 +161,7 @@ public class Server {
 
 	/**
 	 * Handles exceptions (including ServerException)
+	 * 
 	 * @param next
 	 * @return
 	 */
@@ -162,7 +174,7 @@ public class Server {
 			} else {
 				// TODO create real error message
 				String message = exception.getMessage();
-				exchange.setResponseCode(StatusCodes.INTERNAL_SERVER_ERROR);
+				exchange.setStatusCode(StatusCodes.INTERNAL_SERVER_ERROR);
 				exchange.getResponseSender().send(createMessage(message, isAskingForJson(exchange)));
 			}
 		});
@@ -171,6 +183,7 @@ public class Server {
 
 	/**
 	 * Adds Cross Origin if needed
+	 * 
 	 * @param next Handler in the stack
 	 * @return
 	 */
@@ -185,7 +198,8 @@ public class Server {
 	}
 
 	/**
-	 *  Adds admin attribute and checks user attribute
+	 * Adds admin attribute and checks user attribute
+	 * 
 	 * @param next next Handler in the stack
 	 * @return
 	 */
@@ -193,8 +207,10 @@ public class Server {
 		// TODO may be use SessionCookieConfig if it helps
 		return exchange -> {
 			String sessionKey = null;
-			Map<String, Cookie> cookies = Cookies.parseRequestCookies(10, false, exchange.getRequestHeaders().get(Headers.COOKIE));
-			for (Cookie cookie : cookies.values()) {
+			var cookies = new HashSet<Cookie>();
+			Cookies.parseRequestCookies(10, false,
+					exchange.getRequestHeaders().get(Headers.COOKIE), cookies);
+			for (Cookie cookie : cookies) {
 				if (SESSION_KEY.equals(cookie.getName())) {
 					sessionKey = cookie.getValue();
 				}
@@ -220,8 +236,9 @@ public class Server {
 				}
 			}
 
-			if ( isUser(sessionKey) ) {
-				// Need to understand this what's the difference between ADMIN_KEY and SESSION_KEY
+			if (isUser(sessionKey)) {
+				// Need to understand this what's the difference between ADMIN_KEY and
+				// SESSION_KEY
 				exchange.putAttachment(ADMIN_KEY, sessionKey);
 				next.handleRequest(exchange);
 			} else { // It's too early to decide if we are authorize or not
@@ -268,14 +285,14 @@ public class Server {
 		getSong(exchange);
 	}
 
-	private void editSongPage(final HttpServerExchange exchange) throws Exception{
+	private void editSongPage(final HttpServerExchange exchange) throws Exception {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
 		String id = getParameter(exchange, "id");
-        if (id != null) {
-            id = URLEncoder.encode(id, "utf-8");
-        }
+		if (id != null) {
+			id = URLEncoder.encode(id, "utf-8");
+		}
 
 		// Serves song
 		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
@@ -286,7 +303,8 @@ public class Server {
 		if (id != null && !id.isEmpty()) {
 
 			String songContents = songDb.getSongContents(id);
-			if (songContents == null) throw new SongNotFoundException(id);
+			if (songContents == null)
+				throw new SongNotFoundException(id);
 			String title = SongUtils.getTitle(songContents);
 			Templates.header(out, "Edit - " + title + " - My SongBook", role);
 			Templates.editSong(out, id, songContents, role);
@@ -318,7 +336,8 @@ public class Server {
 		}
 
 		StringBuilder out = new StringBuilder();
-		String mimeType = MimeParser.bestMatch(getHeader(exchange, Headers.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
+		String mimeType = MimeParser.bestMatch(getHeader(exchange, Headers.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN,
+				MIME_TEXT_HTML);
 		switch (mimeType) {
 			case MIME_TEXT_HTML:
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
@@ -330,7 +349,7 @@ public class Server {
 				}
 				StringBuilder result = new StringBuilder();
 				indexDb.search(query, result, mimeType);
-				Templates.search(out,result, role);
+				Templates.search(out, result, role);
 
 				Templates.footer(out);
 				break;
@@ -368,9 +387,11 @@ public class Server {
 
 		// Serves song
 		String songContents = songDb.getSongContents(id);
-		if (songContents == null) throw new SongNotFoundException(id);
+		if (songContents == null)
+			throw new SongNotFoundException(id);
 
-		String mimeType = MimeParser.bestMatch(getHeader(exchange, Headers.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
+		String mimeType = MimeParser.bestMatch(getHeader(exchange, Headers.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN,
+				MIME_TEXT_HTML);
 		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, mimeType);
 		switch (mimeType) {
 			case MIME_TEXT_HTML:
@@ -392,7 +413,8 @@ public class Server {
 		String title = SongUtils.getTitle(songData);
 		String role = getRole(exchange);
 		Templates.header(out, title + " - My SongBook", getRole(exchange));
-		if (showKeyCreationAlert) Templates.alertKeyCreation(out, administratorKey, path);
+		if (showKeyCreationAlert)
+			Templates.alertKeyCreation(out, administratorKey, path);
 		Templates.viewSong(out, id, SongUtils.writeHtml(new StringBuilder(), songData), role);
 
 		Templates.footer(out);
@@ -417,7 +439,8 @@ public class Server {
 		indexDb.addOrUpdateDocument(document);
 
 		WritableByteChannel songChannel = songDb.writeChannelForSong(id);
-		if (songChannel == null) throw new ServerException(500, "Can't write song");
+		if (songChannel == null)
+			throw new ServerException(500, "Can't write song");
 
 		ChannelUtil.writeStringContents(songData, songChannel);
 
@@ -433,14 +456,16 @@ public class Server {
 		String id = URLEncoder.encode(getParameter(exchange, "id"), "utf-8");
 
 		// Verify that song exists
-		if (!songDb.exists(id)) throw ServerException.NOT_FOUND;
+		if (!songDb.exists(id))
+			throw ServerException.NOT_FOUND;
 
 		// prepares new document
 		document.add(new StringField("id", id, Field.Store.YES));
 		indexDb.addOrUpdateDocument(document);
 
 		WritableByteChannel songChannel = songDb.writeChannelForSong(id);
-		if (songChannel == null) throw new ServerException(500, "Can't write song");
+		if (songChannel == null)
+			throw new ServerException(500, "Can't write song");
 
 		ChannelUtil.writeStringContents(songData, songChannel);
 
@@ -454,7 +479,8 @@ public class Server {
 		String id = URLEncoder.encode(getParameter(exchange, "id"), "utf-8");
 
 		// Verify that song exists
-		if (!songDb.exists(id)) throw ServerException.NOT_FOUND;
+		if (!songDb.exists(id))
+			throw ServerException.NOT_FOUND;
 
 		// removes file
 		songDb.delete(id);
@@ -464,7 +490,8 @@ public class Server {
 		// removes document from index
 		indexDb.removeDocument(id);
 
-		String mimeType = MimeParser.bestMatch(getHeader(exchange, Headers.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN, MIME_TEXT_HTML);
+		String mimeType = MimeParser.bestMatch(getHeader(exchange, Headers.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN,
+				MIME_TEXT_HTML);
 		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, mimeType);
 		switch (mimeType) {
 			case MIME_TEXT_HTML:
@@ -483,34 +510,17 @@ public class Server {
 		}
 	}
 
-    private void songsByArtistPage(final HttpServerExchange exchange) throws Exception {
-        if (!exchange.getRequestMethod().equals(Methods.GET)) {
-            throw ServerException.METHOD_NOT_ALLOWED;
-        }
-        String artist = getParameter(exchange, "artist");
-        StringBuilder out = new StringBuilder();
-        String role = getRole(exchange);
-        Templates.header(out, "Artists", role);
-        StringBuilder result = new StringBuilder();
-        indexDb.songsByArtist(artist, result, MIME_TEXT_HTML);
-        Templates.search(out, result, role);
-
-        Templates.footer(out);
-
-        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, MIME_TEXT_HTML);
-        exchange.getResponseSender().send(out.toString());
-    }
-
-	private void listArtistPage(final HttpServerExchange exchange) throws Exception {
+	private void songsByArtistPage(final HttpServerExchange exchange) throws Exception {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
+		String artist = getParameter(exchange, "artist");
 		StringBuilder out = new StringBuilder();
-        String role = getRole(exchange);
-        Templates.header(out, "Artists", role);
-        StringBuilder result = new StringBuilder();
-        indexDb.listArtists(result, MIME_TEXT_HTML);
-        Templates.search(out, result, role);
+		String role = getRole(exchange);
+		Templates.header(out, "Artists", role);
+		StringBuilder result = new StringBuilder();
+		indexDb.songsByArtist(artist, result, MIME_TEXT_HTML);
+		Templates.search(out, result, role);
 
 		Templates.footer(out);
 
@@ -518,6 +528,22 @@ public class Server {
 		exchange.getResponseSender().send(out.toString());
 	}
 
+	private void listArtistPage(final HttpServerExchange exchange) throws Exception {
+		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
+		StringBuilder out = new StringBuilder();
+		String role = getRole(exchange);
+		Templates.header(out, "Artists", role);
+		StringBuilder result = new StringBuilder();
+		indexDb.listArtists(result, MIME_TEXT_HTML);
+		Templates.search(out, result, role);
+
+		Templates.footer(out);
+
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, MIME_TEXT_HTML);
+		exchange.getResponseSender().send(out.toString());
+	}
 
 	private void consoleApiPage(final HttpServerExchange exchange) throws ServerException {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
@@ -633,7 +659,8 @@ public class Server {
 
 	private String getHost() {
 		String host = System.getenv("HOST");
-		if (host == null) host = System.getenv("HOSTNAME");
+		if (host == null)
+			host = System.getenv("HOSTNAME");
 		return host == null ? DEFAULT_HOST : host;
 	}
 
@@ -747,13 +774,13 @@ public class Server {
 	}
 
 	protected String getParameter(HttpServerExchange exchange, String parameter) {
-        StringBuilder sb = new StringBuilder();
-        Deque<String> deque = exchange.getQueryParameters().get(parameter);
-        if (deque != null) {
-            URLUtils.decode(deque.element(), "utf-8", true, sb);
-            return sb.toString();
-        }
-        return null;
+		StringBuilder sb = new StringBuilder();
+		Deque<String> deque = exchange.getQueryParameters().get(parameter);
+		if (deque != null) {
+			URLUtils.decode(deque.element(), "utf-8", true, sb);
+			return sb.toString();
+		}
+		return null;
 	}
 
 	private HttpHandler adminAccess(HttpHandler handler) {

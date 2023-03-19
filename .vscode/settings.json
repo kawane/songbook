@@ -1,0 +1,20 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-17",
+            "path": "/usr/lib/jvm/msopenjdk-current",
+            "default": true
+        }
+    ],
+    "java.cleanup.actionsOnSave": [
+        "qualifyMembers",
+        "addOverride",
+        "stringConcatToTextBlock",
+        "invertEquals",
+        "instanceofPatternMatch",
+        "lambdaExpression",
+        "switchExpression",
+        "tryWithResource"
+    ]
+}

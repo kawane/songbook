@@ -1,8 +1,6 @@
-apply plugin: 'java'
-apply plugin: 'application'
-
-
-sourceCompatibility = 1.8
+plugins {
+    id 'application' 
+}
 
 version = 'latest'
 
@@ -11,13 +9,18 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.apache.lucene', name: 'lucene-core', version: '5.4.0'
-    compile group: 'org.apache.lucene', name: 'lucene-queryparser', version: '5.4.0'
-    compile group: 'org.apache.lucene', name: 'lucene-analyzers-common', version: '5.4.0'
+    implementation 'org.apache.lucene:lucene-core:9.5.0'
+    implementation 'org.apache.lucene:lucene-queryparser:9.5.0'
+    implementation 'org.apache.lucene:lucene-analyzers-common:8.11.2'
+    implementation 'io.undertow:undertow-core:2.3.4.Final'
 
-    compile group: 'io.undertow', name: 'undertow-core', version: '1.1.2.Final'
-
-    testCompile 'junit:junit:4.11'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
 }
 
-mainClassName = 'songbook.server.Server'
+application {
+    mainClass = 'songbook.server.Server' 
+}
+
+tasks.named('test') {
+    useJUnitPlatform() 
+}
