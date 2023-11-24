@@ -1,9 +1,9 @@
-FROM gradle:6-jdk8 AS build
+FROM gradle:8.0.2-jdk17 AS build
 COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
 RUN gradle installDist --no-daemon 
 
-FROM openjdk:8-jre-slim
+FROM eclipse-temurin:17-jre
 
 COPY --from=build /home/gradle/src/build/install/songbook /songbook
 COPY --from=build /home/gradle/src/data/songs /songs

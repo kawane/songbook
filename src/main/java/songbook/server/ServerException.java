@@ -25,7 +25,7 @@ import io.undertow.util.StatusCodes;
 public class ServerException extends Exception {
 
     private static final long serialVersionUID = 6619087202310932044L;
-	public static final ServerException NOT_FOUND = new ServerException(StatusCodes.NOT_FOUND);
+    public static final ServerException NOT_FOUND = new ServerException(StatusCodes.NOT_FOUND);
     public static final ServerException BAD_REQUEST = new ServerException(StatusCodes.BAD_REQUEST);
     public static final ServerException METHOD_NOT_ALLOWED = new ServerException(StatusCodes.METHOD_NOT_ALLOWED);
 
@@ -42,7 +42,7 @@ public class ServerException extends Exception {
     }
 
     public void serveError(String role, HttpServerExchange exchange) {
-        exchange.setResponseCode(code);
+        exchange.setStatusCode(code);
 
         StringBuilder out = new StringBuilder();
         Templates.header(out, Integer.toString(code), role);
