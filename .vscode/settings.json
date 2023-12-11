@@ -2,7 +2,7 @@
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.configuration.runtimes": [
         {
-            "name": "JavaSE-17",
+            "name": "JavaSE-21",
             "path": "/usr/lib/jvm/msopenjdk-current",
             "default": true
         }
@@ -16,5 +16,7 @@
         "lambdaExpression",
         "switchExpression",
         "tryWithResource"
-    ]
+    ],
+    "java.import.gradle.wrapper.enabled": false,
+    "java.debug.settings.hotCodeReplace": "auto"
 }
