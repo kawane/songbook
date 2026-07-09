@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "songbook",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["run", "--rm", "--name", "songbook-preview", "-p", "8000:8000", "songbook:frontend"],
+      "port": 8000
+    }
+  ]
+}

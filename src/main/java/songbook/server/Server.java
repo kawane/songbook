@@ -1,14 +1,12 @@
 package songbook.server;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
@@ -121,12 +119,10 @@ public class Server {
 	 * @return
 	 */
 	protected Undertow createServer(HttpHandler appHandler) {
-		// Fifth Handler Session
+		// Fourth Handler Session
 		HttpHandler sessionHandler = sessionHandler(appHandler);
-		// Fourth Handler crossOrigin
-		HttpHandler crossOriginHandler = allowCrossOriginHandler(sessionHandler);
 		// Third Handler exception
-		HttpHandler exceptionHandler = exceptionHandler(crossOriginHandler);
+		HttpHandler exceptionHandler = exceptionHandler(sessionHandler);
 		// Second Handler log
 		HttpHandler logHandler = log(exceptionHandler);
 		// First Handler GracefulShutdown
@@ -182,22 +178,6 @@ public class Server {
 	}
 
 	/**
-	 * Adds Cross Origin if needed
-	 * 
-	 * @param next Handler in the stack
-	 * @return
-	 */
-	protected HttpHandler allowCrossOriginHandler(HttpHandler next) {
-		return (exchange) -> {
-			String origin = getHeader(exchange, Headers.ORIGIN);
-			if (origin != null) {
-				exchange.getResponseHeaders().put(Headers.ORIGIN, origin);
-			}
-			next.handleRequest(exchange);
-		};
-	}
-
-	/**
 	 * Adds admin attribute and checks user attribute
 	 * 
 	 * @param next next Handler in the stack
@@ -219,9 +199,14 @@ public class Server {
 			String key = getParameter(exchange, "key");
 			if (key != null && !key.isEmpty() && !key.equals(sessionKey)) {
 				sessionKey = key;
-				// Set Cookie
+				// Set Cookie. HttpOnly (no JS reads it) + SameSite=Lax guard
+				// against theft and cross-site writes while keeping the same
+				// cookie-based auth approach.
 				Cookie cookie = new CookieImpl(SESSION_KEY, sessionKey);
 				cookie.setMaxAge(Integer.MAX_VALUE);
+				cookie.setPath("/");
+				cookie.setHttpOnly(true);
+				cookie.setSameSiteMode("Lax");
 				exchange.setResponseCookie(cookie);
 			}
 			if (isAdministrator(sessionKey)) {
@@ -665,17 +650,19 @@ public class Server {
 	}
 
 	// Security
+	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
 	private void createAdminKey() {
-		// creates administrator key when it's null
-		long timestamp = System.currentTimeMillis();
-		String timestampString = Long.toHexString(timestamp);
-		try {
-			MessageDigest digest = MessageDigest.getInstance("MD5");
-			digest.update(timestampString.getBytes(), 0, timestampString.length());
-			administratorKey = new BigInteger(1, digest.digest()).toString(16);
-		} catch (NoSuchAlgorithmException e) {
-			administratorKey = timestampString;
+		// 128 bits of randomness, hex-encoded: unpredictable, unlike the old
+		// MD5(startup timestamp) which was brute-forceable
+		byte[] bytes = new byte[16];
+		SECURE_RANDOM.nextBytes(bytes);
+		StringBuilder sb = new StringBuilder(bytes.length * 2);
+		for (byte b : bytes) {
+			sb.append(Character.forDigit((b >> 4) & 0xF, 16));
+			sb.append(Character.forDigit(b & 0xF, 16));
 		}
+		administratorKey = sb.toString();
 		logger.info("Created administrator key: '" + administratorKey + "'.");
 		writeKeys();
 	}

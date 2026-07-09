@@ -75,6 +75,33 @@ describe("song CRUD", () => {
     });
 });
 
+describe("HTML rendering", () => {
+    // Song content must never be able to inject markup into the rendered page
+    const XSS_SONG = `Rock & <Roll>
+artist: <b>DROP</b>
+
+C
+Lyric with <script>alert(1)</script> inside
+`;
+    let id;
+
+    it("stores the raw song untouched", async () => {
+        id = await api.createSong(XSS_SONG);
+        expect(await api.getSong(id)).toBe(XSS_SONG); // text/song is verbatim
+    });
+
+    it("escapes special characters in the HTML view", async () => {
+        const html = await api.getSong(id, "text/html");
+        expect(html).not.toContain("<script>alert(1)</script>");
+        expect(html).toContain("&lt;script&gt;");
+        expect(html).toContain("Rock &amp; &lt;Roll&gt;");
+    });
+
+    afterAll(async () => {
+        if (id) await api.deleteSong(id).catch(() => {});
+    });
+});
+
 describe("authorization", () => {
     it("rejects writes without the admin key", async () => {
         sessionKey = null;

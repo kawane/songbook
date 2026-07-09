@@ -59,7 +59,7 @@ public class SongUtils {
 			w.append("<div class='song' itemscope='' itemtype='http://schema.org/MusicComposition'>\n");
 
 			w.append("<div class='song-title' itemprop='name'>");
-			w.append(songLines[0]);
+			w.append(escape(songLines[0]));
 			w.append("</div>\n");
             w.append("<div class='song-header'>");
             boolean songHeader = true;
@@ -85,10 +85,10 @@ public class SongUtils {
                         }
                     }
 					w.append("<div class='song-");
-					w.append(propName.replace(" ", "-"));
+					w.append(escape(propName.replace(" ", "-")));
 					w.append("'>\n");
 					w.append("<span class='song-metadata-name'>");
-					w.append(propName);
+					w.append(escape(propName));
 					w.append(": </span>\n");
 					if (!propValue.isEmpty()) {
 						w.append("<span class='song-metadata-value'");
@@ -106,16 +106,17 @@ public class SongUtils {
 						}
 
 						w.append("data-name='");
-						w.append(propName);
+						w.append(escape(propName));
 						w.append("'>");
 						boolean isLink = propName.equals("video") || propName.equals("audio") || propName.equals("link");
-						if (isLink) {
+						boolean safeLink = isLink && isSafeHref(propValue);
+						if (safeLink) {
 							w.append("<a href='");
-							w.append(propValue);
+							w.append(escape(propValue));
 							w.append("'>");
 						}
-						w.append(propValue);
-						if (isLink) {
+						w.append(escape(propValue));
+						if (safeLink) {
 							w.append("</a>");
 						}
 						w.append("</span>\n");
@@ -140,7 +141,7 @@ public class SongUtils {
 						verse = false;
 					}
 					w.append("<div class='song-" + lowercaseLine +"-recall'>");
-					w.append(line);
+					w.append(escape(line));
 					w.append("</div>");
 				} else {
 					String[] tokens = line.replace("|", " ").split(" ");
@@ -160,7 +161,9 @@ public class SongUtils {
 							verse = true;
 						}
 						w.append("<div class='song-chords'>");
-						w.append(CHORD_REGEXP.matcher(line).replaceAll("<span class='song-chord'>$0</span>"));
+						// escape first (chords are ASCII and still match afterwards),
+						// then wrap each chord in a span
+						w.append(CHORD_REGEXP.matcher(escape(line)).replaceAll("<span class='song-chord'>$0</span>"));
 						w.append("</div>\n");
 					} else {
 						if (!verse) {
@@ -172,7 +175,7 @@ public class SongUtils {
 							verse = true;
 						}
 						w.append("<div class='song-line'>");
-						w.append(line);
+						w.append(escape(line));
 						w.append(" </div>\n");
 					}
 				}
@@ -188,6 +191,30 @@ public class SongUtils {
 			System.err.println("An appendable must not failed here!");
 		}
 		return w;
+	}
+
+	/** Escapes text so song content can't inject HTML (stored XSS / broken markup). */
+	static String escape(String s) {
+		StringBuilder sb = new StringBuilder(s.length());
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			switch (c) {
+				case '&': sb.append("&amp;"); break;
+				case '<': sb.append("&lt;"); break;
+				case '>': sb.append("&gt;"); break;
+				case '"': sb.append("&quot;"); break;
+				case '\'': sb.append("&#39;"); break;
+				default: sb.append(c);
+			}
+		}
+		return sb.toString();
+	}
+
+	/** Only allow link schemes safe to click; anything else is rendered as plain text. */
+	static boolean isSafeHref(String url) {
+		String u = url.trim().toLowerCase();
+		return u.startsWith("http://") || u.startsWith("https://")
+				|| u.startsWith("mailto:") || u.startsWith("/") || u.startsWith("#");
 	}
 
 }

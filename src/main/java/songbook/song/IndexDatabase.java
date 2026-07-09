@@ -12,7 +12,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.MultiTerms;
@@ -114,109 +113,105 @@ public class IndexDatabase {
     }
 
     public void listArtists(Appendable out, String mimeType) throws IOException, ParseException {
-        var reader = DirectoryReader.open(index);
-
-        Terms artists = MultiTerms.getTerms(reader, "artist");
-        TermsEnum termsEnum = artists.iterator();
-        BytesRef term;
-        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            Templates.startItems(out);
-        }
-        while ((term = termsEnum.next()) != null) {
-            String artist = term.utf8ToString();
-            switch (mimeType) {
-                case Server.MIME_TEXT_HTML:
-                    Templates.artistItem(out, artist, termsEnum.docFreq());
-                    break;
-                case Server.MIME_TEXT_PLAIN:
-                default:
-                    out.append(artist).append(": ").append(Integer.toString(termsEnum.docFreq()));
-                    break;
+        try (DirectoryReader reader = DirectoryReader.open(index)) {
+            Terms artists = MultiTerms.getTerms(reader, "artist");
+            if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+                Templates.startItems(out);
             }
-        }
-        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            Templates.endItems(out);
+            // getTerms returns null when no document has the field yet
+            if (artists != null) {
+                TermsEnum termsEnum = artists.iterator();
+                BytesRef term;
+                while ((term = termsEnum.next()) != null) {
+                    String artist = term.utf8ToString();
+                    switch (mimeType) {
+                        case Server.MIME_TEXT_HTML:
+                            Templates.artistItem(out, artist, termsEnum.docFreq());
+                            break;
+                        case Server.MIME_TEXT_PLAIN:
+                        default:
+                            out.append(artist).append(": ").append(Integer.toString(termsEnum.docFreq()));
+                            break;
+                    }
+                }
+            }
+            if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+                Templates.endItems(out);
+            }
         }
     }
 
     public void search(String querystr, Appendable out, String mimeType) throws ParseException, IOException {
         int hitsPerPage = 500;
-        var reader = DirectoryReader.open(index);
-        var searcher = new IndexSearcher(reader);
-        var storeFields = reader.storedFields();
+        try (DirectoryReader reader = DirectoryReader.open(index)) {
+            var searcher = new IndexSearcher(reader);
+            var storeFields = reader.storedFields();
 
-        ScoreDoc[] hits;
-        if (querystr == null || querystr.isEmpty()) {
-            Query query = new MatchAllDocsQuery();
-            TopFieldDocs topFieldDocs = searcher.search(query, hitsPerPage,
-                    new Sort(new SortField("title", Type.STRING)));
-            hits = topFieldDocs.scoreDocs;
-        } else {
-            // the "song" arg specifies the default field to use
-            // when no field is explicitly specified in the query.
-            Query query = new QueryParser("song", analyzer).parse(querystr);
-            hits = searcher.search(query, hitsPerPage).scoreDocs;
-        }
+            ScoreDoc[] hits;
+            if (querystr == null || querystr.isEmpty()) {
+                Query query = new MatchAllDocsQuery();
+                TopFieldDocs topFieldDocs = searcher.search(query, hitsPerPage,
+                        new Sort(new SortField("title", Type.STRING)));
+                hits = topFieldDocs.scoreDocs;
+            } else {
+                // the "song" arg specifies the default field to use
+                // when no field is explicitly specified in the query.
+                Query query = new QueryParser("song", analyzer).parse(querystr);
+                hits = searcher.search(query, hitsPerPage).scoreDocs;
+            }
 
-        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            Templates.startItems(out);
-        }
+            if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+                Templates.startItems(out);
+            }
 
-        for (ScoreDoc hit : hits) {
-            int docId = hit.doc;
-            Document doc = storeFields.document(docId);
-            switch (mimeType) {
-                case Server.MIME_TEXT_HTML:
-                    String artists = Stream.of(doc.getValues("artist")).collect(Collectors.joining(", "));
-                    Templates.songItem(out, doc.get("id"), doc.get("title"), artists);
-                    break;
-                case Server.MIME_TEXT_PLAIN:
-                default:
-                    out.append(doc.get("id")).append("\n");
-                    break;
+            for (ScoreDoc hit : hits) {
+                Document doc = storeFields.document(hit.doc);
+                switch (mimeType) {
+                    case Server.MIME_TEXT_HTML:
+                        String artists = Stream.of(doc.getValues("artist")).collect(Collectors.joining(", "));
+                        Templates.songItem(out, doc.get("id"), doc.get("title"), artists);
+                        break;
+                    case Server.MIME_TEXT_PLAIN:
+                    default:
+                        out.append(doc.get("id")).append("\n");
+                        break;
+                }
+            }
+            if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+                Templates.endItems(out);
             }
         }
-        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            Templates.endItems(out);
-        }
-
-        // reader can only be closed when there
-        // is no need to access the documents any more.
-        reader.close();
     }
 
     public void songsByArtist(String artist, Appendable out, String mimeType) throws ParseException, IOException {
         int hitsPerPage = 500;
-        IndexReader reader = DirectoryReader.open(index);
-        IndexSearcher searcher = new IndexSearcher(reader);
+        try (DirectoryReader reader = DirectoryReader.open(index)) {
+            IndexSearcher searcher = new IndexSearcher(reader);
+            var storeFields = reader.storedFields();
 
-        Query tq = new TermQuery(new Term("artist", artist));
-        ScoreDoc[] hits = searcher.search(tq, hitsPerPage).scoreDocs;
+            Query tq = new TermQuery(new Term("artist", artist));
+            ScoreDoc[] hits = searcher.search(tq, hitsPerPage).scoreDocs;
 
-        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            Templates.startItems(out);
-        }
-        for (ScoreDoc hit : hits) {
-            int docId = hit.doc;
-            Document doc = reader.storedFields().document(docId);
-            switch (mimeType) {
-                case Server.MIME_TEXT_HTML:
-                    String artists = Stream.of(doc.getValues("artist")).collect(Collectors.joining(", "));
-                    Templates.songItem(out, doc.get("id"), doc.get("title"), artists);
-                    break;
-                case Server.MIME_TEXT_PLAIN:
-                default:
-                    out.append(doc.get("id")).append("\n");
-                    break;
+            if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+                Templates.startItems(out);
+            }
+            for (ScoreDoc hit : hits) {
+                Document doc = storeFields.document(hit.doc);
+                switch (mimeType) {
+                    case Server.MIME_TEXT_HTML:
+                        String artists = Stream.of(doc.getValues("artist")).collect(Collectors.joining(", "));
+                        Templates.songItem(out, doc.get("id"), doc.get("title"), artists);
+                        break;
+                    case Server.MIME_TEXT_PLAIN:
+                    default:
+                        out.append(doc.get("id")).append("\n");
+                        break;
+                }
+            }
+            if (Server.MIME_TEXT_HTML.equals(mimeType)) {
+                Templates.endItems(out);
             }
         }
-        if (Server.MIME_TEXT_HTML.equals(mimeType)) {
-            Templates.endItems(out);
-        }
-
-        // reader can only be closed when there
-        // is no need to access the documents any more.
-        reader.close();
     }
 
 }
