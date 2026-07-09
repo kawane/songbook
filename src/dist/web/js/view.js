@@ -52,8 +52,10 @@ function armHideTimer() {
     hideTimer = setTimeout(hideToolbar, HIDE_DELAY);
 }
 
-song.addEventListener("click", (e) => {
-    if (e.target.closest("a, button")) return;
+// Listen on the whole page, not just the song text: with few lyrics most of
+// the screen is empty space and a tap there must work too
+document.body.addEventListener("click", (e) => {
+    if (e.target.closest("a, button, .song-toolbar, dialog")) return;
     if (toolbar.classList.contains("song-toolbar-hidden")) {
         showToolbar();
     } else {
