@@ -17,6 +17,13 @@
     --meta: #4cc38a;
 }
 
+/* html needs its own background: without it, body's background is promoted
+   to the page canvas and body paints nothing — in fullscreen the browser's
+   black ::backdrop then shows through (black page in light mode) */
+html {
+    background: var(--color-bg-base);
+}
+
 body {
     margin: 0;
     background: var(--color-bg-base);
