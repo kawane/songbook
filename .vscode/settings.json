@@ -1,22 +1,5 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
-    "java.configuration.runtimes": [
-        {
-            "name": "JavaSE-21",
-            "path": "/usr/lib/jvm/msopenjdk-current",
-            "default": true
-        }
-    ],
-    "java.cleanup.actionsOnSave": [
-        "qualifyMembers",
-        "addOverride",
-        "stringConcatToTextBlock",
-        "invertEquals",
-        "instanceofPatternMatch",
-        "lambdaExpression",
-        "switchExpression",
-        "tryWithResource"
-    ],
     "java.import.gradle.wrapper.enabled": false,
     "java.debug.settings.hotCodeReplace": "auto"
 }
