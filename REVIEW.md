@@ -80,3 +80,15 @@ Zéro-build conservé (ES modules natifs + CSS servis tels quels). Bootstrap 3 /
 3. **Button group / toolbar** (`.btn-group`) : boutons accolés (`.btn.square` existe mais pas le groupement).
 4. **Support impression** : reset print, utilitaire `.no-print`, bascule « thème clair forcé en print » (aujourd'hui les tokens dark `[data-theme=dark]` s'appliquent aussi à l'impression).
 5. (Mineur) input de recherche compact pour navbar.
+
+## Revue de code + durcissement serveur — fait (2026-07-05)
+
+Revue complète serveur + client. Avis global : projet sain, bien dimensionné pour un usage perso mono-utilisateur. Correctifs appliqués (commit « Server hardening ») :
+- **Fuite de reader** : `IndexDatabase.listArtists` n'a jamais fermé son `DirectoryReader` (fuite de handle à chaque /artists). Les 3 méthodes de recherche passent en try-with-resources.
+- **Corruption UTF-8** : `ChannelUtil.getStringContents` décodait chaque bloc de 8 Ko séparément → caractères accentués coupés sur une chanson > 8 Ko. Lit tout puis décode une fois.
+- **Échappement HTML** : `SongUtils.writeHtml` échappe désormais tout le contenu (titre, métadonnées, paroles, accords) et n'émet un `<a>` que pour les schémas http/https/mailto. Corrige le rendu des chansons contenant `< > &` et ferme un XSS stocké. Sortie text/song inchangée.
+- **Clé admin** : 128 bits via `SecureRandom` au lieu de MD5(timestamp de démarrage), prévisible. Cookie de session : `HttpOnly` + `SameSite=Lax` + `Path=/` (rien ne le lit en JS). Même approche cookie conservée.
+- **Nettoyage** : suppression du package mort `songbook.chordpro` et du handler CORS inopérant.
+- Tests : ajout d'assertions d'échappement HTML. Suite verte (9 tests).
+
+**Sécurité — pistes futures** (non faites, hors périmètre « même approche ») : brancher songbook sur users.mesnos.ovh (JWT access/refresh token) ; la clé transite encore en `?key=` dans l'URL (logs/historique).
