@@ -1,4 +1,33 @@
+import { deleteSong } from "./api.js";
+import { confirmDialog, showErrorMessage } from "./dialog.js";
+
 const song = document.getElementById("song-view");
+
+// --- Delete (with confirmation; the server only accepts the DELETE method) ---
+
+const deleteButton = document.getElementById("deleteButton");
+if (deleteButton) {
+    deleteButton.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const id = deleteButton.getAttribute("href").substring("/delete/".length);
+        const title = song.querySelector(".song-title")?.textContent ?? id;
+        const confirmed = await confirmDialog({
+            title: "Delete song",
+            message: `Delete “${title}”? This cannot be undone.`,
+            confirmLabel: "Delete",
+            danger: true,
+        });
+        if (!confirmed) return;
+        try {
+            await deleteSong(id);
+            window.location.href = "/";
+        } catch (err) {
+            showErrorMessage("Can't delete this song: " + (err.status === 401
+                ? "you are not signed in as administrator."
+                : err.message));
+        }
+    });
+}
 
 // --- Auto-hiding toolbar (video-player pattern): shown on load so it stays
 // discoverable, fades out after a few seconds, and a tap on the song brings

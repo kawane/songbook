@@ -1,4 +1,5 @@
-import { createSong, updateSong } from "./api.js";
+import { createSong, updateSong, deleteSong } from "./api.js";
+import { confirmDialog, showErrorMessage } from "./dialog.js";
 
 const host = document.getElementById("song-edit");
 const songId = host.dataset.songid;
@@ -9,6 +10,22 @@ host.textContent = "";
 const deleteButton = document.getElementById("deleteButton");
 if (songId && deleteButton) {
     deleteButton.hidden = false;
+    deleteButton.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const confirmed = await confirmDialog({
+            title: "Delete song",
+            message: "Delete this song? This cannot be undone.",
+            confirmLabel: "Delete",
+            danger: true,
+        });
+        if (!confirmed) return;
+        try {
+            await deleteSong(songId);
+            window.location.href = "/";
+        } catch (err) {
+            showError(friendlyMessage(err));
+        }
+    });
 }
 
 // Monaco is unusable with touch keyboards and weighs ~4 MB: phones and
@@ -55,17 +72,5 @@ function plainBody(err) {
 }
 
 function showError(message) {
-    let box = document.getElementById("edit-error");
-    if (!box) {
-        box = document.createElement("div");
-        box.id = "edit-error";
-        box.className = "message message-danger";
-        box.role = "alert";
-        box.style.position = "fixed";
-        box.style.top = "var(--space-2)";
-        box.style.left = "var(--space-2)";
-        box.style.zIndex = "var(--z-modal, 1000)";
-        document.body.appendChild(box);
-    }
-    box.textContent = "Can't save song: " + message;
+    showErrorMessage(message);
 }
