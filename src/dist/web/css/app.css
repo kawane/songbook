@@ -150,35 +150,27 @@ body {
 
 /* --- Song page floating toolbar (songbook-specific) --- */
 
+/* Bottom bar on every screen size: reachable with thumbs on mobile,
+   and keeps the song text unobstructed on desktop */
 .song-toolbar {
     position: fixed;
-    top: var(--space-2);
-    right: var(--space-2);
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: center;
     gap: var(--space-2);
+    padding: var(--space-2);
+    padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+    background: var(--color-bg-surface);
+    border-top: var(--border-width, 1px) solid var(--color-border);
     z-index: var(--z-fixed, 100);
 }
 
-@media (max-width: 640px) {
-    /* On phones the toolbar becomes a bottom bar, easier for thumbs */
-    .song-toolbar {
-        top: auto;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        justify-content: center;
-        padding: var(--space-2);
-        padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
-        background: var(--color-bg-surface);
-        border-top: var(--border-width, 1px) solid var(--color-border);
-    }
-
-    /* Keep the last song lines reachable above the bottom bar */
-    #song-view {
-        padding-bottom: 5rem;
-    }
+/* Keep the last song lines reachable above the bottom bar */
+#song-view {
+    padding-bottom: 5rem;
 }
 
 /* --- Editor host (songbook-specific) --- */
