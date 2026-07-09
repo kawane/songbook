@@ -17,6 +17,8 @@
 package songbook.server;
 
 import io.undertow.server.HttpServerExchange;
+import io.undertow.util.HeaderValues;
+import io.undertow.util.Headers;
 import io.undertow.util.StatusCodes;
 
 /**
@@ -45,11 +47,26 @@ public class ServerException extends Exception {
         exchange.setStatusCode(code);
 
         StringBuilder out = new StringBuilder();
-        Templates.header(out, Integer.toString(code), role);
-        errorText(out);
-        Templates.footer(out);
+        if (asksForHtml(exchange)) {
+            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, Server.MIME_TEXT_HTML);
+            Templates.header(out, Integer.toString(code), role);
+            errorText(out);
+            Templates.footer(out);
+        } else {
+            // API clients get the bare message, not a full HTML page
+            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, Server.MIME_TEXT_PLAIN);
+            errorText(out);
+        }
 
         exchange.getResponseSender().send(out.toString());
+    }
+
+    private static boolean asksForHtml(HttpServerExchange exchange) {
+        HeaderValues accepts = exchange.getRequestHeaders().get(Headers.ACCEPT);
+        String accept = accepts == null ? null : accepts.getFirst();
+        String mimeType = MimeParser.bestMatch(accept,
+                Server.MIME_TEXT_SONG, Server.MIME_TEXT_PLAIN, Server.MIME_TEXT_HTML);
+        return Server.MIME_TEXT_HTML.equals(mimeType);
     }
 
     public void errorText(StringBuilder out) {

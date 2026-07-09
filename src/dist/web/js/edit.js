@@ -28,9 +28,31 @@ document.getElementById("saveButton").addEventListener("click", async (e) => {
         const id = songId ? await updateSong(songId, song) : await createSong(song);
         window.location.pathname = "/songs/" + id;
     } catch (err) {
-        showError(err.message);
+        showError(friendlyMessage(err));
     }
 });
+
+function friendlyMessage(err) {
+    switch (err.status) {
+        case 401:
+            return "You are not signed in as administrator. Open your admin key link, then try again.";
+        case 404:
+            return "This song no longer exists on the server — it may have been renamed or deleted. Copy your text, then recreate it from “New Song”.";
+        case 400:
+            return "The server rejected the song: " + plainBody(err);
+        default:
+            if (err.status) {
+                return `Saving failed (error ${err.status}). ${plainBody(err)} Your text is still in the editor — copy it somewhere safe before leaving the page.`;
+            }
+            return "Saving failed: the server can't be reached. Check your connection and try again — your text is still in the editor.";
+    }
+}
+
+/* Error bodies can be HTML pages; only surface short plain-text ones. */
+function plainBody(err) {
+    const body = (err.body || "").trim();
+    return !body.startsWith("<") && body.length <= 200 ? body : "";
+}
 
 function showError(message) {
     let box = document.getElementById("edit-error");

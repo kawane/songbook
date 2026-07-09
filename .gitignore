@@ -32,3 +32,8 @@ data/administrator.activated
 
 # vim swp files
 *.swp
+
+# Node (tests only, the site itself is zero-build)
+node_modules/
+tests/.data/
+.DS_Store
