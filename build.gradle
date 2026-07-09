@@ -9,12 +9,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.apache.lucene:lucene-core:9.9.0'
-    implementation 'org.apache.lucene:lucene-queryparser:9.9.0'
-    implementation 'org.apache.lucene:lucene-analyzers-common:8.11.2'
-    implementation 'io.undertow:undertow-core:2.3.10.Final'
+    implementation 'org.apache.lucene:lucene-core:10.4.0'
+    implementation 'org.apache.lucene:lucene-queryparser:10.4.0'
+    implementation 'io.undertow:undertow-core:2.3.18.Final'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'
 }
 
 application {

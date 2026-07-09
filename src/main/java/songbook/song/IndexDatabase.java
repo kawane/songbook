@@ -30,7 +30,6 @@ import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.SortField.Type;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopFieldDocs;
-import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.BytesRef;
@@ -142,7 +141,6 @@ public class IndexDatabase {
 
     public void search(String querystr, Appendable out, String mimeType) throws ParseException, IOException {
         int hitsPerPage = 500;
-        int totalHitsThreshold = 500;
         var reader = DirectoryReader.open(index);
         var searcher = new IndexSearcher(reader);
         var storeFields = reader.storedFields();
@@ -157,9 +155,7 @@ public class IndexDatabase {
             // the "song" arg specifies the default field to use
             // when no field is explicitly specified in the query.
             Query query = new QueryParser("song", analyzer).parse(querystr);
-            TopScoreDocCollector collector = TopScoreDocCollector.create(hitsPerPage, totalHitsThreshold);
-            searcher.search(query, collector);
-            hits = collector.topDocs().scoreDocs;
+            hits = searcher.search(query, hitsPerPage).scoreDocs;
         }
 
         if (Server.MIME_TEXT_HTML.equals(mimeType)) {
@@ -191,16 +187,11 @@ public class IndexDatabase {
 
     public void songsByArtist(String artist, Appendable out, String mimeType) throws ParseException, IOException {
         int hitsPerPage = 500;
-        int totalHitsThreshold = 500;
         IndexReader reader = DirectoryReader.open(index);
         IndexSearcher searcher = new IndexSearcher(reader);
 
-        ScoreDoc[] hits;
-
-        TopScoreDocCollector collector = TopScoreDocCollector.create(hitsPerPage, totalHitsThreshold);
         Query tq = new TermQuery(new Term("artist", artist));
-        searcher.search(tq, collector);
-        hits = collector.topDocs().scoreDocs;
+        ScoreDoc[] hits = searcher.search(tq, hitsPerPage).scoreDocs;
 
         if (Server.MIME_TEXT_HTML.equals(mimeType)) {
             Templates.startItems(out);
