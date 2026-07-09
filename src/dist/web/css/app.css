@@ -185,6 +185,13 @@ body {
     pointer-events: none;
 }
 
+/* On small screens the tap gesture is natural: save the space */
+@media (max-width: 640px) {
+    #hideToolbarButton {
+        display: none;
+    }
+}
+
 /* Small comfort margin so the last line isn't glued to the screen edge */
 #song-view {
     padding-bottom: 3rem;

@@ -33,6 +33,8 @@ song.addEventListener("click", (e) => {
 });
 // Keep the toolbar up while it is being used (e.g. repeated transpositions)
 toolbar.addEventListener("pointerdown", armHideTimer);
+// Explicit hide button: on desktop, clicking the song is a less natural reflex
+document.getElementById("hideToolbarButton").addEventListener("click", hideToolbar);
 showToolbar();
 
 // --- Font size ---
