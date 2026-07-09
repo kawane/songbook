@@ -129,6 +129,11 @@
         text-decoration: none;
     }
 
+    /* URLs are useless on paper: drop the link metadata lines entirely */
+    .song-link, .song-video, .song-audio {
+        display: none;
+    }
+
     @page {
         margin: 12mm;
     }
