@@ -61,3 +61,22 @@ Constat : Bootstrap 3.3.4 (2015), jQuery 1.11.2 (2014), RequireJS (obsolète), A
 3. **Refonte** : Bootstrap 5 ou CSS maison léger ; l'occasion d'ajouter les features utilisateur (auto-scroll pendant le jeu, transposition d'accords côté client, mode plein écran/pupitre).
 
 À discuter (brainstorming) : les objectifs d'usage réels — qui s'en sert (llgmusic.net → concerts ? répètes ?), sur quel device (tablette sur pupitre ?), et ce qui manque vraiment au quotidien.
+
+## Lifting frontend — fait (2026-07-05)
+
+Zéro-build conservé (ES modules natifs + CSS servis tels quels). Bootstrap 3 / jQuery / RequireJS / Ace / Glyphicons supprimés. En place :
+- **mesnos.style.css v0.1.44 vendorée** (`css/vendor/`) + couche app token-compatible (`css/app.css`) + `css/song.css` réécrite (tous les sélecteurs émis par SongUtils conservés). Dark mode via `data-theme` (convention components.mesnos.ovh), impression forcée en clair (bloc `@media print` final).
+- **Monaco 0.52.2 vendoré** (sous-ensemble AMD min/vs, ~4 Mo, `js/vendor/monaco/`) avec langage **songmark** (Monarch porté de vscode-songmark) et thèmes light/dark. Chargé uniquement sur `/edit` et `/new`, par import dynamique. **Fallback textarea sur mobile/tactile** (`pointer: coarse`).
+- JS en modules ES : `api.js` (fetch), `search.js`, `view.js` (transposition/plein écran/colonnes portés + **nouveau toggle accords**, qui sert aussi d'« imprimer sans accords » — avant, song-nochords.css n'était référencée nulle part), `edit.js`, `consoleApi.js` (simplifié, textareas).
+- Toolbar chanson : barre en bas de l'écran sur mobile (pouces), flottante en haut à droite sinon. SVG inline à la place des glyphicons.
+- Scripts de mise à jour des vendors : `tools/update-monaco.sh`, `tools/update-mesnos.sh` + `doc/Update_Vendored_Assets.md`.
+- Validé : docker build, placeholders 100% résolus, négociation Accept (song/plain/html), flux admin CRUD + 401, transposition G→G#, toggle accords, dark mode, Monaco + coloration, zéro erreur console. **Reste à vérifier à la main : l'aperçu d'impression** (2 colonnes, sans accords) et l'édition sur un vrai téléphone.
+
+## Manques dans components.mesnos.ovh (à remonter dans la lib)
+
+Écrits en attendant dans `css/app.css` de songbook, token-compatibles donc upstreamables tels quels :
+1. **Top nav / app-bar** (le `.top-nav` du site docs est dans docs.css, pas dans la lib) : brand + liens + zone recherche + wrap responsive.
+2. **List group** (`.item-list`/`.item`/`.item-title`/`.item-sub`) : lignes de résultats cliquables, hover, cible tactile ≥ `--size-touch-min`.
+3. **Button group / toolbar** (`.btn-group`) : boutons accolés (`.btn.square` existe mais pas le groupement).
+4. **Support impression** : reset print, utilitaire `.no-print`, bascule « thème clair forcé en print » (aujourd'hui les tokens dark `[data-theme=dark]` s'appliquent aussi à l'impression).
+5. (Mineur) input de recherche compact pour navbar.

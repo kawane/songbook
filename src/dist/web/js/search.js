@@ -1,20 +1,15 @@
-function search(query) {
-    window.location.pathname = "/search/" + query;
-    return false;
-}
-var searchForm = document.querySelector("#search");
-var queryInputSearch = document.querySelector("#querySearch");
-if (searchForm) {
-    searchForm.addEventListener("submit", function (e) {
+const form = document.getElementById("search");
+const input = document.getElementById("querySearch");
+
+if (form && input) {
+    form.addEventListener("submit", (e) => {
         e.preventDefault();
-        search(queryInputSearch.value);
+        window.location.pathname = "/search/" + encodeURIComponent(input.value);
     });
-}
-var searchPath = "/search/";
-if (window.location.pathname.indexOf(searchPath) == 0) {
-    var searchQuery = decodeURIComponent(window.location.pathname.substring(searchPath.length));
-    if (queryInputSearch) {
-        queryInputSearch.value = searchQuery;
+
+    // Prefill the search box when landing on a /search/{query} URL
+    const prefix = "/search/";
+    if (window.location.pathname.startsWith(prefix)) {
+        input.value = decodeURIComponent(window.location.pathname.substring(prefix.length));
     }
 }
-//# sourceMappingURL=search.js.map

@@ -1,12 +1,6 @@
+/* Song rendering without chord lines (lyrics-only printing). */
 @import url("song.css");
 
-.song-chord {
-	position: absolute;
-	top: -1em;
-	display: none;
-}
-
-.song-line-with-chords {
-	line-height: inherit;
-	position: relative;
+.song-chords, .song-chord {
+    display: none;
 }

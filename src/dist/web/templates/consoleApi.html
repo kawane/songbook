@@ -1,124 +1,92 @@
-<style>
-    #result {
-        margin-top: 1em;
-        height: 500px;
-    }
+<nav class="topnav no-print" role="navigation">
+    <a class="brand" href="/">Songs</a>
+    <a href="/artists">Artists</a>
+    <a href="/admin">Admin</a>
+    <button type="button" class="btn ghost square" title="Toggle theme" onclick="toggleTheme()" style="margin-left:auto">🌓</button>
+</nav>
+<div class="page">
+    <h1>Song Api Console</h1>
 
-    #create-songdata, #update-songdata {
-        height: 300px;
-    }
+    <ul id="services" class="flex gap-2" style="list-style:none;padding:0" role="navigation">
+        <li><a class="btn btn-secondary" href="#searchApi">Search</a></li>
+        <li><a class="btn btn-secondary" href="#get">Get</a></li>
+        <li><a class="btn btn-secondary" href="#create">Create</a></li>
+        <li><a class="btn btn-secondary" href="#update">Update</a></li>
+        <li><a class="btn btn-secondary" href="#delete">Delete</a></li>
+    </ul>
 
-    .action-form {
-    }
-</style>
-<div class="container">
-    <div>
-        <div class="col-sm-6">
-            <h1>
-                Song Api Console
-            </h1>
-        </div>
-        <div class="form-group col-sm-6">
-            <label for="server-url" class="control-label">Server URL</label>
-            <input class="form-control" type="text"  name="serverUrl" id="server-url" value="/songs/"/>
-        </div>
+    <div id="searchApi" class="action-form">
+        <form>
+            <div class="form-group">
+                <label for="search-query">Query</label>
+                <input class="dialog-input" type="text" name="query" id="search-query">
+            </div>
+            <div class="form-group">
+                <label for="search-content-type">Content Type</label>
+                <select class="dialog-input" name="contentType" id="search-content-type">
+                    <option value="text/plain">text</option>
+                    <option value="text/html">html</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" name="search">Search</button>
+        </form>
     </div>
-    <div>
-        <ul id="services" class="nav nav-pills" role="navigation">
-            <li><a href="#searchApi">Search</a></li>
-            <li><a href="#get">Get</a></li>
-            <li><a href="#create">Create</a></li>
-            <li><a href="#update">Update</a></li>
-            <li><a href="#delete">Delete</a></li>
-        </ul>
+
+    <div id="get" class="action-form">
+        <form>
+            <div class="form-group">
+                <label for="get-id">Id</label>
+                <input class="dialog-input" type="text" name="id" id="get-id">
+            </div>
+            <div class="form-group">
+                <label for="get-content-type">Content Type</label>
+                <select class="dialog-input" name="contentType" id="get-content-type">
+                    <option value="text/plain">text</option>
+                    <option value="text/html">html</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" name="get">Get</button>
+        </form>
     </div>
-    <div class="col-sm-6">
 
-        <div id="searchApi" class="action-form">
-            <form role="form">
-                <div class="form-group">
-                    <label for="search-query">Query</label>
-                    <input class="form-control" type="text"  name="query" id="search-query"/>
-                </div>
-                <div class="form-group">
-                    <label for="search-content-type">Content Type</label>
-
-                    <select class="form-control" name="contentType" id="search-content-type">
-                        <option value="text/plain">text</option>
-                        <option value="text/html">html</option>
-                    </select>
-                </div>
-
-                <button class="btn btn-default" name="search">Search</button>
-            </form>
-        </div>
-
-        <div id="get" class="action-form">
-            <form >
-                <div class="form-group">
-                    <label for="get-id">Id</label>
-                    <input class="form-control" type="text"  name="id" id="get-id"/>
-
-                    
-                </div>
-                <div class="form-group">
-                    <label for="get-content-type">Content Type</label>
-                    <select class="form-control" name="contentType" id="get-content-type">
-                        <option value="text/plain">text</option>
-                        <option value="text/html">html</option>
-                    </select>
-                </div>
-
-                <button class="btn btn-default" name="get">Get</button>
-            </form>
-        </div>
-
-        <div id="create" class="action-form">
-            <form >
-                <div class="form-group">
-                    <label for="create-songdata">Song Data</label>
-                    <div id="create-songdata"></div>
-                </div>
-                <button class="btn btn-default" name="create">Create</button>
-            </form>
-        </div>
-
-        <div id="update" class="action-form">
-            <form >
-                <div class="form-group">
-                    <label for="update-id">Id</label>
-                    <input class="form-control" type="text"  name="id" id="update-id"/>
-                </div>
-                <div class="form-group">
-                    <label for="update-songdata">Song Data</label>
-                    <div id="update-songdata"></div>
-                </div>
-                <button class="btn btn-default" name="update">Update</button>
-            </form>
-        </div>
-
-        <div id="delete" class="action-form">
-            <form >
-                <div class="form-group">
-                    <label for="delete-id">Id</label>
-                    <input class="form-control" type="text"  name="id" id="delete-id"/>
-                </div>
-                <button class="btn btn-default" name="delete">Delete</button>
-            </form>
-        </div>
-
+    <div id="create" class="action-form">
+        <form>
+            <div class="form-group">
+                <label for="create-songdata">Song Data</label>
+                <textarea class="dialog-input console-songdata" id="create-songdata" rows="12" wrap="off" spellcheck="false"></textarea>
+            </div>
+            <button class="btn btn-primary" name="create">Create</button>
+        </form>
     </div>
-    <div id="result" class="col-sm-6"></div>
 
+    <div id="update" class="action-form">
+        <form>
+            <div class="form-group">
+                <label for="update-id">Id</label>
+                <input class="dialog-input" type="text" name="id" id="update-id">
+            </div>
+            <div class="form-group">
+                <label for="update-songdata">Song Data</label>
+                <textarea class="dialog-input console-songdata" id="update-songdata" rows="12" wrap="off" spellcheck="false"></textarea>
+            </div>
+            <button class="btn btn-primary" name="update">Update</button>
+        </form>
+    </div>
+
+    <div id="delete" class="action-form">
+        <form>
+            <div class="form-group">
+                <label for="delete-id">Id</label>
+                <input class="dialog-input" type="text" name="id" id="delete-id">
+            </div>
+            <button class="btn btn-danger" name="delete">Delete</button>
+        </form>
+    </div>
+
+    <div class="form-group">
+        <label for="result">Result</label>
+        <pre id="result" class="code-block" style="min-height:8rem;overflow:auto"></pre>
+    </div>
 </div>
 
-<script src='/js/ace/ace.js'></script>
-
-<script>
-    require.config({paths: {
-        ace: "/js/ace/ace",
-    }})
-    require(["./consoleApi"], function() {});
-</script>
-
-
+<script type="module" src="/js/consoleApi.js"></script>

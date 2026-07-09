@@ -1,62 +1,38 @@
+/*
+ * Song rendering. Every .song-* selector below matches markup emitted by
+ * SongUtils.writeHtml() on the server — do not rename them here.
+ */
+
+#song-view {
+    display: inline-block;
+    padding: var(--space-3);
+    overflow-x: auto;
+    max-width: 100%;
+    box-sizing: border-box;
+}
 
 .song {
-	font-family: consolas, monospace;
-	white-space: nowrap;
-}
-
-
-.song-toolbar {
-    position: fixed;
-    right: 0;
-    z-index: 2;
-}
-
-.song-navbar {
-    position: fixed;
-    left: 0;
-}
-
-@media print {
-    .song-toolbar, .song-navbar {
-        visibility: hidden;
-        display: none;
-    }
-}
-
-.song-header {
-}
-
-.song-header .song-metadata-name {
-    text-align: left;
-}
-
-
-.song-content {
-}
-
-.song-column {
-	-webkit-column-count: 2; /* Chrome, Safari, Opera */
-	-moz-column-count: 2; /* Firefox */
-	column-count: 2;
-
-	-webkit-column-rule: 1px dashed #dddddd; /* Chrome, Safari, Opera */
-	-moz-column-rule: 1px dashed #dddddd; /* Firefox */
-	column-rule: 1px dashed #dddddd;
+    font-family: var(--font-mono, consolas, monospace);
+    white-space: nowrap;
 }
 
 .song-title {
-    font-weight: bold;
+    font-weight: var(--font-weight-bold, bold);
     font-size: 180%;
 }
 
 .song-metadata-name {
-    font-weight: bold;
+    font-weight: var(--font-weight-bold, bold);
     text-transform: capitalize;
-    color: rgb(0,165,0);
+    color: var(--meta);
 }
 
 .song-metadata-value {
     font-style: italic;
+}
+
+.song-header a {
+    color: var(--color-accent, #2563eb);
 }
 
 .song-intro,
@@ -73,49 +49,87 @@
 .song-verse-6,
 .song-verse-7,
 .song-verse-8,
-.song-verse-9
-{
-	margin-top: 2.5ex;
-	-webkit-column-break-inside: avoid;
-	page-break-inside: avoid;
-	column-break-inside: avoid;
+.song-verse-9 {
+    margin-top: 2.5ex;
+    break-inside: avoid;
 }
 
 .song-chorus {
-	padding-left: 1em;
+    padding-left: 1em;
 }
 
 .song-chorus > .song-metadata-name {
-	font-style: italic;
-	line-height: 1.5em;
+    font-style: italic;
+    line-height: 1.5em;
 }
 
 .song-intro-recall,
 .song-chorus-recall,
-.song-bridge-recall
-{
-	padding-left: 1em;
-	font-style: italic;
-	font-weight: bold;
-	font-size: 120%;
+.song-bridge-recall {
+    padding-left: 1em;
+    font-style: italic;
+    font-weight: var(--font-weight-bold, bold);
+    font-size: 120%;
 }
 
+/* white-space: pre is load-bearing: chords align with lyrics by columns */
 .song-line {
     white-space: pre;
 }
 
+/* Negative margins keep each chord line tight against its lyrics line */
 .song-chords {
     margin-bottom: -6px;
     margin-top: -6px;
     white-space: pre;
-	font-weight: bold;
-	color: rgb(33,128,255);
+    font-weight: var(--font-weight-bold, bold);
+    color: var(--chord);
 }
 
 .song-chords + .song-chords {
-	line-height: 2em
+    line-height: 2em;
 }
 
+/* Two-column layout, toggled from view.js on wide screens */
+.song-column {
+    column-count: 2;
+    column-rule: 1px dashed var(--rule);
+}
 
+/* Hide chords (toggle in the song toolbar, also used for printing) */
+.song-hide-chords .song-chords {
+    display: none;
+}
 
+/*
+ * Print: always black on white, whatever the screen theme. Overrides the
+ * mesnos dark tokens ([data-theme="dark"]), so this block must stay last.
+ */
+@media print {
+    :root, :root[data-theme="dark"] {
+        --color-bg-base: #ffffff;
+        --color-bg-surface: #ffffff;
+        --color-bg-elevated: #ffffff;
+        --color-text-primary: #000000;
+        --color-text-secondary: #333333;
+        --color-text-muted: #555555;
+        --color-border: #bbbbbb;
+        --chord: #2180ff;
+        --meta: #007000;
+        --rule: #bbbbbb;
+    }
 
+    body {
+        background: #ffffff;
+        color: #000000;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    @page {
+        margin: 12mm;
+    }
+}

@@ -1,22 +1,13 @@
-
-
-<div id="toolbar" class="song-toolbar btn-toolbar" role="toolbar" aria-label="Toolbar">
+<div id="toolbar" class="song-toolbar no-print" role="toolbar" aria-label="Toolbar">
     <div class="btn-group" role="group" aria-label="Navigation">
-        <a href="/" title="Back to list" class="btn btn-default glyphicon glyphicon-chevron-left"></a>
+        <a href="/" title="Back to list" class="btn square"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></a>
     </div>
     <div id="editToolbar" class="btn-group ${role}-admin" role="group" aria-label="Edition">
-        <a id="saveButton" href="#save" title="Save" class="btn btn-default  glyphicon glyphicon-floppy-save"></a>
+        <a id="saveButton" href="#save" title="Save" class="btn square btn-primary"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></a>
+        <a id="deleteButton" href="/delete/${songId}" title="Delete" class="btn square" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a>
     </div>
 </div>
 
 <div id="song-edit" data-songid="${songId}">${song}</div>
 
-<script src='/js/ace/ace.js'></script>
-<script>
-    var editToolbar = document.getElementById('editToolbar');
-    if ('${songId}') {
-        editToolbar.innerHTML += '<a id="deleteButton" href="/delete/${songId}" title="Delete" class="btn btn-default glyphicon glyphicon-trash"></a> ';
-    }
-    require(["./edit"], function() {});
-</script>
-
+<script type="module" src="/js/edit.js"></script>

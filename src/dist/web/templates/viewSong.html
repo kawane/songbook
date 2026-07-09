@@ -1,33 +1,27 @@
-<div class="song-navbar btn-toolbar" role="toolbar" aria-label="Toolbar">
-
-</div>
-
-<div id="toolbar" class="song-toolbar btn-toolbar" role="toolbar" aria-label="Toolbar">
+<div id="toolbar" class="song-toolbar no-print" role="toolbar" aria-label="Toolbar">
     <div class="btn-group" role="group" aria-label="Navigation">
-        <a href="/" title="Back to list" class="btn btn-default glyphicon glyphicon-chevron-left"></a>
+        <a href="/" title="Back to list" class="btn square"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></a>
     </div>
     <div class="btn-group ${role}-admin" role="group" aria-label="Edition">
-        <a id="editButton" href="/edit/${songId}" title="Edit" class="btn btn-default glyphicon glyphicon-pencil"></a>
-        <a id="deleteButton" href="/delete/${songId}" title="Delete" class="btn btn-default glyphicon glyphicon-trash"></a>
+        <a id="editButton" href="/edit/${songId}" title="Edit" class="btn square"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></a>
+        <a id="deleteButton" href="/delete/${songId}" title="Delete" class="btn square"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a>
     </div>
-    <div class="btn-group" role="group" aria-label="Resize Text">
-        <button id="biggerButton" title="Bigger" class="btn btn-default glyphicon glyphicon-zoom-in"></button>
-        <button id="smallerButton" title="Smaller" class="btn btn-default glyphicon glyphicon-zoom-out"></button>
+    <div class="btn-group" role="group" aria-label="Resize text">
+        <button id="biggerButton" title="Bigger text" class="btn square"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
+        <button id="smallerButton" title="Smaller text" class="btn square"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
     </div>
     <div class="btn-group" role="group" aria-label="Transposition">
-        <button id="transposeLessButton" title="transpose halph-tone less" class="btn btn-default glyphicon glyphicon-arrow-down"></button>
-        <button id="transposeDisplay" title="Current transposition" class="btn btn-default glyphicon">0</button>
-        <button id="transposeMoreButton" title="transpose halph-tone more" class="btn btn-default glyphicon glyphicon-arrow-up"></button>
+        <button id="transposeLessButton" title="Transpose half-tone down" class="btn square"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></button>
+        <button id="transposeDisplay" title="Current transposition" class="btn square">0</button>
+        <button id="transposeMoreButton" title="Transpose half-tone up" class="btn square"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
     </div>
-    <div class="btn-group" role="group" aria-label="Screen">
-        <button id="fullScreenButton" title="FullScreen" class="btn btn-default glyphicon glyphicon-fullscreen"></button>
+    <div class="btn-group" role="group" aria-label="Display">
+        <button id="chordsButton" title="Show/hide chords" class="btn square active"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></button>
+        <button id="fullScreenButton" title="Full screen" class="btn square"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/></svg></button>
     </div>
 </div>
-<div id="song-view" class="container-fluid">
+<div id="song-view">
     ${song}
 </div>
 
-<script>
-    require(["./view"], function() {});
-</script>
-
+<script type="module" src="/js/view.js"></script>

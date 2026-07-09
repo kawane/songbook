@@ -1,16 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <!-- Theme detection first, blocks parsing to prevent FOUC (mesnos convention) -->
+    <script>
+        (function () {
+            var t = localStorage.getItem('theme') ||
+                (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : '');
+            if (t) document.documentElement.dataset.theme = t;
+        })();
+        function toggleTheme() {
+            var next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+            document.documentElement.dataset.theme = next;
+            localStorage.setItem('theme', next);
+        }
+    </script>
     <title>${title}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap -->
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <link href="/css/main.css" rel="stylesheet" media="screen">
-    <link href="/css/song.css" rel="stylesheet" media="screen,print">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="/css/vendor/mesnos.style.css">
+    <link rel="stylesheet" href="/css/app.css" media="screen,print">
+    <link id="songStyle" rel="stylesheet" href="/css/song.css" media="screen,print">
 </head>
 <body>
-
-<script src='/js/require.js' data-main='/js/search'></script>
-

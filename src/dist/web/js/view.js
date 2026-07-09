@@ -1,160 +1,100 @@
-var song = document.getElementById("song-view");
-var fontSize = 100;
-var biggerButton = document.getElementById("biggerButton");
-biggerButton.addEventListener("click", function (e) {
+const song = document.getElementById("song-view");
+
+// --- Font size ---
+
+let fontSize = 100;
+document.getElementById("biggerButton").addEventListener("click", () => {
     fontSize += 10;
     song.style.fontSize = fontSize + "%";
 });
-var smallerButton = document.getElementById("smallerButton");
-smallerButton.addEventListener("click", function (e) {
+document.getElementById("smallerButton").addEventListener("click", () => {
     fontSize -= 10;
     song.style.fontSize = fontSize + "%";
 });
-// FullScreen
-var fullScreenButton = document.getElementById("fullScreenButton");
-fullScreenButton.addEventListener("click", function (e) {
-    if (isFullScreen()) {
-        exitFullScreen();
-    }
-    else {
-        requestFullScreen(document.body);
-    }
+
+// --- Full screen ---
+
+const fullScreenButton = document.getElementById("fullScreenButton");
+const fullscreenEnabled = document.fullscreenEnabled || document.webkitFullscreenEnabled;
+if (!fullscreenEnabled) {
+    // iPhone Safari has no fullscreen API
+    fullScreenButton.hidden = true;
+} else {
+    fullScreenButton.addEventListener("click", () => {
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        } else {
+            const el = document.body;
+            (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+        }
+    });
+    const fullscreenChange = () => {
+        const active = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+        fullScreenButton.classList.toggle("active", active);
+    };
+    document.addEventListener("fullscreenchange", fullscreenChange);
+    document.addEventListener("webkitfullscreenchange", fullscreenChange);
+}
+
+// --- Chords visibility (screen display and printing without chords) ---
+
+const chordsButton = document.getElementById("chordsButton");
+chordsButton.addEventListener("click", () => {
+    const hidden = song.classList.toggle("song-hide-chords");
+    chordsButton.classList.toggle("active", !hidden);
 });
-var fullscreenChange = function () {
-    if (isFullScreen()) {
-        fullScreenButton.classList.add("active");
-    }
-    else {
-        fullScreenButton.classList.remove("active");
-    }
-};
-document.addEventListener("fullscreenchange ", fullscreenChange);
-document.addEventListener("webkitfullscreenchange", fullscreenChange);
-document.addEventListener("mozfullscreenchange", fullscreenChange);
-document.addEventListener("MSFullscreenChange", fullscreenChange);
-function isFullScreen() {
-    if (document["isFullScreen"]) {
-        return document["isFullScreen"];
-    }
-    else if (document["webkitIsFullScreen"]) {
-        return document["webkitIsFullScreen"];
-    }
-    else if (document["mozFullScreen"]) {
-        return document["mozFullScreen"];
-    }
-}
-function exitFullScreen() {
-    if (document["exitFullscreen"]) {
-        return document["exitFullscreen"]();
-    }
-    else if (document["webkitExitFullscreen"]) {
-        return document["webkitExitFullscreen"]();
-    }
-    else if (document["mozCancelFullScreen"]) {
-        return document["mozCancelFullScreen"]();
-    }
-}
-function requestFullScreen(element) {
-    if (element["requestFullScreen"]) {
-        element["requestFullScreen"]();
-    }
-    else if (element["webkitRequestFullScreen"]) {
-        element["webkitRequestFullScreen"]();
-    }
-    else if (element["mozRequestFullScreen"]) {
-        element["mozRequestFullScreen"]();
-    }
-}
-// Restore two column current user pref
-var songWidth = song.clientWidth;
-var songHeight = song.clientHeight;
-var updateColumn = function () {
-    var needColumn = songWidth < window.innerWidth / 2;
-    needColumn = needColumn && songHeight > window.innerHeight;
-    var songContent = song.querySelector(".song-content");
-    if (needColumn) {
-        songContent.classList.add("song-column");
-    }
-    else {
-        songContent.classList.remove("song-column");
-    }
+
+// --- Two-column layout on wide screens ---
+
+const songWidth = song.clientWidth;
+const songHeight = song.clientHeight;
+const updateColumn = () => {
+    const needColumn = songWidth < window.innerWidth / 2 && songHeight > window.innerHeight;
+    song.querySelector(".song-content").classList.toggle("song-column", needColumn);
 };
 window.addEventListener("resize", updateColumn);
 updateColumn();
-// Transposition
-var transposeCount = 0;
-var musicalKey = null;
-var transposeDisplay = document.getElementById("transposeDisplay");
-var musicalKeyElt = song.querySelector(".song-metadata-value[itemprop=musicalKey]");
-if (musicalKeyElt) {
-    musicalKey = musicalKeyElt.textContent;
-    transposeDisplay.innerHTML = musicalKey;
-}
-else {
-    transposeDisplay.innerHTML = "0";
-}
-var forEachNode = function (list, callback, context) {
-    return Array.prototype.forEach.call(list, callback, context);
+
+// --- Transposition ---
+
+const notesIndexes = {
+    "C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3, "E": 4, "F": 5,
+    "F#": 6, "Gb": 6, "G": 7, "G#": 8, "Ab": 8, "A": 9, "A#": 10, "Bb": 10, "B": 11,
 };
-var transposeLessButton = document.getElementById("transposeLessButton");
-transposeLessButton.addEventListener("click", function (e) {
-    transposeAll(-1);
-});
-var transposeMoreButton = document.getElementById("transposeMoreButton");
-transposeMoreButton.addEventListener("click", function (e) {
-    transposeAll(1);
-});
-function transposeAll(count) {
-    transposeCount += count;
-    forEachNode(song.querySelectorAll(".song-chord"), function (chordElt) {
-        chordElt.textContent = transpose(chordElt.textContent, count);
-    });
-    if (musicalKey) {
-        transposeDisplay.innerHTML = transpose(musicalKey, transposeCount);
-    }
-    else {
-        transposeDisplay.innerHTML = transposeCount + "";
-    }
+const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+function getNoteIndex(i) {
+    return ((i % 12) + 12) % 12;
 }
-var notesIndexes = {
-    "C": 0,
-    "C#": 1,
-    "Db": 1,
-    "D": 2,
-    "D#": 3,
-    "Eb": 3,
-    "E": 4,
-    "F": 5,
-    "F#": 6,
-    "Gb": 6,
-    "G": 7,
-    "G#": 8,
-    "Ab": 8,
-    "A": 9,
-    "A#": 10,
-    "Bb": 10,
-    "B": 11
-};
-var notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
 function transpose(chord, demiToneCount) {
-    var note = chord[0];
+    let note = chord[0];
     if (chord.length > 1 && (chord[1] === "b" || chord[1] === "#")) {
         note += chord[1];
     }
-    var newNote = notes[getNoteIndex(notesIndexes[note] + demiToneCount)];
-    var indexOfBass = chord.indexOf("/");
+    const newNote = notes[getNoteIndex(notesIndexes[note] + demiToneCount)];
+    const indexOfBass = chord.indexOf("/");
     if (indexOfBass !== -1 && indexOfBass < chord.length - 1) {
         chord = chord.substring(0, indexOfBass + 1) + transpose(chord.substring(indexOfBass + 1), demiToneCount);
     }
     return newNote + chord.substring(note.length);
 }
-function getNoteIndex(i) {
-    if (i < 0) {
-        return getNoteIndex(12 + i);
+
+let transposeCount = 0;
+const transposeDisplay = document.getElementById("transposeDisplay");
+const musicalKeyElt = song.querySelector(".song-metadata-value[itemprop=musicalKey]");
+const musicalKey = musicalKeyElt ? musicalKeyElt.textContent : null;
+transposeDisplay.textContent = musicalKey ?? "0";
+
+function transposeAll(count) {
+    transposeCount += count;
+    for (const chordElt of song.querySelectorAll(".song-chord")) {
+        chordElt.textContent = transpose(chordElt.textContent, count);
     }
-    if (i >= 12) {
-        return getNoteIndex(i - 12);
-    }
-    return i;
+    transposeDisplay.textContent = musicalKey
+        ? transpose(musicalKey, transposeCount)
+        : String(transposeCount);
 }
-//# sourceMappingURL=view.js.map
+
+document.getElementById("transposeLessButton").addEventListener("click", () => transposeAll(-1));
+document.getElementById("transposeMoreButton").addEventListener("click", () => transposeAll(1));
