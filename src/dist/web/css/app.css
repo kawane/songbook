@@ -157,8 +157,9 @@ body {
 
 /* --- Song page floating toolbar (songbook-specific) --- */
 
-/* Bottom bar on every screen size: reachable with thumbs on mobile,
-   and keeps the song text unobstructed on desktop */
+/* Bottom bar on every screen size, video-player style: translucent, and
+   view.js auto-hides it after a few seconds — tap the song to bring it back.
+   The lyrics keep the whole screen while playing. */
 .song-toolbar {
     position: fixed;
     bottom: 0;
@@ -170,14 +171,23 @@ body {
     gap: var(--space-2);
     padding: var(--space-2);
     padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
-    background: var(--color-bg-surface);
+    background: color-mix(in srgb, var(--color-bg-surface) 75%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-top: var(--border-width, 1px) solid var(--color-border);
     z-index: var(--z-fixed, 100);
+    transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
-/* Keep the last song lines reachable above the bottom bar */
+.song-toolbar-hidden {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Small comfort margin so the last line isn't glued to the screen edge */
 #song-view {
-    padding-bottom: 5rem;
+    padding-bottom: 3rem;
 }
 
 /* --- Editor host (songbook-specific) --- */

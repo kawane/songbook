@@ -1,5 +1,40 @@
 const song = document.getElementById("song-view");
 
+// --- Auto-hiding toolbar (video-player pattern): shown on load so it stays
+// discoverable, fades out after a few seconds, and a tap on the song brings
+// it back. While playing, the lyrics get the whole screen. ---
+
+const toolbar = document.getElementById("toolbar");
+const HIDE_DELAY = 5000;
+let hideTimer;
+
+function showToolbar() {
+    toolbar.classList.remove("song-toolbar-hidden");
+    armHideTimer();
+}
+
+function hideToolbar() {
+    clearTimeout(hideTimer);
+    toolbar.classList.add("song-toolbar-hidden");
+}
+
+function armHideTimer() {
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(hideToolbar, HIDE_DELAY);
+}
+
+song.addEventListener("click", (e) => {
+    if (e.target.closest("a, button")) return;
+    if (toolbar.classList.contains("song-toolbar-hidden")) {
+        showToolbar();
+    } else {
+        hideToolbar();
+    }
+});
+// Keep the toolbar up while it is being used (e.g. repeated transpositions)
+toolbar.addEventListener("pointerdown", armHideTimer);
+showToolbar();
+
 // --- Font size ---
 
 let fontSize = 100;
