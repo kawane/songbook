@@ -113,4 +113,28 @@ describe("authorization", () => {
             sessionKey = ADMIN_KEY;
         }
     });
+
+    // A browser that kept an old SessionKey at a narrower path sends both
+    // cookies; the server must not pick the stale one and drop admin rights.
+    it("stays admin when a stale duplicate SessionKey cookie is also sent", async () => {
+        sessionKey = `stale-key-0000; SessionKey=${ADMIN_KEY}`;
+        try {
+            const id = await api.createSong(SONG);
+            expect(id).toBeTruthy();
+            await api.deleteSong(id);
+        } finally {
+            sessionKey = ADMIN_KEY;
+        }
+    });
+
+    it("stays admin when the stale cookie comes second", async () => {
+        sessionKey = `${ADMIN_KEY}; SessionKey=stale-key-0000`;
+        try {
+            const id = await api.createSong(SONG);
+            expect(id).toBeTruthy();
+            await api.deleteSong(id);
+        } finally {
+            sessionKey = ADMIN_KEY;
+        }
+    });
 });

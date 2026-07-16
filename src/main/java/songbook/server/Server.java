@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,7 +27,6 @@ import io.undertow.server.handlers.ExceptionHandler;
 import io.undertow.server.handlers.GracefulShutdownHandler;
 import io.undertow.server.handlers.resource.FileResourceManager;
 import io.undertow.util.AttachmentKey;
-import io.undertow.util.Cookies;
 import io.undertow.util.HeaderValues;
 import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
@@ -186,13 +184,28 @@ public class Server {
 	protected HttpHandler sessionHandler(HttpHandler next) {
 		// TODO may be use SessionCookieConfig if it helps
 		return exchange -> {
+			// A browser can send several SessionKey cookies at once — typically a
+			// stale one stored at a narrower path (older versions set no Path)
+			// next to the current one. Keep an administrator key if any of them
+			// is one, otherwise admin rights silently drop on some pages only.
+			// The header is parsed by hand because Undertow's parseRequestCookies
+			// collects into a Set where same-name cookies are equal: it would
+			// discard all but one of the duplicates before we can compare them.
 			String sessionKey = null;
-			var cookies = new HashSet<Cookie>();
-			Cookies.parseRequestCookies(10, false,
-					exchange.getRequestHeaders().get(Headers.COOKIE), cookies);
-			for (Cookie cookie : cookies) {
-				if (SESSION_KEY.equals(cookie.getName())) {
-					sessionKey = cookie.getValue();
+			HeaderValues cookieHeaders = exchange.getRequestHeaders().get(Headers.COOKIE);
+			if (cookieHeaders != null) {
+				for (String cookieHeader : cookieHeaders) {
+					for (String pair : cookieHeader.split(";")) {
+						int equals = pair.indexOf('=');
+						if (equals == -1) {
+							continue;
+						}
+						String name = pair.substring(0, equals).trim();
+						String value = pair.substring(equals + 1).trim();
+						if (SESSION_KEY.equals(name) && (sessionKey == null || isAdministrator(value))) {
+							sessionKey = value;
+						}
+					}
 				}
 			}
 
