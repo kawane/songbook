@@ -1,8 +1,8 @@
 /*
- * Songbook application layer, built on the mesnos design system tokens
- * (css/vendor/mesnos.style.css). Everything here either fills a gap in the
- * library (topnav, item list, button groups, print support — candidates to
- * upstream into components.mesnos.ovh) or is songbook-specific.
+ * Songbook application layer, on top of the mesnos design system
+ * (css/vendor/mesnos.style.css) which provides the tokens, the base reset and
+ * the shared patterns (.topnav, .item-list, .btn-group, print utilities).
+ * Only songbook-specific styles belong here.
  */
 
 :root {
@@ -17,18 +17,12 @@
     --meta: #4cc38a;
 }
 
-/* html needs its own background: without it, body's background is promoted
-   to the page canvas and body paints nothing — in fullscreen the browser's
-   black ::backdrop then shows through (black page in light mode) */
+/* html needs its own background — the library only sets body's. Without it
+   body's background is promoted to the page canvas and body paints nothing:
+   in fullscreen the browser's black ::backdrop then shows through (black
+   page in light mode). */
 html {
     background: var(--color-bg-base);
-}
-
-body {
-    margin: 0;
-    background: var(--color-bg-base);
-    color: var(--color-text-primary);
-    font-family: var(--font-sans);
 }
 
 /* Role-based visibility: templates emit `${role}-admin` / `${role}-user`.
@@ -37,125 +31,7 @@ body {
     display: none !important;
 }
 
-/* --- Top nav (missing from mesnos library) --- */
-
-.topnav {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    background: var(--color-bg-surface);
-    border-bottom: var(--border-width, 1px) solid var(--color-border);
-}
-
-.topnav a {
-    color: var(--color-text-primary);
-    text-decoration: none;
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-sm);
-    min-height: var(--size-btn-sm);
-    display: inline-flex;
-    align-items: center;
-}
-
-.topnav a:hover {
-    background: var(--color-bg-elevated);
-}
-
-.topnav .brand {
-    font-weight: var(--font-weight-bold);
-}
-
-.topnav-search {
-    flex: 1 1 12rem;
-    display: flex;
-    margin: 0;
-}
-
-.topnav-search input {
-    flex: 1;
-    min-width: 0;
-    padding: var(--space-1-5) var(--space-2);
-    font-size: var(--font-size-base);
-    font-family: inherit;
-    color: var(--color-text-primary);
-    background: var(--color-input-bg);
-    border: var(--border-width, 1px) solid var(--color-input-border);
-    border-radius: var(--radius-md);
-}
-
-.topnav-search input:focus {
-    outline: none;
-    border-color: var(--color-input-focus, var(--color-accent));
-}
-
-/* --- Item list for search results (missing from mesnos library) --- */
-
-.item-list {
-    display: flex;
-    flex-direction: column;
-    margin: var(--space-3) 0;
-    border: var(--border-width, 1px) solid var(--color-border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-}
-
-.item {
-    display: block;
-    padding: var(--space-2) var(--space-3);
-    min-height: var(--size-touch-min);
-    box-sizing: border-box;
-    color: var(--color-text-primary);
-    text-decoration: none;
-    background: var(--color-bg-surface);
-}
-
-.item + .item {
-    border-top: var(--border-width, 1px) solid var(--color-border);
-}
-
-.item:hover {
-    background: var(--color-bg-elevated);
-}
-
-.item-title {
-    margin: 0;
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-}
-
-.item-sub {
-    margin: 0;
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
-}
-
-/* --- Button group / toolbar (missing from mesnos library) --- */
-
-.btn-group {
-    display: inline-flex;
-}
-
-.btn-group > .btn {
-    border-radius: 0;
-}
-
-.btn-group > .btn:first-child {
-    border-top-left-radius: var(--radius-md);
-    border-bottom-left-radius: var(--radius-md);
-}
-
-.btn-group > .btn:last-child {
-    border-top-right-radius: var(--radius-md);
-    border-bottom-right-radius: var(--radius-md);
-}
-
-.btn-group > .btn + .btn {
-    margin-left: calc(-1 * var(--border-width, 1px));
-}
-
-/* --- Song page floating toolbar (songbook-specific) --- */
+/* --- Song page floating toolbar --- */
 
 /* Bottom bar on every screen size, video-player style: translucent, and
    view.js auto-hides it after a few seconds — tap the song to bring it back.
@@ -197,7 +73,7 @@ body {
     padding-bottom: 3rem;
 }
 
-/* --- Editor host (songbook-specific) --- */
+/* --- Editor host --- */
 
 #song-edit {
     position: absolute;
@@ -247,10 +123,12 @@ body {
     vertical-align: -0.25em;
 }
 
-/* --- Print (missing from mesnos library: reset + .no-print utility) --- */
+/* --- Print --- */
 
+/* The library already hides .no-print/.topnav and forces black on white.
+   Song-specific print rules live in song.css, which must stay loaded last. */
 @media print {
-    .no-print, .topnav, .song-toolbar {
+    .song-toolbar {
         display: none !important;
     }
 }

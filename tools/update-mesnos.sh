@@ -3,7 +3,7 @@
 # Bump VERSION, run from the repo root, check the site rendering, then commit.
 set -eu
 
-VERSION="0.1.44"
+VERSION="0.2.0"
 DEST="src/dist/web/css/vendor"
 
 mkdir -p "$DEST"

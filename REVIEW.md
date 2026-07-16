@@ -72,14 +72,18 @@ Zéro-build conservé (ES modules natifs + CSS servis tels quels). Bootstrap 3 /
 - Scripts de mise à jour des vendors : `tools/update-monaco.sh`, `tools/update-mesnos.sh` + `doc/Update_Vendored_Assets.md`.
 - Validé : docker build, placeholders 100% résolus, négociation Accept (song/plain/html), flux admin CRUD + 401, transposition G→G#, toggle accords, dark mode, Monaco + coloration, zéro erreur console. **Reste à vérifier à la main : l'aperçu d'impression** (2 colonnes, sans accords) et l'édition sur un vrai téléphone.
 
-## Manques dans components.mesnos.ovh (à remonter dans la lib)
+## Manques dans components.mesnos.ovh — ~~à remonter~~ upstreamés en v0.2.0 (2026-07-16)
 
-Écrits en attendant dans `css/app.css` de songbook, token-compatibles donc upstreamables tels quels :
-1. **Top nav / app-bar** (le `.top-nav` du site docs est dans docs.css, pas dans la lib) : brand + liens + zone recherche + wrap responsive.
-2. **List group** (`.item-list`/`.item`/`.item-title`/`.item-sub`) : lignes de résultats cliquables, hover, cible tactile ≥ `--size-touch-min`.
-3. **Button group / toolbar** (`.btn-group`) : boutons accolés (`.btn.square` existe mais pas le groupement).
-4. **Support impression** : reset print, utilitaire `.no-print`, bascule « thème clair forcé en print » (aujourd'hui les tokens dark `[data-theme=dark]` s'appliquent aussi à l'impression).
-5. (Mineur) input de recherche compact pour navbar.
+Les patterns écrits localement ici ont été upstreamés dans la lib (phase 1 du plan écosystème) et publiés en **v0.2.0**. Songbook les consomme désormais depuis le vendor, les doublons locaux ont été supprimés d'`app.css` (cf. `doc/Adopt_Mesnos_0.2.0.md`) :
+1. ~~Top nav / app-bar~~ → `.topnav`, `.topnav a`, `.topnav .brand`, `.topnav-search` dans la lib (+ bonus : override `@media (pointer:coarse)` qui passe les liens à `--size-touch-min`).
+2. ~~List group~~ → `.item-list`/`.item`/`.item-title`/`.item-sub` dans la lib.
+3. ~~Button group~~ → `.btn-group` dans la lib (cible `> button` nu en plus de `> .btn`).
+4. ~~Support impression~~ → `@media print` dans la lib : masque `.no-print`/`.topnav`, force noir sur blanc, coupe les ombres.
+5. ~~Input de recherche navbar~~ → `.topnav-search input` dans la lib.
+
+Reste local dans `app.css` (spécifique songbook) : `--chord`/`--meta`/`--rule` (+ variantes dark), `html { background }` (correctif fond noir en plein écran — la lib ne style que `body`), le trick de visibilité par rôle, `.song-toolbar`, `#song-edit`, `.page`, `.icon`, et le print de `.song-toolbar`. Les blocs print de `song.css` restent chargés en dernier (tokens forcés clairs, liens masqués).
+
+Phase 2 (plus tard) : remplacer `js/dialog.js` par `<mesnos-dialog>` quand il existera.
 
 ## Revue de code + durcissement serveur — fait (2026-07-05)
 
