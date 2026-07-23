@@ -5,7 +5,7 @@ import io.undertow.util.StatusCodes;
 /**
  * Song not found.
  */
-public class MissingArgumentsException extends ServerException {
+public final class MissingArgumentsException extends ServerException {
 
     private static final long serialVersionUID = 8897585263772580341L;
 	private final String[] arguments;

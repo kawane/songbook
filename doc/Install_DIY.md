@@ -3,14 +3,14 @@ Songbook Do It Yourself
 
 This tutorial presents how to get a songbook server on your own server.
 
-Java 8
-------
+Java 25
+-------
 
-Songbook is meant to be easy to install and it is, except for one thing: Java 8.
+Songbook is meant to be easy to install and it is, except for one thing: Java 25.
 We really wanted to test out the new language features. 
 They are ground breaking.
-There are lots of tutorial online to install java 8 depending on your platform.
-For Windows or MacOS X, just go to Oracle Java download [page](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) and install it.
+There are lots of tutorial online to install java 25 depending on your platform.
+For Windows or MacOS X, just download a JRE 25 (for instance from [Adoptium/Eclipse Temurin](https://adoptium.net/temurin/releases/?version=25)) and install it.
 For linux, it depends on your distribution. 
 Here are some tutorials for some distributions:
 

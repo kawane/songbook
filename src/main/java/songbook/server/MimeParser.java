@@ -10,14 +10,7 @@ import java.util.*;
  *
  */
 public class MimeParser {
-	static class MimeTypePattern {
-		final String acceptedMimeType;
-		final Map<String, String> parameters;
-		protected MimeTypePattern(String acceptedMimeType, Map<String, String> parameters) {
-			this.acceptedMimeType = acceptedMimeType;
-			this.parameters = parameters;
-		}
-		
+	record MimeTypePattern(String acceptedMimeType, Map<String, String> parameters) {
 	}
 	/**
 	 * Does the mimeType match with the mimeTypePattern
@@ -49,12 +42,12 @@ public class MimeParser {
 	 */
 	public static String[] getMimeTypesByPriority(String acceptHeaderMimeType) {
 		final String[] mimetypePatternsWithParams = acceptHeaderMimeType.split(",");
-		final List<MimeTypePattern> mimeTypes = new ArrayList<MimeTypePattern>();
+		final List<MimeTypePattern> mimeTypes = new ArrayList<>();
 		for (String m : mimetypePatternsWithParams) {
 			final String[] mimetypePatternWithParams = m.split(";");
 			if (mimetypePatternWithParams.length > 0) {
 				final String acceptedMimeType = mimetypePatternWithParams[0];
-				final Map<String, String> parameters = new HashMap<String, String>();
+				final Map<String, String> parameters = new HashMap<>();
 				for (int i = 1; i < mimetypePatternWithParams.length; i++) {
 					final String[] paramsPair = mimetypePatternWithParams[1].split("=");
 					if (paramsPair.length == 1) {
@@ -69,29 +62,26 @@ public class MimeParser {
 				mimeTypes.add(new MimeTypePattern(acceptedMimeType.trim(), parameters));
 			}
 		}
-		Collections.sort(mimeTypes, new Comparator<MimeTypePattern>() {
-			@Override
-			public int compare(MimeTypePattern m1, MimeTypePattern m2) {
-				float q1 = Float.parseFloat(m1.parameters.get("q"));
-				float q2 = Float.parseFloat(m2.parameters.get("q"));
-				if (q1 == q2) {
-					if (m1.acceptedMimeType.equals(m2.acceptedMimeType)) {
-						if (m1.parameters.size() == m2.parameters.size()) {
-							return 0;
-						}
-						return m1.parameters.size() > m2.parameters.size() ? -1 : 1;
+		mimeTypes.sort((m1, m2) -> {
+			float q1 = Float.parseFloat(m1.parameters().get("q"));
+			float q2 = Float.parseFloat(m2.parameters().get("q"));
+			if (q1 == q2) {
+				if (m1.acceptedMimeType().equals(m2.acceptedMimeType())) {
+					if (m1.parameters().size() == m2.parameters().size()) {
+						return 0;
 					}
-					if (m1.acceptedMimeType.contains("*")) {
-						return 1;
-					}
+					return m1.parameters().size() > m2.parameters().size() ? -1 : 1;
+				}
+				if (m1.acceptedMimeType().contains("*")) {
 					return 1;
 				}
-				return q1 < q2 ? 1 : -1;
+				return 1;
 			}
+			return q1 < q2 ? 1 : -1;
 		});
-		String[] mimeTypesStr= new String[mimeTypes.size()];
+		String[] mimeTypesStr = new String[mimeTypes.size()];
 		for (int i = 0; i < mimeTypesStr.length; i++) {
-			mimeTypesStr[i] = mimeTypes.get(i).acceptedMimeType;
+			mimeTypesStr[i] = mimeTypes.get(i).acceptedMimeType();
 		}
 		return mimeTypesStr;
 	}

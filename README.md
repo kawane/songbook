@@ -17,14 +17,14 @@ It aims to be easily installed on a server, including for not technical users. S
 * on OpenShift with the songbook cartridge [Here](doc/Install_On_OpenShift.md),
 * on RunAbove [Here](doc/Install_On_RunAbove.md),
 * with Docker on a Linux server (kawane/songbook) [Here](doc/Install_With_Docker.md) ,
-* on any server with Java 8 [Here](doc/Install_DIY.md),
+* on any server with Java 25 [Here](doc/Install_DIY.md),
 * Google App Engine (TODO archive+doc)
 
 Not supported:
 
-- AMS Amazon (TODO Check if Java 8 is supported).
-- Heroku (TODO Check if Java 8 is supported).
-- Cloudbees (TODO Check if Java 8 is supported).
+- AMS Amazon (TODO Check if Java 25 is supported).
+- Heroku (TODO Check if Java 25 is supported).
+- Cloudbees (TODO Check if Java 25 is supported).
 
 
 OpenShift and Google App Engine provides some free solutions to test, they are sufficient for Songbook needs. 
@@ -60,7 +60,7 @@ Here are some feature for the future (partial):
 Dependencies
 ------------
 
-Songbook is a Java 8 application. 
+Songbook is a Java 25 application. 
 
 Songbook uses these third party libraries:
 

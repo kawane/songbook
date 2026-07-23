@@ -6,12 +6,15 @@
 	"image": "mcr.microsoft.com/devcontainers/java",
 	"features": {
 		"ghcr.io/devcontainers/features/java": {
-			"version": "none",
+			"version": "25",
 			"installMaven": "false",
 			"installGradle": "true"
 		},
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "24"
+		},
 		"ghcr.io/devcontainers/features/docker-in-docker": {
-			 
+
 		}
 	},
 	// "runArgs": [

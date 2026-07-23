@@ -1,9 +1,9 @@
-FROM gradle:8-jdk21-alpine AS build
+FROM gradle:9-jdk25-alpine AS build
 COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
 RUN gradle installDist --no-daemon 
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 COPY --from=build /home/gradle/src/build/install/songbook /songbook
 COPY --from=build /home/gradle/src/data/songs /songs

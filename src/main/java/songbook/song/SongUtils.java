@@ -93,16 +93,10 @@ public class SongUtils {
 					if (!propValue.isEmpty()) {
 						w.append("<span class='song-metadata-value'");
 						switch (propName) {
-							case "author":
-							case "artist":
-								w.append(" itemprop='composer'");
-								break;
-							case "album":
-								w.append(" itemprop='inAlbum'");
-								break;
-							case "tone":case "key":
-								w.append(" itemprop='musicalKey'");
-								break;
+							case "author", "artist" -> w.append(" itemprop='composer'");
+							case "album" -> w.append(" itemprop='inAlbum'");
+							case "tone", "key" -> w.append(" itemprop='musicalKey'");
+							default -> { /* no schema.org mapping for this property */ }
 						}
 
 						w.append("data-name='");
@@ -199,12 +193,12 @@ public class SongUtils {
 		for (int i = 0; i < s.length(); i++) {
 			char c = s.charAt(i);
 			switch (c) {
-				case '&': sb.append("&amp;"); break;
-				case '<': sb.append("&lt;"); break;
-				case '>': sb.append("&gt;"); break;
-				case '"': sb.append("&quot;"); break;
-				case '\'': sb.append("&#39;"); break;
-				default: sb.append(c);
+				case '&' -> sb.append("&amp;");
+				case '<' -> sb.append("&lt;");
+				case '>' -> sb.append("&gt;");
+				case '"' -> sb.append("&quot;");
+				case '\'' -> sb.append("&#39;");
+				default -> sb.append(c);
 			}
 		}
 		return sb.toString();

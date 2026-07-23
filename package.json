@@ -3,6 +3,9 @@
   "private": true,
   "description": "Integration tests for songbook (the site itself is zero-build; node is only needed to run the tests)",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "test": "vitest run"
   },

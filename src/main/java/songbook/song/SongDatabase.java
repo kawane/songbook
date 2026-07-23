@@ -26,7 +26,7 @@ public class SongDatabase {
     public SongDatabase(Path songDir) throws IOException {
         this.songDir = songDir;
 
-        if (Files.exists(songDir) == false) {
+        if (!Files.exists(songDir)) {
             Files.createDirectories(songDir);
         }
     }
@@ -66,7 +66,7 @@ public class SongDatabase {
     public WritableByteChannel writeChannelForSong(String id) {
         try {
             Path path = getSongPath(id);
-            if (Files.exists(path) == false) {
+            if (!Files.exists(path)) {
                 Files.createDirectories(path.getParent());
             }
             return Files.newByteChannel(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.SYNC);

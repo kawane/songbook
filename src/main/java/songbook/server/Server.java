@@ -7,13 +7,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 
@@ -126,7 +124,7 @@ public class Server {
 		// First Handler GracefulShutdown
 		GracefulShutdownHandler gracefulShutdownHandler = Handlers.gracefulShutdown(logHandler);
 
-		Undertow.Builder builder = Undertow.builder();
+		var builder = Undertow.builder();
 		final int port = getPort();
 		final String host = getHost();
 		builder.addHttpListener(port, host);
@@ -163,8 +161,8 @@ public class Server {
 		ExceptionHandler exceptionHandler = Handlers.exceptionHandler(next);
 		exceptionHandler.addExceptionHandler(ServerException.class, (exchange) -> {
 			Throwable exception = exchange.getAttachment(ExceptionHandler.THROWABLE);
-			if (exception instanceof ServerException) {
-				((ServerException) exception).serveError(getRole(exchange), exchange);
+			if (exception instanceof ServerException serverException) {
+				serverException.serveError(getRole(exchange), exchange);
 			} else {
 				// TODO create real error message
 				String message = exception.getMessage();
@@ -295,7 +293,7 @@ public class Server {
 		// Serves song
 		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
 
-		StringBuilder out = new StringBuilder();
+		var out = new StringBuilder();
 		String role = getRole(exchange);
 
 		if (id != null && !id.isEmpty()) {
@@ -333,11 +331,11 @@ public class Server {
 			title = query + " - " + title;
 		}
 
-		StringBuilder out = new StringBuilder();
+		var out = new StringBuilder();
 		String mimeType = MimeParser.bestMatch(getHeader(exchange, Headers.ACCEPT), MIME_TEXT_SONG, MIME_TEXT_PLAIN,
 				MIME_TEXT_HTML);
 		switch (mimeType) {
-			case MIME_TEXT_HTML:
+			case MIME_TEXT_HTML -> {
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
 
 				String role = getRole(exchange);
@@ -345,35 +343,24 @@ public class Server {
 				if (showKeyCreationAlert) {
 					Templates.alertKeyCreation(out, administratorKey, exchange.getRequestPath());
 				}
-				StringBuilder result = new StringBuilder();
+				var result = new StringBuilder();
 				indexDb.search(query, result, mimeType);
 				Templates.search(out, result, role);
 
 				Templates.footer(out);
-				break;
-			default:
-				indexDb.search(query, out, mimeType);
-				break;
+			}
+			default -> indexDb.search(query, out, mimeType);
 		}
 		exchange.getResponseSender().send(out.toString());
 	}
 
 	private void restSong(final HttpServerExchange exchange) throws Exception {
 		switch (exchange.getRequestMethod().toString()) {
-			case Methods.GET_STRING:
-				this.getSong(exchange);
-				break;
-			case Methods.POST_STRING:
-				adminAccess(this::createSong).handleRequest(exchange);
-				break;
-			case Methods.PUT_STRING:
-				adminAccess(this::modifySong).handleRequest(exchange);
-				break;
-			case Methods.DELETE_STRING:
-				adminAccess(this::deleteSong).handleRequest(exchange);
-				break;
-			default:
-				throw ServerException.METHOD_NOT_ALLOWED;
+			case Methods.GET_STRING -> this.getSong(exchange);
+			case Methods.POST_STRING -> adminAccess(this::createSong).handleRequest(exchange);
+			case Methods.PUT_STRING -> adminAccess(this::modifySong).handleRequest(exchange);
+			case Methods.DELETE_STRING -> adminAccess(this::deleteSong).handleRequest(exchange);
+			default -> throw ServerException.METHOD_NOT_ALLOWED;
 		}
 	}
 
@@ -392,21 +379,15 @@ public class Server {
 				MIME_TEXT_HTML);
 		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, mimeType);
 		switch (mimeType) {
-			case MIME_TEXT_HTML:
-				exchange.getResponseSender().send(htmlSong(exchange, id, songContents, exchange.getRequestPath()));
-				break;
-			default:
-			case MIME_TEXT_PLAIN:
-			case MIME_TEXT_SONG:
-				exchange.getResponseSender().send(songContents);
-				break;
+			case MIME_TEXT_HTML -> exchange.getResponseSender().send(htmlSong(exchange, id, songContents, exchange.getRequestPath()));
+			default -> exchange.getResponseSender().send(songContents);
 		}
 
 		logger.info("Serve Song " + id);
 	}
 
 	private String htmlSong(HttpServerExchange exchange, String id, String songData, String path) {
-		StringBuilder out = new StringBuilder();
+		var out = new StringBuilder();
 		// Todo use a songmark object to extract title and then generate html
 		String title = SongUtils.getTitle(songData);
 		String role = getRole(exchange);
@@ -423,7 +404,7 @@ public class Server {
 		String songData = ChannelUtil.getStringContents(exchange.getRequestChannel());
 
 		// indexes updated song
-		Document document = SongUtils.indexSong(songData);
+		var document = SongUtils.indexSong(songData);
 		String title = document.get("title");
 		String artist = document.get("artist");
 
@@ -449,7 +430,7 @@ public class Server {
 		String songData = ChannelUtil.getStringContents(exchange.getRequestChannel());
 
 		// indexes updated song
-		Document document = SongUtils.indexSong(songData);
+		var document = SongUtils.indexSong(songData);
 
 		String id = URLEncoder.encode(getParameter(exchange, "id"), "utf-8");
 
@@ -492,19 +473,15 @@ public class Server {
 				MIME_TEXT_HTML);
 		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, mimeType);
 		switch (mimeType) {
-			case MIME_TEXT_HTML:
-				StringBuilder out = new StringBuilder();
+			case MIME_TEXT_HTML -> {
+				var out = new StringBuilder();
 				Templates.header(out, "My SongBook", getRole(exchange));
 				// show home page with message
 				Templates.alertSongRemovedSuccessfully(out, title == null ? id : title);
 				Templates.footer(out);
 				exchange.getResponseSender().send(out.toString());
-				break;
-			default:
-			case MIME_TEXT_PLAIN:
-			case MIME_TEXT_SONG:
-				exchange.getResponseSender().send(id);
-				break;
+			}
+			default -> exchange.getResponseSender().send(id);
 		}
 	}
 
@@ -513,10 +490,10 @@ public class Server {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
 		String artist = getParameter(exchange, "artist");
-		StringBuilder out = new StringBuilder();
+		var out = new StringBuilder();
 		String role = getRole(exchange);
 		Templates.header(out, "Artists", role);
-		StringBuilder result = new StringBuilder();
+		var result = new StringBuilder();
 		indexDb.songsByArtist(artist, result, MIME_TEXT_HTML);
 		Templates.search(out, result, role);
 
@@ -530,10 +507,10 @@ public class Server {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
-		StringBuilder out = new StringBuilder();
+		var out = new StringBuilder();
 		String role = getRole(exchange);
 		Templates.header(out, "Artists", role);
-		StringBuilder result = new StringBuilder();
+		var result = new StringBuilder();
 		indexDb.listArtists(result, MIME_TEXT_HTML);
 		Templates.search(out, result, role);
 
@@ -547,7 +524,7 @@ public class Server {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
-		StringBuilder out = new StringBuilder();
+		var out = new StringBuilder();
 		Templates.header(out, "Song Console Api", getRole(exchange));
 		Templates.consoleApi(out);
 		Templates.footer(out);
@@ -560,7 +537,7 @@ public class Server {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
-		StringBuilder out = new StringBuilder();
+		var out = new StringBuilder();
 		Templates.header(out, "SongBook Admin Page", getRole(exchange));
 		Templates.signin(out);
 		Templates.footer(out);
@@ -573,7 +550,7 @@ public class Server {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
-		StringBuilder out = new StringBuilder();
+		var out = new StringBuilder();
 		Templates.header(out, "SongBook Admin Page", getRole(exchange));
 		Templates.admin(out);
 		Templates.footer(out);
@@ -586,16 +563,16 @@ public class Server {
 		if (!exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
-		StringBuilder out = new StringBuilder();
+		var out = new StringBuilder();
 
 		Templates.header(out, "Administration - My SongBook", getRole(exchange));
 
 		String section = getParameter(exchange, "section");
 		String command = getParameter(exchange, "command");
 		switch (section) {
-			case "index":
+			case "index" -> {
 				switch (command) {
-					case "reset":
+					case "reset" -> {
 						try {
 							long start = System.currentTimeMillis();
 							songDb.clearCache();
@@ -610,16 +587,14 @@ public class Server {
 							Templates.alertIndexingError(out);
 							Templates.admin(out);
 						}
-						break;
-					default:
+					}
+					default -> {
 						Templates.alertCommandNotSupported(out);
 						Templates.admin(out);
-						break;
+					}
 				}
-				break;
-			default:
-				throw ServerException.BAD_REQUEST;
-
+			}
+			default -> throw ServerException.BAD_REQUEST;
 		}
 		Templates.footer(out);
 
@@ -718,7 +693,7 @@ public class Server {
 		if (administratorKey != null) {
 			try {
 				final Path administratorKeyPath = getDataRoot().resolve(ADMINISTRATOR_KEY_PATH);
-				Files.write(administratorKeyPath, Collections.singleton(administratorKey));
+				Files.write(administratorKeyPath, List.of(administratorKey));
 				showKeyCreationAlert = true;
 
 				final Path administratorActivatedPath = getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH);
@@ -733,7 +708,7 @@ public class Server {
 		if (userKey != null) {
 			try {
 				final Path userKeyPath = getDataRoot().resolve("user.key");
-				Files.write(userKeyPath, Collections.singleton(userKey));
+				Files.write(userKeyPath, List.of(userKey));
 				showKeyCreationAlert = true;
 			} catch (IOException e) {
 				error("Could not write user key", e);
@@ -765,7 +740,8 @@ public class Server {
 	}
 
 	protected String createMessage(String message, boolean json) {
-		return json ? "{ \"message\": \"" + message + "\"}" : message;
+		return json ? """
+				{ "message": "%s"}""".formatted(message) : message;
 	}
 
 	protected String getHeader(HttpServerExchange exchange, HttpString header) {

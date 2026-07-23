@@ -4,6 +4,12 @@ plugins {
 
 version = 'latest'
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
 repositories {
     mavenCentral()
 }

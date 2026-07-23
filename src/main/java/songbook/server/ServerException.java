@@ -24,7 +24,8 @@ import io.undertow.util.StatusCodes;
 /**
  * ServerException used by exception handler
  */
-public class ServerException extends Exception {
+public sealed class ServerException extends Exception
+        permits SongNotFoundException, MissingArgumentsException {
 
     private static final long serialVersionUID = 6619087202310932044L;
     public static final ServerException NOT_FOUND = new ServerException(StatusCodes.NOT_FOUND);
@@ -46,7 +47,7 @@ public class ServerException extends Exception {
     public void serveError(String role, HttpServerExchange exchange) {
         exchange.setStatusCode(code);
 
-        StringBuilder out = new StringBuilder();
+        var out = new StringBuilder();
         if (asksForHtml(exchange)) {
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, Server.MIME_TEXT_HTML);
             Templates.header(out, Integer.toString(code), role);

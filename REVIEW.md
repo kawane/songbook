@@ -96,3 +96,27 @@ Revue complète serveur + client. Avis global : projet sain, bien dimensionné p
 - Tests : ajout d'assertions d'échappement HTML. Suite verte (9 tests).
 
 **Sécurité — pistes futures** (non faites, hors périmètre « même approche ») : brancher songbook sur users.mesnos.ovh (JWT access/refresh token) ; la clé transite encore en `?key=` dans l'URL (logs/historique).
+
+## Montée Java 25 / Node 24 + modernisation langage — fait (2026-07-23)
+
+Passage aux dernières LTS stables et adoption des nouveautés du langage Java (Java 21 → 25).
+
+**Runtimes & config de dev :**
+- `Dockerfile` : build `gradle:8-jdk21-alpine` → `gradle:9-jdk25-alpine`, runtime `eclipse-temurin:21-jre-alpine` → `:25-jre-alpine`.
+- `build.gradle` : ajout d'un bloc `java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }` — la version Java n'était imposée que par l'image Docker, elle est désormais épinglée pour le build local / devcontainer.
+- `.devcontainer/devcontainer.json` : feature Java `none` → `25`, ajout de la feature Node `24` (pour les tests vitest).
+- `package.json` : ajout de `engines.node >= 24` ; nouveau `.nvmrc` (`24`).
+- Suppression des `deploy/docker/{songbook,songbook-dev}/Dockerfile` obsolètes (FROM java:8, songbook-0.4.zip inexistant) ; le Dockerfile racine est le seul à jour.
+- Docs : mentions « Java 8 » périmées corrigées en Java 25 (`README.md`, `doc/Install_DIY.md`).
+
+**Modernisation code (refactos syntaxiques, comportement préservé) :**
+- **Records** : `IndexEntityType`, `Templates.TemplateCache`, `MimeParser.MimeTypePattern`.
+- **Sealed** : `ServerException sealed ... permits SongNotFoundException, MissingArgumentsException` (sous-classes passées `final`).
+- **Pattern matching for instanceof** : handler d'exception dans `Server.exceptionHandler`.
+- **Switch expressions (forme flèche)** : `SongUtils.escape` + mapping schema.org, `Server.restSong/getSong/deleteSong/searchPage/adminCommand`, les 3 switch `mimeType` d'`IndexDatabase`.
+- **Text block** : `Server.createMessage` (JSON via `.formatted`, plus d'échappement de guillemets).
+- **`var`** + diamant `<>` + lambda (`MimeParser` : comparateur anonyme → lambda, `List.of` à la place de `Collections.singleton`), idiome `!Files.exists(...)` dans `SongDatabase`.
+
+Validé : `docker build` (Gradle 9 / JDK 25 / Temurin 25) OK, suite d'intégration vitest verte.
+
+**Pistes de modernisation restantes** (option « complète » écartée, plus intrusives) : `Optional` aux frontières (`Server.getHeader`, `SongDatabase.getSongContents`, getters d'env `getWebRoot`/`getDataRoot`/`getSongsPath`/`getHost`) ; extraction des switch `mimeType` dupliqués d'`IndexDatabase` (search/songsByArtist quasi identiques) ; refonte de `SongUtils.writeHtml` (gros bloc de concaténation HTML) en text blocks / builder dédié.

@@ -125,14 +125,7 @@ public class Templates {
         return out;
     }
 
-    private static class TemplateCache {
-        long time;
-        String content;
-
-        public TemplateCache(long time, String content) {
-            this.time = time;
-            this.content = content;
-        }
+    private record TemplateCache(long time, String content) {
     }
 
     private static String getContent(String templateName) throws IOException {
@@ -144,13 +137,13 @@ public class Templates {
             needLoading = true;
         } else {
             lastModified = Files.getLastModifiedTime(templatePath).toMillis();
-            needLoading = lastModified > templateCache.time;
+            needLoading = lastModified > templateCache.time();
         }
         if (needLoading) {
             cache.remove(templateName);
             templateCache = new TemplateCache(lastModified, new String(Files.readAllBytes(templatePath), StandardCharsets.UTF_8));
             cache.put(templateName, templateCache);
         }
-        return templateCache.content;
+        return templateCache.content();
     }
 }

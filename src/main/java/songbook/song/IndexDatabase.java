@@ -98,7 +98,7 @@ public class IndexDatabase {
                 (id) -> {
                     String contents = songDb.getSongContents(id);
                     if (contents != null) {
-                        Document document = SongUtils.indexSong(contents);
+                        var document = SongUtils.indexSong(contents);
                         document.add(new StringField("id", id, Field.Store.YES));
                         try {
                             indexWriter.addDocument(document);
@@ -125,13 +125,8 @@ public class IndexDatabase {
                 while ((term = termsEnum.next()) != null) {
                     String artist = term.utf8ToString();
                     switch (mimeType) {
-                        case Server.MIME_TEXT_HTML:
-                            Templates.artistItem(out, artist, termsEnum.docFreq());
-                            break;
-                        case Server.MIME_TEXT_PLAIN:
-                        default:
-                            out.append(artist).append(": ").append(Integer.toString(termsEnum.docFreq()));
-                            break;
+                        case Server.MIME_TEXT_HTML -> Templates.artistItem(out, artist, termsEnum.docFreq());
+                        default -> out.append(artist).append(": ").append(Integer.toString(termsEnum.docFreq()));
                     }
                 }
             }
@@ -167,14 +162,11 @@ public class IndexDatabase {
             for (ScoreDoc hit : hits) {
                 Document doc = storeFields.document(hit.doc);
                 switch (mimeType) {
-                    case Server.MIME_TEXT_HTML:
+                    case Server.MIME_TEXT_HTML -> {
                         String artists = Stream.of(doc.getValues("artist")).collect(Collectors.joining(", "));
                         Templates.songItem(out, doc.get("id"), doc.get("title"), artists);
-                        break;
-                    case Server.MIME_TEXT_PLAIN:
-                    default:
-                        out.append(doc.get("id")).append("\n");
-                        break;
+                    }
+                    default -> out.append(doc.get("id")).append("\n");
                 }
             }
             if (Server.MIME_TEXT_HTML.equals(mimeType)) {
@@ -186,7 +178,7 @@ public class IndexDatabase {
     public void songsByArtist(String artist, Appendable out, String mimeType) throws ParseException, IOException {
         int hitsPerPage = 500;
         try (DirectoryReader reader = DirectoryReader.open(index)) {
-            IndexSearcher searcher = new IndexSearcher(reader);
+            var searcher = new IndexSearcher(reader);
             var storeFields = reader.storedFields();
 
             Query tq = new TermQuery(new Term("artist", artist));
@@ -198,14 +190,11 @@ public class IndexDatabase {
             for (ScoreDoc hit : hits) {
                 Document doc = storeFields.document(hit.doc);
                 switch (mimeType) {
-                    case Server.MIME_TEXT_HTML:
+                    case Server.MIME_TEXT_HTML -> {
                         String artists = Stream.of(doc.getValues("artist")).collect(Collectors.joining(", "));
                         Templates.songItem(out, doc.get("id"), doc.get("title"), artists);
-                        break;
-                    case Server.MIME_TEXT_PLAIN:
-                    default:
-                        out.append(doc.get("id")).append("\n");
-                        break;
+                    }
+                    default -> out.append(doc.get("id")).append("\n");
                 }
             }
             if (Server.MIME_TEXT_HTML.equals(mimeType)) {
