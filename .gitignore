@@ -37,3 +37,6 @@ data/administrator.activated
 node_modules/
 tests/.data/
 .DS_Store
+
+# Claude Code local config
+.claude/
