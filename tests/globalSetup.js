@@ -48,5 +48,13 @@ export async function setup() {
 
 export async function teardown() {
     try { docker("rm", "-f", CONTAINER); } catch { /* already gone */ }
+    // The server runs as root in the container, so on a Linux host the files
+    // it wrote to the bind mount belong to root and cannot be removed by the
+    // test runner. Empty the directory from inside a container first (Docker
+    // Desktop hides this ownership difference).
+    try {
+        docker("run", "--rm", "-v", `${DATA_DIR}:/data`, "--entrypoint", "sh", IMAGE,
+            "-c", "rm -rf /data/* /data/.[!.]*");
+    } catch { /* nothing to clean */ }
     rmSync(DATA_DIR, { recursive: true, force: true });
 }
