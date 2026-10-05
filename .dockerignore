@@ -1,0 +1,15 @@
+# Keep the build context to what the Gradle build needs.
+.git/
+.gradle/
+build/
+node_modules/
+tests/
+.claude/
+.devcontainer/
+.vscode/
+doc/
+
+# Local runtime data: never ship a local index or admin key in the context.
+data/index/
+data/administrator.key
+data/administrator.activated
