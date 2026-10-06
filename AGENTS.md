@@ -39,6 +39,11 @@ The tests also run on every push and pull request (`.github/workflows/tests.yml`
 - **Admin access**: routes wrapped in `adminAccess(...)` (`/edit`, `/delete`,
   `/new`, `/admin`) and the write methods of `/songs/{id}`. Reading must stay
   public.
+- **Health**: `GET /api/health` is public (served before the session check)
+  and answers 200 `ok`/`degraded` or 503 `down` with the list of checks
+  (`Health.java`; vital: `songs`, `index`; not vital: `data-writable`). The
+  Docker `HEALTHCHECK` calls it. Shared contract: `ecosysteme/sante.md` in
+  the knowledge base. Never put paths or raw errors in it.
 - **HTML escaping**: `SongUtils.writeHtml` escapes all song content and only
   emits links for http/https/mailto. Keep it that way (it closes a stored XSS).
 

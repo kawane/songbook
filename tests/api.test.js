@@ -138,3 +138,20 @@ describe("authorization", () => {
         }
     });
 });
+
+describe("health", () => {
+    // Public route, queried by the Docker HEALTHCHECK: no session cookie.
+    it("reports ok without a session, with every check", async () => {
+        const res = await realFetch(new URL("/api/health", BASE));
+        expect(res.status).toBe(200);
+        expect(res.headers.get("content-type")).toContain("application/json");
+        const health = await res.json();
+        expect(health.status).toBe("ok");
+        expect(health.version).toBeTruthy();
+        expect(health.checks.map((c) => [c.name, c.ok, c.critical])).toEqual([
+            ["songs", true, true],
+            ["index", true, true],
+            ["data-writable", true, false],
+        ]);
+    });
+});

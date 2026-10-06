@@ -37,7 +37,7 @@ export async function setup() {
     const deadline = Date.now() + 30000;
     for (;;) {
         try {
-            await fetch(`http://localhost:${PORT}/`);
+            await fetch(`http://localhost:${PORT}/api/health`);
             break;
         } catch {
             if (Date.now() > deadline) throw new Error("songbook container did not come up on :" + PORT);

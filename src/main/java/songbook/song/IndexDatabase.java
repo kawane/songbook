@@ -65,6 +65,13 @@ public class IndexDatabase {
         }
     }
 
+    /** Opens a reader, as a search does: throws when the index cannot be read. */
+    public void checkReadable() throws IOException {
+        try (DirectoryReader reader = DirectoryReader.open(index)) {
+            reader.numDocs();
+        }
+    }
+
     public void addOrUpdateDocument(Document document) throws IOException {
         indexWriter.updateDocument(new Term("id", document.get("id")), document);
         indexWriter.commit();

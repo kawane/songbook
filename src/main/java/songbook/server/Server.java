@@ -121,8 +121,11 @@ public class Server {
 		HttpHandler exceptionHandler = exceptionHandler(sessionHandler);
 		// Second Handler log
 		HttpHandler logHandler = log(exceptionHandler);
+		// Health, before the log (the Docker HEALTHCHECK calls it every 30s)
+		// and before the session (public even when a user key is set)
+		HttpHandler healthHandler = healthHandler(logHandler);
 		// First Handler GracefulShutdown
-		GracefulShutdownHandler gracefulShutdownHandler = Handlers.gracefulShutdown(logHandler);
+		GracefulShutdownHandler gracefulShutdownHandler = Handlers.gracefulShutdown(healthHandler);
 
 		var builder = Undertow.builder();
 		final int port = getPort();
@@ -133,6 +136,26 @@ public class Server {
 		info("Listens on '" + host + ":" + port + "'");
 
 		return builder.build();
+	}
+
+	/**
+	 * Serves GET /api/health (see {@link Health}), passes anything else on.
+	 * 
+	 * @param next
+	 * @return
+	 */
+	protected HttpHandler healthHandler(HttpHandler next) {
+		return exchange -> {
+			if (!"/api/health".equals(exchange.getRequestPath()) || !Methods.GET.equals(exchange.getRequestMethod())) {
+				next.handleRequest(exchange);
+				return;
+			}
+			Health.Report report = Health.check(songDb, indexDb, getSongsPath(), getDataRoot());
+			exchange.setStatusCode(report.statusCode());
+			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json; charset=utf-8");
+			exchange.getResponseHeaders().put(Headers.CACHE_CONTROL, "no-store");
+			exchange.getResponseSender().send(report.json());
+		};
 	}
 
 	/**
