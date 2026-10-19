@@ -20,16 +20,23 @@ To upgrade:
    console for loader/worker errors.
 4. Commit the result.
 
-## mesnos design system (`src/dist/web/css/vendor/mesnos.style.css`)
+## mesnos design system (`src/dist/web/css/vendor/mesnos.style.css`, `src/dist/web/js/vendor/mesnos-dialog.js`)
 
-The shared stylesheet from https://components.mesnos.ovh (tokens, buttons,
-messages, forms, dark theme via `data-theme`). Songbook's own layers sit on
-top: `css/app.css` (navbar, item list, button groups, print — gaps not yet
-provided by the library) and `css/song.css` (song rendering).
+From https://components.mesnos.ovh, both in the version written in
+`css/vendor/MESNOS_VERSION`:
+
+- the shared stylesheet (tokens, buttons, messages, forms, dialogs, dark theme
+  via `data-theme`). Songbook's own layers sit on top: `css/app.css` (navbar,
+  item list, button groups, print — gaps not yet provided by the library) and
+  `css/song.css` (song rendering);
+- the shared dialog, `mesnos-dialog.js`: a standalone ES module (no import, no
+  build step), whose `confirmDialog()` asks before deleting a song (`view.js`,
+  `edit.js`). Its labels default to English (the pages are `lang="en"`).
 
 To upgrade:
 
 1. Bump `VERSION` in `tools/update-mesnos.sh` and run it.
 2. Check the site rendering in light and dark themes, and print preview
-   (must stay black on white).
+   (must stay black on white); delete a song from its page and from the
+   editor (Cancel, Escape, then Delete).
 3. Commit the result.

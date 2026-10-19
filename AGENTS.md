@@ -14,8 +14,9 @@ decisions): [mesnos/carnet.mesnos.ovh](https://git.mesnos.ovh/mesnos/carnet.mesn
   `songbook.server.Server`. Built with Gradle inside Docker (no Gradle wrapper).
 - **Frontend**: zero-build — native ES modules and plain CSS served as-is from
   `src/dist/web/` (`js/`, `css/`, `templates/`).
-- **Vendored assets**: `mesnos.style.css` (shared design system, version in
-  `src/dist/web/css/vendor/MESNOS_VERSION`) and Monaco (editor). Update them
+- **Vendored assets**: the mesnos design system — `mesnos.style.css` and the
+  shared dialog `js/vendor/mesnos-dialog.js` (`confirmDialog()`), version in
+  `src/dist/web/css/vendor/MESNOS_VERSION` — and Monaco (editor). Update them
   with `tools/update-mesnos.sh` / `tools/update-monaco.sh`, see
   `doc/Update_Vendored_Assets.md`. Never edit vendored files by hand.
 - **Data**: one ChordPro file per song in `data/songs/`; the Lucene index and

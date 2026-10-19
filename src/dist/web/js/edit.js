@@ -1,5 +1,6 @@
 import { createSong, updateSong, deleteSong } from "./api.js";
-import { confirmDialog, showErrorMessage } from "./dialog.js";
+import { showErrorMessage } from "./dialog.js";
+import { confirmDialog } from "./vendor/mesnos-dialog.js";
 
 const host = document.getElementById("song-edit");
 const songId = host.dataset.songid;
@@ -13,8 +14,8 @@ if (songId && deleteButton) {
     deleteButton.addEventListener("click", async (e) => {
         e.preventDefault();
         const confirmed = await confirmDialog({
-            title: "Delete song",
-            message: "Delete this song? This cannot be undone.",
+            title: "Delete song?",
+            message: "This song will be deleted. This cannot be undone.",
             confirmLabel: "Delete",
             danger: true,
         });
