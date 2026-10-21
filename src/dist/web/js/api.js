@@ -3,7 +3,8 @@
  * header (text/song = raw songmark, text/plain = ids, text/html = rendered),
  * so every call sets it explicitly — fetch would send * / * otherwise and the
  * server would pick text/song for pages expecting html.
- * The SessionKey cookie rides along automatically (same origin).
+ * The session cookies (shared login or key login) ride along automatically
+ * (same origin).
  *
  * Song ids come URL-encoded from the server ('+' stands for a space, as in
  * "les+innocents-l+autre+finistere") and must be used verbatim in paths:

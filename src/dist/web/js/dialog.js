@@ -2,8 +2,9 @@
  * confirmDialog() from js/vendor/mesnos-dialog.js (vendored with
  * tools/update-mesnos.sh). */
 
-/* Fixed error banner, shared by the pages that call the API. */
-export function showErrorMessage(message) {
+/* Fixed error banner, shared by the pages that call the API. An optional
+ * link ({ href, label }) opens in a new tab, so the page keeps its state. */
+export function showErrorMessage(message, link) {
     let box = document.getElementById("app-error");
     if (!box) {
         box = document.createElement("div");
@@ -18,4 +19,18 @@ export function showErrorMessage(message) {
         document.body.appendChild(box);
     }
     box.textContent = message;
+    if (link) {
+        const a = document.createElement("a");
+        a.href = link.href;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = link.label;
+        box.append(" ", a);
+    }
+    box.hidden = false;
+}
+
+export function hideErrorMessage() {
+    const box = document.getElementById("app-error");
+    if (box) box.hidden = true;
 }

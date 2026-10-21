@@ -52,6 +52,9 @@ public sealed class ServerException extends Exception
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, Server.MIME_TEXT_HTML);
             Templates.header(out, Integer.toString(code), role);
             errorText(out);
+            if (code == StatusCodes.UNAUTHORIZED) {
+                out.append(" <a href=\"/signin\">Sign in</a>");
+            }
             Templates.footer(out);
         } else {
             // API clients get the bare message, not a full HTML page

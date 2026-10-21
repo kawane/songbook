@@ -1,7 +1,9 @@
 package songbook.server;
 
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,8 +21,6 @@ import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.server.handlers.Cookie;
-import io.undertow.server.handlers.CookieImpl;
 import io.undertow.server.handlers.ExceptionHandler;
 import io.undertow.server.handlers.GracefulShutdownHandler;
 import io.undertow.server.handlers.resource.FileResourceManager;
@@ -46,15 +46,12 @@ public class Server {
 	public final static String DEFAULT_DATA_ROOT = "data";
 
 	public static final String ADMINISTRATOR_KEY_PATH = "administrator.key";
-	public static final String ADMINISTRATOR_ACTIVATED_PATH = "administrator.activated";
 
 	public static final String MIME_TEXT_HTML = "text/html";
 	public static final String MIME_TEXT_PLAIN = "text/plain";
 	public static final String MIME_TEXT_SONG = "text/song";
 
-	public static final String SESSION_KEY = "SessionKey";
-
-	public static final AttachmentKey<String> ADMIN_KEY = AttachmentKey.create(String.class);
+	public static final AttachmentKey<Access.Identity> IDENTITY = AttachmentKey.create(Access.Identity.class);
 
 	private Logger logger;
 
@@ -62,11 +59,7 @@ public class Server {
 
 	private IndexDatabase indexDb;
 
-	private boolean showKeyCreationAlert = false;
-
-	private String administratorKey = null;
-
-	private String userKey = null;
+	private Access access;
 
 	public void start() {
 		logger = Logger.getLogger("Songbook");
@@ -82,11 +75,29 @@ public class Server {
 			return;
 		}
 
-		readKeys();
-
-		// creates admin key if needed
-		if (administratorKey == null)
-			createAdminKey();
+		// Who may write: the shared login (USERS_URL) and/or the local key
+		// (ADMIN_KEY_LOGIN=true), see Access
+		String usersUrl = Access.usersUrl(System.getenv("USERS_URL"));
+		if (System.getenv("USERS_URL") != null && usersUrl == null) {
+			logger.severe("USERS_URL ignored: an http(s) address without path is expected");
+		}
+		String administratorKey = null;
+		if ("true".equalsIgnoreCase(System.getenv("ADMIN_KEY_LOGIN"))) {
+			administratorKey = readAdminKey();
+			if (administratorKey == null)
+				administratorKey = createAdminKey();
+		}
+		if (Files.exists(dataRoot.resolve("user.key"))) {
+			logger.warning("user.key is no longer read: reading is public");
+		}
+		access = new Access(usersUrl, administratorKey);
+		if (usersUrl == null && !access.keyLogin()) {
+			info("Editing disabled: set USERS_URL (shared login) or ADMIN_KEY_LOGIN=true (administrator key)");
+		} else {
+			info("Editing through " + (usersUrl != null ? "the shared login at " + usersUrl : "")
+					+ (usersUrl != null && access.keyLogin() ? " and " : "")
+					+ (access.keyLogin() ? "the administrator key" : ""));
+		}
 
 		try {
 			// initializes songDb
@@ -197,72 +208,18 @@ public class Server {
 	}
 
 	/**
-	 * Adds admin attribute and checks user attribute
+	 * Attaches the identity of the request (see {@link Access}) and keeps the
+	 * cookies in line with it. Reading is public: nothing is refused here.
 	 * 
 	 * @param next next Handler in the stack
 	 * @return
 	 */
 	protected HttpHandler sessionHandler(HttpHandler next) {
-		// TODO may be use SessionCookieConfig if it helps
 		return exchange -> {
-			// A browser can send several SessionKey cookies at once — typically a
-			// stale one stored at a narrower path (older versions set no Path)
-			// next to the current one. Keep an administrator key if any of them
-			// is one, otherwise admin rights silently drop on some pages only.
-			// The header is parsed by hand because Undertow's parseRequestCookies
-			// collects into a Set where same-name cookies are equal: it would
-			// discard all but one of the duplicates before we can compare them.
-			String sessionKey = null;
-			HeaderValues cookieHeaders = exchange.getRequestHeaders().get(Headers.COOKIE);
-			if (cookieHeaders != null) {
-				for (String cookieHeader : cookieHeaders) {
-					for (String pair : cookieHeader.split(";")) {
-						int equals = pair.indexOf('=');
-						if (equals == -1) {
-							continue;
-						}
-						String name = pair.substring(0, equals).trim();
-						String value = pair.substring(equals + 1).trim();
-						if (SESSION_KEY.equals(name) && (sessionKey == null || isAdministrator(value))) {
-							sessionKey = value;
-						}
-					}
-				}
-			}
-
-			String key = getParameter(exchange, "key");
-			if (key != null && !key.isEmpty() && !key.equals(sessionKey)) {
-				sessionKey = key;
-				// Set Cookie. HttpOnly (no JS reads it) + SameSite=Lax guard
-				// against theft and cross-site writes while keeping the same
-				// cookie-based auth approach.
-				Cookie cookie = new CookieImpl(SESSION_KEY, sessionKey);
-				cookie.setMaxAge(Integer.MAX_VALUE);
-				cookie.setPath("/");
-				cookie.setHttpOnly(true);
-				cookie.setSameSiteMode("Lax");
-				exchange.setResponseCookie(cookie);
-			}
-			if (isAdministrator(sessionKey)) {
-				// gets administrator key, remove alert (if present)
-				if (showKeyCreationAlert) {
-					showKeyCreationAlert = false;
-					try {
-						Files.createFile(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
-					} catch (IOException e) {
-						error("Can't create file '" + ADMINISTRATOR_ACTIVATED_PATH + "'", e);
-					}
-				}
-			}
-
-			if (isUser(sessionKey)) {
-				// Need to understand this what's the difference between ADMIN_KEY and
-				// SESSION_KEY
-				exchange.putAttachment(ADMIN_KEY, sessionKey);
-				next.handleRequest(exchange);
-			} else { // It's too early to decide if we are authorize or not
-				throw new ServerException(StatusCodes.UNAUTHORIZED);
-			}
+			Access.Identity identity = access.currentUser(exchange);
+			exchange.putAttachment(IDENTITY, identity);
+			access.updateCookies(exchange, identity);
+			next.handleRequest(exchange);
 		};
 	}
 
@@ -290,6 +247,7 @@ public class Server {
 		pathHandler.add("/consoleApi", this::consoleApiPage);
 
 		pathHandler.add("/signin", this::signinPage);
+		pathHandler.add("/signout", this::signout);
 		pathHandler.add("/admin/{section}/{command}", adminAccess(this::adminCommand));
 		pathHandler.add("/admin", adminAccess(this::adminPage));
 
@@ -326,14 +284,14 @@ public class Server {
 				throw new SongNotFoundException(id);
 			String title = SongUtils.getTitle(songContents);
 			Templates.header(out, "Edit - " + title + " - My SongBook", role);
-			Templates.editSong(out, id, songContents, role);
+			Templates.editSong(out, id, songContents, role, sessionKeeper());
 			Templates.footer(out);
 
 			exchange.getResponseSender().send(out.toString());
 
 		} else {
 			Templates.header(out, "Create Song - My SongBook", role);
-			Templates.editSong(out, "", Templates.newSong(new StringBuilder()), role);
+			Templates.editSong(out, "", Templates.newSong(new StringBuilder()), role, sessionKeeper());
 			Templates.footer(out);
 			exchange.getResponseSender().send(out.toString());
 		}
@@ -363,9 +321,6 @@ public class Server {
 
 				String role = getRole(exchange);
 				Templates.header(out, title, role);
-				if (showKeyCreationAlert) {
-					Templates.alertKeyCreation(out, administratorKey, exchange.getRequestPath());
-				}
 				var result = new StringBuilder();
 				indexDb.search(query, result, mimeType);
 				Templates.search(out, result, role);
@@ -402,21 +357,19 @@ public class Server {
 				MIME_TEXT_HTML);
 		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, mimeType);
 		switch (mimeType) {
-			case MIME_TEXT_HTML -> exchange.getResponseSender().send(htmlSong(exchange, id, songContents, exchange.getRequestPath()));
+			case MIME_TEXT_HTML -> exchange.getResponseSender().send(htmlSong(exchange, id, songContents));
 			default -> exchange.getResponseSender().send(songContents);
 		}
 
 		logger.info("Serve Song " + id);
 	}
 
-	private String htmlSong(HttpServerExchange exchange, String id, String songData, String path) {
+	private String htmlSong(HttpServerExchange exchange, String id, String songData) {
 		var out = new StringBuilder();
 		// Todo use a songmark object to extract title and then generate html
 		String title = SongUtils.getTitle(songData);
 		String role = getRole(exchange);
-		Templates.header(out, title + " - My SongBook", getRole(exchange));
-		if (showKeyCreationAlert)
-			Templates.alertKeyCreation(out, administratorKey, path);
+		Templates.header(out, title + " - My SongBook", role);
 		Templates.viewSong(out, id, SongUtils.writeHtml(new StringBuilder(), songData), role);
 
 		Templates.footer(out);
@@ -556,17 +509,83 @@ public class Server {
 		exchange.getResponseSender().send(out.toString());
 	}
 
-	private void signinPage(final HttpServerExchange exchange) throws ServerException {
-		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+	/**
+	 * The sign-in form of the administrator key, when ADMIN_KEY_LOGIN is on.
+	 * Otherwise the administrator signs in through the shared login, which
+	 * Caddy puts in front of /admin. The key only ever travels in the body of a
+	 * POST, never in an address.
+	 */
+	private void signinPage(final HttpServerExchange exchange) throws Exception {
+		boolean post = exchange.getRequestMethod().equals(Methods.POST);
+		if (!post && !exchange.getRequestMethod().equals(Methods.GET)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
+		if (!access.keyLogin()) {
+			if (post) {
+				throw ServerException.NOT_FOUND;
+			}
+			redirect(exchange, "/admin");
+			return;
+		}
+		String message = "";
+		if (post) {
+			String key = formValue(ChannelUtil.getStringContents(exchange.getRequestChannel()), "key");
+			if (access.signIn(exchange, key)) {
+				redirect(exchange, "/");
+				return;
+			}
+			exchange.setStatusCode(StatusCodes.UNAUTHORIZED);
+			message = "<p class=\"field-error\" role=\"alert\">Wrong key.</p>";
+		} else if (identity(exchange).admin()) {
+			redirect(exchange, "/");
+			return;
+		}
 		var out = new StringBuilder();
-		Templates.header(out, "SongBook Admin Page", getRole(exchange));
-		Templates.signin(out);
+		Templates.header(out, "Sign in - My SongBook", getRole(exchange));
+		Templates.signin(out, message);
 		Templates.footer(out);
 
 		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, MIME_TEXT_HTML);
+		exchange.getResponseHeaders().put(Headers.CACHE_CONTROL, "no-store");
 		exchange.getResponseSender().send(out.toString());
+	}
+
+	/**
+	 * Ends the songbook session (key login) and hides the edit buttons, then
+	 * ends the shared session at users when there is one.
+	 */
+	private void signout(final HttpServerExchange exchange) throws ServerException {
+		if (!exchange.getRequestMethod().equals(Methods.POST)) {
+			throw ServerException.METHOD_NOT_ALLOWED;
+		}
+		access.signOut(exchange);
+		redirect(exchange, access.usersUrl() != null ? access.usersUrl() + "/api/logout" : "/");
+	}
+
+	private static void redirect(HttpServerExchange exchange, String location) {
+		exchange.setStatusCode(StatusCodes.SEE_OTHER);
+		exchange.getResponseHeaders().put(Headers.LOCATION, location);
+		exchange.endExchange();
+	}
+
+	/** Reads a field of an application/x-www-form-urlencoded body. */
+	private static String formValue(String body, String name) {
+		for (String pair : body.split("&")) {
+			int equals = pair.indexOf('=');
+			if (equals > 0 && name.equals(URLDecoder.decode(pair.substring(0, equals), StandardCharsets.UTF_8))) {
+				return URLDecoder.decode(pair.substring(equals + 1), StandardCharsets.UTF_8);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * The users session keeper, on the edit pages: an edit can outlast the 15
+	 * min access token. Its banner is off, edit.js shows its own message.
+	 */
+	private String sessionKeeper() {
+		return access.usersUrl() == null ? ""
+				: "<script defer data-no-banner src=\"" + access.usersUrl() + "/session-keeper.js\"></script>";
 	}
 
 	private void adminPage(final HttpServerExchange exchange) throws ServerException {
@@ -583,7 +602,9 @@ public class Server {
 	}
 
 	private void adminCommand(final HttpServerExchange exchange) throws Exception {
-		if (!exchange.getRequestMethod().equals(Methods.GET)) {
+		// Commands change the server state: POST only (a link or a prefetch
+		// must not reindex)
+		if (!exchange.getRequestMethod().equals(Methods.POST)) {
 			throw ServerException.METHOD_NOT_ALLOWED;
 		}
 		var out = new StringBuilder();
@@ -663,9 +684,12 @@ public class Server {
 	// Security
 	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-	private void createAdminKey() {
-		// 128 bits of randomness, hex-encoded: unpredictable, unlike the old
-		// MD5(startup timestamp) which was brute-forceable
+	/**
+	 * Creates the administrator key of the key login. The key is never logged
+	 * nor shown: it is read in the data directory.
+	 */
+	private String createAdminKey() {
+		// 128 bits of randomness, hex-encoded
 		byte[] bytes = new byte[16];
 		SECURE_RANDOM.nextBytes(bytes);
 		StringBuilder sb = new StringBuilder(bytes.length * 2);
@@ -673,88 +697,44 @@ public class Server {
 			sb.append(Character.forDigit((b >> 4) & 0xF, 16));
 			sb.append(Character.forDigit(b & 0xF, 16));
 		}
-		administratorKey = sb.toString();
-		logger.info("Created administrator key: '" + administratorKey + "'.");
-		writeKeys();
+		String key = sb.toString();
+		try {
+			Files.write(getDataRoot().resolve(ADMINISTRATOR_KEY_PATH), List.of(key));
+			info("Administrator key created in the data directory (" + ADMINISTRATOR_KEY_PATH + ")");
+		} catch (IOException e) {
+			error("Could not write administrator key", e);
+		}
+		return key;
 	}
 
 	/**
-	 * Searches for keys on server to initialize administratorKey and userKey.
+	 * Reads the administrator key of the key login, or null.
 	 */
-	private void readKeys() {
+	private String readAdminKey() {
 		try {
 			final Path administratorKeyPath = getDataRoot().resolve(ADMINISTRATOR_KEY_PATH);
 			if (Files.exists(administratorKeyPath)) {
 				final List<String> allLines = Files.readAllLines(administratorKeyPath);
-				if (!allLines.isEmpty()) {
-					administratorKey = allLines.get(allLines.size() - 1);
-
-					showKeyCreationAlert = !Files.exists(getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH));
+				for (int i = allLines.size() - 1; i >= 0; i--) {
+					if (!allLines.get(i).isBlank()) {
+						return allLines.get(i).strip();
+					}
 				}
 			}
 		} catch (IOException e) {
 			error("Could not read administrator key", e);
 		}
-
-		try {
-			final Path userKeyPath = getDataRoot().resolve("user.key");
-			if (Files.exists(userKeyPath)) {
-				final List<String> allLines = Files.readAllLines(userKeyPath);
-				if (!allLines.isEmpty()) {
-					userKey = allLines.get(allLines.size() - 1);
-				}
-			}
-		} catch (IOException e) {
-			error("Could not read user key", e);
-		}
+		return null;
 	}
 
-	/**
-	 * Writes administratorKey and userKey to file system.
-	 */
-	private void writeKeys() {
-		if (administratorKey != null) {
-			try {
-				final Path administratorKeyPath = getDataRoot().resolve(ADMINISTRATOR_KEY_PATH);
-				Files.write(administratorKeyPath, List.of(administratorKey));
-				showKeyCreationAlert = true;
-
-				final Path administratorActivatedPath = getDataRoot().resolve(ADMINISTRATOR_ACTIVATED_PATH);
-				if (Files.exists(administratorActivatedPath)) {
-					Files.delete(administratorActivatedPath);
-				}
-			} catch (IOException e) {
-				error("Could not write administrator key", e);
-			}
-		}
-
-		if (userKey != null) {
-			try {
-				final Path userKeyPath = getDataRoot().resolve("user.key");
-				Files.write(userKeyPath, List.of(userKey));
-				showKeyCreationAlert = true;
-			} catch (IOException e) {
-				error("Could not write user key", e);
-			}
-		}
+	private Access.Identity identity(HttpServerExchange exchange) {
+		Access.Identity identity = exchange.getAttachment(IDENTITY);
+		return identity == null ? Access.Identity.ANONYMOUS : identity;
 	}
 
-	/**
-	 * Checks if key allows to be administrator
-	 */
-	private boolean isAdministrator(String requestKey) {
-		return administratorKey == null || administratorKey.equals(requestKey);
-	}
-
-	/**
-	 * Checks if key allows to be user
-	 */
-	private boolean isUser(String requestKey) {
-		return userKey == null || userKey.equals(requestKey);
-	}
-
+	/** "admin" shows the edit buttons; the access itself is checked by {@link #adminAccess}. */
 	private String getRole(HttpServerExchange exchange) {
-		return isAdministrator(exchange.getAttachment(ADMIN_KEY)) ? "admin" : "user";
+		return access != null && access.showsAdmin(exchange, identity(exchange)) ? "admin" : "user";
 	}
 
 	protected boolean isAskingForJson(HttpServerExchange exchange) {
@@ -784,11 +764,12 @@ public class Server {
 
 	private HttpHandler adminAccess(HttpHandler handler) {
 		return exchange -> {
-			String sessionKey = exchange.getAttachment(ADMIN_KEY);
-			if (isAdministrator(sessionKey)) {
+			Access.Identity identity = identity(exchange);
+			if (identity.admin()) {
 				handler.handleRequest(exchange);
 			} else {
-				throw new ServerException(StatusCodes.UNAUTHORIZED);
+				// 401: nobody signed in; 403: signed in, but not as administrator
+				throw new ServerException(identity.authenticated() ? StatusCodes.FORBIDDEN : StatusCodes.UNAUTHORIZED);
 			}
 		};
 	}

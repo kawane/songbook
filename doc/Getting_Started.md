@@ -21,15 +21,29 @@ Write access
 
 Now that your server is up, this section presents you how to add and edit songs.
 
-Songbook write access is granted when giving a key as a URL parameter. 
-The key is generated when the server is run the first time.
-An alert is presented then until the site is accessed using the newly generated key.
-![AdminKeyAlert](https://github.com/kawane/songbook/raw/master/doc/img/adminKeyAlert.png) 
+Reading is public. Writing is for the administrator, who signs in one of two
+ways (environment variables of the server):
 
-Remember to store the key by bookmarking the address.
-If you wan't to share write access with someone, just send the URL with the key.
+* **A shared login in front of songbook** (`USERS_URL`, for instance
+  `https://users.llgmusic.net`). A reverse proxy (Caddy `forward_auth`) asks the
+  login service before the admin routes (`/edit/*`, `/new`, `/delete/*`,
+  `/admin*` and the POST, PUT and DELETE methods of `/songs/*`) and passes the
+  identity in the `Remote-User` and `Remote-Groups` headers: `Remote-Groups`
+  must contain `admin`. songbook trusts these headers only when `USERS_URL` is
+  set, so the proxy must remove them from every client request and the port of
+  songbook must not be reachable without the proxy. The edit pages load the
+  session keeper of the login service, and *Sign out* ends the session there.
+* **The administrator key** (`ADMIN_KEY_LOGIN=true`), a fallback for a server
+  without the shared login or while it is down. The key is created on the first
+  start in `administrator.key` in the data directory; it is never printed nor
+  shown. Sign in with *Sign In* (`/signin`): the key is sent in a form, never in
+  an address, and the session cookie holds a signature, not the key. A new key
+  (delete the file and restart) ends every session.
 
-Accessing your server with the admin key adds to the navigation several buttons:
+With neither, nobody can write. Older versions took the key as a `?key=` URL
+parameter and stored it in a cookie: both are no longer read.
+
+Signing in as administrator adds to the navigation several buttons:
 
 * A pen to Edit a song.
 * A plus to add a new song.

@@ -35,8 +35,8 @@ public class Templates {
         return print(out, "search.html", "searchResult", searchResult, "role", role);
     }
 
-    public static <A extends Appendable> A editSong(A out, CharSequence songId, CharSequence song, CharSequence role) {
-        return print(out, "editSong.html", "songId", songId, "song", song, "role", role);
+    public static <A extends Appendable> A editSong(A out, CharSequence songId, CharSequence song, CharSequence role, CharSequence sessionKeeper) {
+        return print(out, "editSong.html", "songId", songId, "song", song, "role", role, "sessionKeeper", sessionKeeper);
     }
 
     public static <A extends Appendable> A viewSong(A out, CharSequence songId, CharSequence song, CharSequence role) {
@@ -64,8 +64,8 @@ public class Templates {
 	}
 
 
-    public static <A extends Appendable> A signin(A out) {
-        return print(out, "signin.html");
+    public static <A extends Appendable> A signin(A out, CharSequence message) {
+        return print(out, "signin.html", "message", message);
     }
 
     public static <A extends Appendable> A admin(A out) {
@@ -82,10 +82,6 @@ public class Templates {
 
     public static <A extends Appendable> A alertMissingArguments(A out, CharSequence arguments) {
         return print(out, "alerts/songDoesNotExist.html", "arguments", arguments);
-	}
-
-    public static <A extends Appendable> A alertKeyCreation(A out, CharSequence adminSessionKey, CharSequence path) {
-        return print(out, "alerts/keyCreation.html", "adminSessionKey", adminSessionKey, "path", path);
 	}
 
     public static <A extends Appendable> A alertSongReindexed(A out) {
