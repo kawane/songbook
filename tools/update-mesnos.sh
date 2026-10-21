@@ -5,7 +5,7 @@
 # delete confirmation, then commit.
 set -eu
 
-VERSION="0.5.0"
+VERSION="0.6.0"
 BASE="https://components.mesnos.ovh/v${VERSION}"
 CSS_DEST="src/dist/web/css/vendor"
 JS_DEST="src/dist/web/js/vendor"
