@@ -267,6 +267,18 @@ describe("defaults (no shared login, no key)", () => {
     });
 });
 
+describe("favicon", () => {
+    // The mesnos note in burnt orange, on every page (header.html)
+    it("is served and linked from the pages", async () => {
+        const icon = await raw("main", "/favicon.svg");
+        expect(icon.status).toBe(200);
+        expect(icon.headers.get("content-type")).toContain("image/svg+xml");
+        expect(await icon.text()).toContain('fill="#ba5624"');
+        const page = await (await raw("main", "/", { headers: { Accept: "text/html" } })).text();
+        expect(page).toContain('<link rel="icon" href="/favicon.svg" type="image/svg+xml">');
+    });
+});
+
 describe("health", () => {
     // Public route, queried by the Docker HEALTHCHECK: no session cookie.
     it("reports ok without a session, with every check", async () => {
