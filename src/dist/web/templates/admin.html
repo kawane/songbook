@@ -6,7 +6,10 @@
 <div class="page">
 
     <h3>Admin Songs Database</h3>
-    <div><a id="resetIndex" class="btn btn-secondary" href="/admin/index/reset">Reindex songs</a></div>
+    <form method="post" action="/admin/index/reset"><button id="resetIndex" type="submit" class="btn btn-secondary">Reindex songs</button></form>
+
+    <h3>Session</h3>
+    <form method="post" action="/signout"><button id="signOut" type="submit" class="btn btn-secondary">Sign out</button></form>
 
     <h3>Contributing</h3>
     <div><b>Something wrong:</b> <a href="https://github.com/kawane/songbook/issues">Submit an issue</a></div>

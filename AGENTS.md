@@ -26,7 +26,7 @@ decisions): [mesnos/carnet.mesnos.ovh](https://git.mesnos.ovh/mesnos/carnet.mesn
 
 ```sh
 docker build -t songbook .                                  # build
-docker run --rm -p 8000:8000 -v "$PWD/data:/data" songbook   # run on :8000
+docker run --rm -p 8000:8000 -v "$PWD/data:/data" -e ADMIN_KEY_LOGIN=true songbook   # run on :8000 (key in data/administrator.key)
 npm ci && npm test   # API tests (Node 24, Docker required: they build and run the image)
 ```
 
@@ -39,7 +39,24 @@ The tests also run on every push and pull request (`.github/workflows/tests.yml`
   way for learnsong to read songs from songbook — keep it stable.
 - **Admin access**: routes wrapped in `adminAccess(...)` (`/edit`, `/delete`,
   `/new`, `/admin`) and the write methods of `/songs/{id}`. Reading must stay
-  public.
+  public. The identity is read in one place, `Access.currentUser`:
+  - behind the shared login (`USERS_URL`, `https://users.llgmusic.net` in
+    production), admin = `Remote-User` set and `Remote-Groups` containing
+    `admin`. These headers are trusted only because Caddy removes them from
+    every client request and sets them from users (`forward_auth`) on the admin
+    routes; the port must not be published on the host. Without `USERS_URL`
+    they are ignored;
+  - fallback `ADMIN_KEY_LOGIN=true`: `POST /signin` with the key in the body,
+    cookie `songbook-session` = expiry + HMAC (never the key), `POST /signout`.
+    `?key=` and the old `SessionKey` cookie are not read anymore;
+  - the `songbook-admin` cookie only shows the edit buttons on the public
+    pages; it grants nothing.
+  - 401 = nobody signed in, 403 = signed in without the admin role; `edit.js`
+    handles both, and the edit pages load the users session keeper
+    (`data-no-banner`, songbook shows its own message).
+  - State changes are POST only (`/admin/index/reset`, `/signout`).
+  - Later (decision 0016): check the users JWT in `Access` instead of the
+    headers.
 - **Health**: `GET /api/health` is public (served before the session check)
   and answers 200 `ok`/`degraded` or 503 `down` with the list of checks
   (`Health.java`; vital: `songs`, `index`; not vital: `data-writable`). The
@@ -59,5 +76,8 @@ The tests also run on every push and pull request (`.github/workflows/tests.yml`
 
 - ❌ Add a frontend build step (bundler, transpiler): the site is zero-build on purpose
 - ❌ Make songbook call another service at runtime without a degraded mode
-- ❌ Log or print the admin key
+  (the session keeper is loaded by the browser on the edit pages only: reading
+  never depends on users)
+- ❌ Log or print the admin key, or accept it in an address
+- ❌ Trust `Remote-User` / `Remote-Groups` anywhere but in `Access`, or without `USERS_URL`
 - ❌ New dependencies without discussion

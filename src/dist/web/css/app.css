@@ -31,6 +31,13 @@ html {
     display: none !important;
 }
 
+/* The error banner of dialog.js floats over the page: the danger tint is
+   translucent in dark mode, so it is painted on an opaque surface. */
+#app-error {
+    background-color: var(--color-bg-surface);
+    background-image: linear-gradient(var(--color-danger-bg), var(--color-danger-bg));
+}
+
 /* --- Song page floating toolbar --- */
 
 /* Bottom bar on every screen size, video-player style: translucent, and

@@ -3,11 +3,16 @@
     <button type="button" class="btn ghost square topnav-end" title="Toggle theme" onclick="toggleTheme()">🌓</button>
 </nav>
 <div class="page">
-    <form method="get" action="/">
+    <h1>Sign in</h1>
+    <form class="form-stack" method="post" action="/signin">
         <div class="form-group">
-            <label for="keyInput">Admin key</label>
-            <input id="keyInput" type="text" name="key" class="dialog-input" autocomplete="off">
+            <label for="keyInput">Administrator key</label>
+            <input id="keyInput" type="password" name="key" class="dialog-input" autocomplete="current-password" required aria-describedby="keyHelp">
+            <small id="keyHelp" class="field-help">The key is in the file <code>administrator.key</code> of the data directory.</small>
         </div>
-        <button type="submit" class="btn btn-primary">Sign in</button>
+        ${message}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Sign in</button>
+        </div>
     </form>
 </div>

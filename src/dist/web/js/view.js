@@ -23,9 +23,10 @@ if (deleteButton) {
             await deleteSong(id);
             window.location.href = "/";
         } catch (err) {
-            showErrorMessage("Can't delete this song: " + (err.status === 401
-                ? "you are not signed in as administrator."
-                : err.message));
+            const signedOut = err.status === 401 || err.status === 403;
+            showErrorMessage("Can't delete this song: " + (signedOut
+                ? "you are not signed in as administrator (or the session has expired)."
+                : err.message), signedOut ? { href: "/signin", label: "Sign in (new tab)" } : undefined);
         }
     });
 }

@@ -8,7 +8,8 @@ Songbook
 Songbook is an extremely simple server that allows you to store and edit songs with chords and lyrics on your own server.
 It helps setting you free of web site full of distracting animations to focus on the song.
 
-It's fast and simple. There is no user management, no administration, only a minimal access control. 
+It's fast and simple. There is no user management: reading is public, and writing is for the administrator,
+signed in through a shared login in front of songbook or with a local key (see [Getting Started](doc/Getting_Started.md#write-access)).
 
 Get documentation with the [Getting Started](doc/Getting_Started.md).
 
@@ -42,8 +43,8 @@ The first Songbook version will include this features:
   - [x] Client side add song.
   - [x] Client side remove song.
 - [x] Handle two access types: viewer and editor:
-  - [x] One time access administration page on install.
-  - [x] Parametrized key for accesses.
+  - [x] Public reading.
+  - [x] Editing through a shared login (`USERS_URL`) or an administrator key (`ADMIN_KEY_LOGIN=true`).
 - [x] Full text search on all songs.
 - [x] Supports for computers, smart phones and tablets.
 - [ ] Administration
