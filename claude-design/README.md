@@ -140,7 +140,9 @@ dialogues, contrôles de lecteur…).
 
 ## 4. Le système de design actuel
 
-Les fichiers sont dans `design-system/`.
+Les fichiers sont dans `design-system/`. Le même système existe en artefact « Design System »
+(jetons en clair et en sombre, 20 motifs CSS et 5 web components avec un aperçu en direct) :
+https://claude.ai/artifact/Wr46Vaux7xDjhKnY8oheSU
 
 **Palette** (nommée) :
 
