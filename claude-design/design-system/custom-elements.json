@@ -1,0 +1,5458 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "src/components/audio-loop-player/audio-loop-player.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "A loop player for an audio file, with the same interface as\nvideo-loop-player and youtube-loop-player: loops, speed, pitch, waveform.",
+          "name": "AudioLoopPlayer",
+          "members": [
+            {
+              "kind": "field",
+              "name": "src",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "URL of the audio file (required)",
+              "attribute": "src"
+            },
+            {
+              "kind": "field",
+              "name": "title",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "Title shown in the player (default: the file name, without extension)",
+              "attribute": "title"
+            },
+            {
+              "kind": "field",
+              "name": "showShortcuts",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true,
+              "default": "true",
+              "description": "Show the keyboard shortcuts help (\"false\" hides it)",
+              "attribute": "show-shortcuts",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "autoRestore",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true,
+              "default": "true",
+              "description": "Restore the loops and settings saved in localStorage (\"false\" starts fresh)",
+              "attribute": "auto-restore",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "storagePrefix",
+              "type": {
+                "text": "string"
+              },
+              "readonly": true,
+              "default": "'audioloop'",
+              "description": "Prefix of the localStorage keys: give two players of the same media different prefixes",
+              "attribute": "storage-prefix",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "compact",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Hide the title bar (use when container shows title, e.g., <details><summary>)",
+              "attribute": "compact"
+            },
+            {
+              "kind": "field",
+              "name": "pitch",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "description": "Pitch shift in semitones (-12 to +12). Requires pitch shifter processing (SoundTouch).",
+              "attribute": "pitch"
+            },
+            {
+              "kind": "field",
+              "name": "showPitchControl",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Show pitch control button (advanced feature)",
+              "attribute": "show-pitch-control"
+            },
+            {
+              "kind": "field",
+              "name": "mediaIcon",
+              "type": {
+                "text": "string"
+              },
+              "readonly": true,
+              "description": "Media type icon for compact view (e.g., '🎵', '🎬', '📺')",
+              "default": "'🎵'",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "showExpandButton",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Audio player shows expand button only in minimal mode",
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getCompactTitle",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              },
+              "description": "Get the display title for compact view",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getMediaId",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "play",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "pause",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getCurrentTime",
+              "return": {
+                "type": {
+                  "text": "number"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getDuration",
+              "return": {
+                "type": {
+                  "text": "number"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "seekTo",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "time",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "setPlaybackRate",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "rate",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "isMediaReady",
+              "return": {
+                "type": {
+                  "text": "boolean"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "initMediaLoad",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Lazy load: start loading audio on first activation (expand or play press)",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "exclusive",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "When true, starting this player pauses all other exclusive players on the page (\"false\" turns it off)",
+              "attribute": "exclusive",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "expanded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether the player is expanded (showing full controls) or collapsed (compact view)",
+              "attribute": "expanded",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "loopEnabled",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Whether loop mode is enabled - reflects to attribute for CSS. Defaults to true (ON); \"false\" turns it off.",
+              "attribute": "loop-enabled",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "editMode",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether edit mode is active (shows edit panel, drag handles). Always restores as false.",
+              "attribute": "edit-mode",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "minimal",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Ultra-compact mode: shows only title + play button + expand chevron (~44px)",
+              "attribute": "minimal",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "reloadOn",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "description": "Name of a window event that triggers a silent retry when the player is\nin the media error state — retry loading after an app-defined recovery\nevent (e.g. a session restore). No default; the component stays generic.",
+              "attribute": "reload-on",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "currentTime",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "duration",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "isPlaying",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "playbackSpeed",
+              "type": {
+                "text": "number"
+              },
+              "default": "1",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "loops",
+              "type": {
+                "text": "Loop[]"
+              },
+              "default": "[]",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "activeLoopId",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "editState",
+              "type": {
+                "text": "EditState"
+              },
+              "default": "{ loopId: null, boundary: null }",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "countdown",
+              "type": {
+                "text": "number | null"
+              },
+              "default": "null",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "draggingBoundary",
+              "type": {
+                "text": "'start' | 'end' | null"
+              },
+              "default": "null",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "zoomToLoop",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "mediaError",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "activeLoop",
+              "type": {
+                "text": "Loop | null"
+              },
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "editingLoop",
+              "type": {
+                "text": "Loop | null"
+              },
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "isEditing",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getSubtitle",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              },
+              "description": "Get optional subtitle (e.g., channel name). Override in subclass.",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "startTimeUpdate",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "stopTimeUpdate",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "checkLoopBoundary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleExpanded",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "focus",
+              "parameters": [
+                {
+                  "name": "options",
+                  "optional": true,
+                  "type": {
+                    "text": "FocusOptions"
+                  }
+                }
+              ],
+              "description": "Focus this player for keyboard shortcuts",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "togglePlayPause",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "retryMediaLoad",
+              "description": "Retry loading the media after a failed load. Remembers the playback\nposition, calls media.load() (re-issuing the network request), and\nrestores the position on loadedmetadata before clearing the error\nstate. Loops, pitch, playback rate and other component state live in\ncomponent fields and are untouched. Does not auto-play.",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "seek",
+              "parameters": [
+                {
+                  "name": "seconds",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "setSpeed",
+              "parameters": [
+                {
+                  "name": "speed",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "adjustSpeed",
+              "parameters": [
+                {
+                  "name": "delta",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "returnToLoopStart",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "goToStart",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "countdownPlay",
+              "description": "Countdown play: 3-2-1 then play from current position",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "startCountdownThenPlay",
+              "parameters": [
+                {
+                  "name": "startTime",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "cancelCountdown",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "createLoop",
+              "return": {
+                "type": {
+                  "text": "Loop"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "start",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "end",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "updateLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "updates",
+                  "type": {
+                    "text": "Partial<Loop>"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "deleteLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "activateLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string | null"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleLoopEnabled",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "selectLoopByIndex",
+              "parameters": [
+                {
+                  "name": "index",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleEditMode",
+              "description": "Toggle between play and edit mode",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "enterEditMode",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "exitEditMode",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "adjustEditingBoundary",
+              "parameters": [
+                {
+                  "name": "delta",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "switchEditBoundary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "setBoundaryToCurrent",
+              "parameters": [
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "previewLoop",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "previewEnd",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getTimelineZoom",
+              "return": {
+                "type": {
+                  "text": "{ start: number; end: number; isZoomed: boolean }"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleZoom",
+              "description": "Toggle zoom to loop",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "handleTimelineClick",
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "MouseEvent"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "startDrag",
+              "parameters": [
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                },
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "MouseEvent | TouchEvent"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "handleKeyboard",
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "KeyboardEvent"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "saveCurrentState",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "restoreState",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ],
+          "events": [
+            {
+              "name": "playback-state-changed",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "When playback starts or stops (`detail.playing`)"
+            },
+            {
+              "name": "loop-created",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "When a loop is added from the toolbar (`detail.loop`)",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ],
+          "attributes": [
+            {
+              "description": "Deprecated since 0.6.0: use `show-shortcuts`.",
+              "name": "showshortcuts",
+              "deprecated": "since 0.6.0: use `show-shortcuts`."
+            },
+            {
+              "description": "Deprecated since 0.6.0: use `auto-restore`.",
+              "name": "autorestore",
+              "deprecated": "since 0.6.0: use `auto-restore`."
+            },
+            {
+              "description": "Deprecated since 0.6.0: use `storage-prefix`.",
+              "name": "storageprefix",
+              "deprecated": "since 0.6.0: use `storage-prefix`."
+            },
+            {
+              "name": "src",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "URL of the audio file (required)",
+              "fieldName": "src"
+            },
+            {
+              "name": "title",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "Title shown in the player (default: the file name, without extension)",
+              "fieldName": "title"
+            },
+            {
+              "name": "show-shortcuts",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Show the keyboard shortcuts help (\"false\" hides it)",
+              "fieldName": "showShortcuts"
+            },
+            {
+              "name": "auto-restore",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Restore the loops and settings saved in localStorage (\"false\" starts fresh)",
+              "fieldName": "autoRestore"
+            },
+            {
+              "name": "storage-prefix",
+              "type": {
+                "text": "string"
+              },
+              "default": "'audioloop'",
+              "description": "Prefix of the localStorage keys: give two players of the same media different prefixes",
+              "fieldName": "storagePrefix"
+            },
+            {
+              "name": "compact",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Hide the title bar (use when container shows title, e.g., <details><summary>)",
+              "fieldName": "compact"
+            },
+            {
+              "name": "pitch",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "description": "Pitch shift in semitones (-12 to +12). Requires pitch shifter processing (SoundTouch).",
+              "fieldName": "pitch"
+            },
+            {
+              "name": "show-pitch-control",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Show pitch control button (advanced feature)",
+              "fieldName": "showPitchControl"
+            },
+            {
+              "name": "exclusive",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "When true, starting this player pauses all other exclusive players on the page (\"false\" turns it off)",
+              "fieldName": "exclusive",
+              "attribute": "exclusive",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "expanded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether the player is expanded (showing full controls) or collapsed (compact view)",
+              "fieldName": "expanded",
+              "attribute": "expanded",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "loop-enabled",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Whether loop mode is enabled - reflects to attribute for CSS. Defaults to true (ON); \"false\" turns it off.",
+              "fieldName": "loopEnabled",
+              "attribute": "loop-enabled",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "edit-mode",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether edit mode is active (shows edit panel, drag handles). Always restores as false.",
+              "fieldName": "editMode",
+              "attribute": "edit-mode",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "minimal",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Ultra-compact mode: shows only title + play button + expand chevron (~44px)",
+              "fieldName": "minimal",
+              "attribute": "minimal",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "reload-on",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "description": "Name of a window event that triggers a silent retry when the player is\nin the media error state — retry loading after an app-defined recovery\nevent (e.g. a session restore). No default; the component stays generic.",
+              "fieldName": "reloadOn",
+              "attribute": "reload-on",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ],
+          "mixins": [
+            {
+              "name": "LoopPlayerMixin",
+              "module": "/src/components/loop-player-base/index.js"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "audio-loop-player",
+          "customElement": true,
+          "cssProperties": [
+            {
+              "description": "Background of the player",
+              "name": "--player-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Background of the panels (loop list, edit panel)",
+              "name": "--player-panel-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Tracks, borders and inactive controls",
+              "name": "--player-surface",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Main text",
+              "name": "--player-text-primary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Secondary text (times, labels)",
+              "name": "--player-text-secondary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Play button, active loop, progress",
+              "name": "--player-accent",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Accent on hover",
+              "name": "--player-accent-hover",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Text on the accent buttons (AA on the accent)",
+              "name": "--player-accent-text",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Delete and stop",
+              "name": "--player-danger",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Text on the danger buttons (AA on the danger colour)",
+              "name": "--player-danger-text",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Background of a loop in the list",
+              "name": "--player-item-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Background of a loop on hover",
+              "name": "--player-item-hover-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "AudioLoopPlayer",
+          "declaration": {
+            "name": "AudioLoopPlayer",
+            "module": "src/components/audio-loop-player/audio-loop-player.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "audio-loop-player",
+          "declaration": {
+            "name": "AudioLoopPlayer",
+            "module": "src/components/audio-loop-player/audio-loop-player.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/audio-loop-player/index.ts",
+      "declarations": [],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "AudioLoopPlayer",
+          "declaration": {
+            "name": "AudioLoopPlayer",
+            "module": "./audio-loop-player.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "EditState",
+          "declaration": {
+            "name": "EditState",
+            "module": "../loop-player-base/types.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "EditingBoundary",
+          "declaration": {
+            "name": "EditingBoundary",
+            "module": "../loop-player-base/types.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "Loop",
+          "declaration": {
+            "name": "Loop",
+            "module": "../loop-player-base/types.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "PlayerState",
+          "declaration": {
+            "name": "PlayerState",
+            "module": "../loop-player-base/types.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/chord-grid/chord-grid.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "Renders a chord chart written in SNHT notation as a grid, a compact grid\nor text. The reader picks the view and the zoom; both are remembered\n(localStorage) for every chord grid of the site.",
+          "name": "ChordGridElement",
+          "members": [
+            {
+              "kind": "field",
+              "name": "notation",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "The chart, in SNHT notation (several lines)",
+              "attribute": "notation"
+            },
+            {
+              "kind": "field",
+              "name": "variant",
+              "type": {
+                "text": "'cells' | 'compact' | 'text'"
+              },
+              "default": "'cells'",
+              "description": "The view: 'cells', 'compact' or 'text'. Without the attribute, the reader's last choice, else 'text'",
+              "attribute": "variant",
+              "reflects": true
+            }
+          ],
+          "attributes": [
+            {
+              "name": "notation",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "The chart, in SNHT notation (several lines)",
+              "fieldName": "notation"
+            },
+            {
+              "name": "variant",
+              "type": {
+                "text": "'cells' | 'compact' | 'text'"
+              },
+              "default": "'cells'",
+              "description": "The view: 'cells', 'compact' or 'text'. Without the attribute, the reader's last choice, else 'text'",
+              "fieldName": "variant"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "chord-grid",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "ChordGridElement",
+          "declaration": {
+            "name": "ChordGridElement",
+            "module": "src/components/chord-grid/chord-grid.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "chord-grid",
+          "declaration": {
+            "name": "ChordGridElement",
+            "module": "src/components/chord-grid/chord-grid.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/chord-grid/index.ts",
+      "declarations": [],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "parse",
+          "declaration": {
+            "name": "parse",
+            "module": "./parser.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "Beat",
+          "declaration": {
+            "name": "Beat",
+            "module": "./types.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "Chord",
+          "declaration": {
+            "name": "Chord",
+            "module": "./types.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "ChordGrid",
+          "declaration": {
+            "name": "ChordGrid",
+            "module": "./types.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "Measure",
+          "declaration": {
+            "name": "Measure",
+            "module": "./types.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "Section",
+          "declaration": {
+            "name": "Section",
+            "module": "./types.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/chord-grid/parser.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "parse",
+          "return": {
+            "type": {
+              "text": "ChordGrid"
+            }
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "text": "string"
+              }
+            }
+          ],
+          "description": "Parse SNHT notation text into a ChordGrid AST.\n\nSupported syntax:\n  {time: 3/4}              → time signature directive\n  # [Section name]         → section header\n  | C . . . | Am . G . |  → measures with chords and beat continuations\n  %                        → repeat previous measure\n  x2                       → repeat section N times (suffix after last |)"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "parse",
+          "declaration": {
+            "name": "parse",
+            "module": "src/components/chord-grid/parser.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/chord-grid/types.ts",
+      "declarations": [],
+      "exports": []
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/loop-player-base/attributes.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "booleanAttribute",
+          "type": {
+            "text": "ComplexAttributeConverter<boolean>"
+          },
+          "default": "{ fromAttribute: (value: string | null) => value !== null && value !== 'false', toAttribute: (value: boolean) => (value ? '' : null), }",
+          "description": "Converter for a boolean attribute whose property defaults to true: present\nmeans true, absent or \"false\" means false (`show-shortcuts=\"false\"` turns\nthe shortcuts off). Reflection writes an empty attribute or removes it."
+        },
+        {
+          "kind": "variable",
+          "name": "LEGACY_ATTRIBUTES",
+          "type": {
+            "text": "Readonly<Record<string, string>>"
+          },
+          "default": "{ showshortcuts: 'show-shortcuts', autorestore: 'auto-restore', storageprefix: 'storage-prefix', videoid: 'video-id', }",
+          "description": "Attribute names before 0.6.0 → their current names."
+        },
+        {
+          "kind": "function",
+          "name": "warnLegacyAttribute",
+          "return": {
+            "type": {
+              "text": "void"
+            }
+          },
+          "parameters": [
+            {
+              "name": "tagName",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "oldName",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "currentName",
+              "type": {
+                "text": "string"
+              }
+            }
+          ],
+          "description": "Warns once per element and old attribute name."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "booleanAttribute",
+          "declaration": {
+            "name": "booleanAttribute",
+            "module": "src/components/loop-player-base/attributes.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "LEGACY_ATTRIBUTES",
+          "declaration": {
+            "name": "LEGACY_ATTRIBUTES",
+            "module": "src/components/loop-player-base/attributes.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "warnLegacyAttribute",
+          "declaration": {
+            "name": "warnLegacyAttribute",
+            "module": "src/components/loop-player-base/attributes.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/loop-player-base/index.ts",
+      "declarations": [],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "module": "src/components/loop-player-base/attributes.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "module": "src/components/loop-player-base/icons.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "module": "src/components/loop-player-base/mixin.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "module": "src/components/loop-player-base/styles.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "module": "src/components/loop-player-base/types.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/loop-player-base/mixin.ts",
+      "declarations": [
+        {
+          "kind": "mixin",
+          "description": "Mixin that adds loop player functionality to a LitElement: what the three\nloop players share (loops, edit mode, speed, shortcuts, persistence).",
+          "name": "LoopPlayerMixin",
+          "cssProperties": [
+            {
+              "description": "Background of the player",
+              "name": "--player-bg"
+            },
+            {
+              "description": "Background of the panels (loop list, edit panel)",
+              "name": "--player-panel-bg"
+            },
+            {
+              "description": "Tracks, borders and inactive controls",
+              "name": "--player-surface"
+            },
+            {
+              "description": "Main text",
+              "name": "--player-text-primary"
+            },
+            {
+              "description": "Secondary text (times, labels)",
+              "name": "--player-text-secondary"
+            },
+            {
+              "description": "Play button, active loop, progress",
+              "name": "--player-accent"
+            },
+            {
+              "description": "Accent on hover",
+              "name": "--player-accent-hover"
+            },
+            {
+              "description": "Text on the accent buttons (AA on the accent)",
+              "name": "--player-accent-text"
+            },
+            {
+              "description": "Delete and stop",
+              "name": "--player-danger"
+            },
+            {
+              "description": "Text on the danger buttons (AA on the danger colour)",
+              "name": "--player-danger-text"
+            },
+            {
+              "description": "Background of a loop in the list",
+              "name": "--player-item-bg"
+            },
+            {
+              "description": "Background of a loop on hover",
+              "name": "--player-item-hover-bg"
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "exclusive",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "When true, starting this player pauses all other exclusive players on the page (\"false\" turns it off)",
+              "attribute": "exclusive",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "expanded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether the player is expanded (showing full controls) or collapsed (compact view)",
+              "attribute": "expanded",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "loopEnabled",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Whether loop mode is enabled - reflects to attribute for CSS. Defaults to true (ON); \"false\" turns it off.",
+              "attribute": "loop-enabled",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "editMode",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether edit mode is active (shows edit panel, drag handles). Always restores as false.",
+              "attribute": "edit-mode",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "minimal",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Ultra-compact mode: shows only title + play button + expand chevron (~44px)",
+              "attribute": "minimal",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "reloadOn",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "description": "Name of a window event that triggers a silent retry when the player is\nin the media error state — retry loading after an app-defined recovery\nevent (e.g. a session restore). No default; the component stays generic.",
+              "attribute": "reload-on"
+            },
+            {
+              "kind": "field",
+              "name": "currentTime",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "duration",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "isPlaying",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "playbackSpeed",
+              "type": {
+                "text": "number"
+              },
+              "default": "1"
+            },
+            {
+              "kind": "field",
+              "name": "loops",
+              "type": {
+                "text": "Loop[]"
+              },
+              "default": "[]"
+            },
+            {
+              "kind": "field",
+              "name": "activeLoopId",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "editState",
+              "type": {
+                "text": "EditState"
+              },
+              "default": "{ loopId: null, boundary: null }"
+            },
+            {
+              "kind": "field",
+              "name": "countdown",
+              "type": {
+                "text": "number | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "draggingBoundary",
+              "type": {
+                "text": "'start' | 'end' | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "zoomToLoop",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "mediaError",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "activeLoop",
+              "type": {
+                "text": "Loop | null"
+              },
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "editingLoop",
+              "type": {
+                "text": "Loop | null"
+              },
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "isEditing",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true
+            },
+            {
+              "kind": "method",
+              "name": "getMediaId",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "play",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "pause",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getCurrentTime",
+              "return": {
+                "type": {
+                  "text": "number"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getDuration",
+              "return": {
+                "type": {
+                  "text": "number"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "seekTo",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "time",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "setPlaybackRate",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "rate",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "isMediaReady",
+              "return": {
+                "type": {
+                  "text": "boolean"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "initMediaLoad",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "storagePrefix",
+              "type": {
+                "text": "string"
+              },
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "autoRestore",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "showShortcuts",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "mediaIcon",
+              "type": {
+                "text": "string"
+              },
+              "readonly": true,
+              "description": "Media type icon for compact view (e.g., '🎵', '🎬', '📺')"
+            },
+            {
+              "kind": "method",
+              "name": "getCompactTitle",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              },
+              "description": "Get the display title for compact view"
+            },
+            {
+              "kind": "method",
+              "name": "getSubtitle",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              },
+              "description": "Get optional subtitle (e.g., channel name). Override in subclass."
+            },
+            {
+              "kind": "method",
+              "name": "startTimeUpdate"
+            },
+            {
+              "kind": "method",
+              "name": "stopTimeUpdate"
+            },
+            {
+              "kind": "method",
+              "name": "checkLoopBoundary"
+            },
+            {
+              "kind": "method",
+              "name": "toggleExpanded"
+            },
+            {
+              "kind": "method",
+              "name": "focus",
+              "parameters": [
+                {
+                  "name": "options",
+                  "optional": true,
+                  "type": {
+                    "text": "FocusOptions"
+                  }
+                }
+              ],
+              "description": "Focus this player for keyboard shortcuts"
+            },
+            {
+              "kind": "field",
+              "name": "showExpandButton",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether to show the expand button (override in subclasses like audio player)",
+              "readonly": true
+            },
+            {
+              "kind": "method",
+              "name": "togglePlayPause"
+            },
+            {
+              "kind": "method",
+              "name": "retryMediaLoad",
+              "description": "Retry loading the media after a failed load. Remembers the playback\nposition, calls media.load() (re-issuing the network request), and\nrestores the position on loadedmetadata before clearing the error\nstate. Loops, pitch, playback rate and other component state live in\ncomponent fields and are untouched. Does not auto-play."
+            },
+            {
+              "kind": "method",
+              "name": "seek",
+              "parameters": [
+                {
+                  "name": "seconds",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "setSpeed",
+              "parameters": [
+                {
+                  "name": "speed",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "adjustSpeed",
+              "parameters": [
+                {
+                  "name": "delta",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "returnToLoopStart"
+            },
+            {
+              "kind": "method",
+              "name": "goToStart"
+            },
+            {
+              "kind": "method",
+              "name": "countdownPlay",
+              "description": "Countdown play: 3-2-1 then play from current position"
+            },
+            {
+              "kind": "method",
+              "name": "startCountdownThenPlay",
+              "parameters": [
+                {
+                  "name": "startTime",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "cancelCountdown"
+            },
+            {
+              "kind": "method",
+              "name": "createLoop",
+              "return": {
+                "type": {
+                  "text": "Loop"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "start",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "end",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "updateLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "updates",
+                  "type": {
+                    "text": "Partial<Loop>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "deleteLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "activateLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string | null"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "toggleLoopEnabled"
+            },
+            {
+              "kind": "method",
+              "name": "selectLoopByIndex",
+              "parameters": [
+                {
+                  "name": "index",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "toggleEditMode",
+              "description": "Toggle between play and edit mode"
+            },
+            {
+              "kind": "method",
+              "name": "enterEditMode",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "exitEditMode"
+            },
+            {
+              "kind": "method",
+              "name": "adjustEditingBoundary",
+              "parameters": [
+                {
+                  "name": "delta",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "switchEditBoundary"
+            },
+            {
+              "kind": "method",
+              "name": "setBoundaryToCurrent",
+              "parameters": [
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "previewLoop"
+            },
+            {
+              "kind": "method",
+              "name": "previewEnd"
+            },
+            {
+              "kind": "method",
+              "name": "getTimelineZoom",
+              "return": {
+                "type": {
+                  "text": "{ start: number; end: number; isZoomed: boolean }"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleZoom",
+              "description": "Toggle zoom to loop"
+            },
+            {
+              "kind": "method",
+              "name": "handleTimelineClick",
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "MouseEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "startDrag",
+              "parameters": [
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                },
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "MouseEvent | TouchEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "handleKeyboard",
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "KeyboardEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "saveCurrentState"
+            },
+            {
+              "kind": "method",
+              "name": "restoreState"
+            }
+          ],
+          "events": [
+            {
+              "name": "loop-created",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "When a loop is added from the toolbar (`detail.loop`)"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "exclusive",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "When true, starting this player pauses all other exclusive players on the page (\"false\" turns it off)",
+              "fieldName": "exclusive",
+              "attribute": "exclusive"
+            },
+            {
+              "name": "expanded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether the player is expanded (showing full controls) or collapsed (compact view)",
+              "fieldName": "expanded",
+              "attribute": "expanded"
+            },
+            {
+              "name": "loop-enabled",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Whether loop mode is enabled - reflects to attribute for CSS. Defaults to true (ON); \"false\" turns it off.",
+              "fieldName": "loopEnabled",
+              "attribute": "loop-enabled"
+            },
+            {
+              "name": "edit-mode",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether edit mode is active (shows edit panel, drag handles). Always restores as false.",
+              "fieldName": "editMode",
+              "attribute": "edit-mode"
+            },
+            {
+              "name": "minimal",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Ultra-compact mode: shows only title + play button + expand chevron (~44px)",
+              "fieldName": "minimal",
+              "attribute": "minimal"
+            },
+            {
+              "name": "reload-on",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "description": "Name of a window event that triggers a silent retry when the player is\nin the media error state — retry loading after an app-defined recovery\nevent (e.g. a session restore). No default; the component stays generic.",
+              "fieldName": "reloadOn",
+              "attribute": "reload-on"
+            }
+          ],
+          "parameters": [
+            {
+              "name": "superClass",
+              "type": {
+                "text": "T"
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "LoopPlayerMixin",
+          "declaration": {
+            "name": "LoopPlayerMixin",
+            "module": "src/components/loop-player-base/mixin.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/loop-player-base/types.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "TIMING",
+          "type": {
+            "text": "{\n    /** Interval for updating current time display */\n    FRAME_INTERVAL_MS: 16,\n    /** Debounce delay for saving state to localStorage */\n    DEBOUNCE_SAVE_MS: 500,\n    /** Seconds before end to preview when using \"preview end\" feature */\n    PREVIEW_BEFORE_END_S: 3,\n    /** Countdown duration before playing */\n    COUNTDOWN_SECONDS: 3,\n}"
+          },
+          "default": "{ /** Interval for updating current time display */ FRAME_INTERVAL_MS: 16, /** Debounce delay for saving state to localStorage */ DEBOUNCE_SAVE_MS: 500, /** Seconds before end to preview when using \"preview end\" feature */ PREVIEW_BEFORE_END_S: 3, /** Countdown duration before playing */ COUNTDOWN_SECONDS: 3, }",
+          "description": "Timing constants for all loop players"
+        },
+        {
+          "kind": "variable",
+          "name": "ADJUSTMENTS",
+          "type": {
+            "text": "{\n    /** Normal seek amount in seconds */\n    SEEK_NORMAL_S: 5,\n    /** Fine seek amount (with Shift) in seconds */\n    SEEK_FINE_S: 0.1,\n    /** Normal loop boundary adjustment in seconds */\n    LOOP_ADJUST_NORMAL_S: 0.5,\n    /** Fine loop boundary adjustment (with Shift) in seconds */\n    LOOP_ADJUST_FINE_S: 0.1,\n    /** Playback speed adjustment step */\n    SPEED_STEP: 0.1,\n    /** Minimum playback speed */\n    SPEED_MIN: 0.1,\n    /** Maximum playback speed */\n    SPEED_MAX: 2.0,\n}"
+          },
+          "default": "{ /** Normal seek amount in seconds */ SEEK_NORMAL_S: 5, /** Fine seek amount (with Shift) in seconds */ SEEK_FINE_S: 0.1, /** Normal loop boundary adjustment in seconds */ LOOP_ADJUST_NORMAL_S: 0.5, /** Fine loop boundary adjustment (with Shift) in seconds */ LOOP_ADJUST_FINE_S: 0.1, /** Playback speed adjustment step */ SPEED_STEP: 0.1, /** Minimum playback speed */ SPEED_MIN: 0.1, /** Maximum playback speed */ SPEED_MAX: 2.0, }",
+          "description": "Adjustment values for seeking and loop editing"
+        },
+        {
+          "kind": "variable",
+          "name": "TIMELINE",
+          "type": {
+            "text": "{\n    /** Padding on each side of loop when zoomed (30%) */\n    ZOOM_PADDING: 0.3,\n    /** Minimum visible duration in seconds when zoomed */\n    MIN_VISIBLE_DURATION: 10,\n    /** Minimum loop duration in seconds */\n    MIN_LOOP_DURATION: 0.1,\n}"
+          },
+          "default": "{ /** Padding on each side of loop when zoomed (30%) */ ZOOM_PADDING: 0.3, /** Minimum visible duration in seconds when zoomed */ MIN_VISIBLE_DURATION: 10, /** Minimum loop duration in seconds */ MIN_LOOP_DURATION: 0.1, }",
+          "description": "Timeline visualization constants"
+        },
+        {
+          "kind": "variable",
+          "name": "GESTURES",
+          "type": {
+            "text": "{\n    /** Duration in ms a pointer must be held to trigger a long press */\n    LONG_PRESS_DELAY_MS: 350,\n    /** Max pointer movement in px before a long press is cancelled (scroll/drag intent) */\n    LONG_PRESS_MOVE_THRESHOLD_PX: 8,\n}"
+          },
+          "default": "{ /** Duration in ms a pointer must be held to trigger a long press */ LONG_PRESS_DELAY_MS: 350, /** Max pointer movement in px before a long press is cancelled (scroll/drag intent) */ LONG_PRESS_MOVE_THRESHOLD_PX: 8, }",
+          "description": "Touch/pointer gesture constants"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "TIMING",
+          "declaration": {
+            "name": "TIMING",
+            "module": "src/components/loop-player-base/types.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "ADJUSTMENTS",
+          "declaration": {
+            "name": "ADJUSTMENTS",
+            "module": "src/components/loop-player-base/types.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "TIMELINE",
+          "declaration": {
+            "name": "TIMELINE",
+            "module": "src/components/loop-player-base/types.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "GESTURES",
+          "declaration": {
+            "name": "GESTURES",
+            "module": "src/components/loop-player-base/types.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/mesnos-dialog/mesnos-dialog.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "A dialog that enriches the native `<dialog>` it wraps (decision 0010 in\nthe knowledge base): focus, return value, forms that stay open on error.\nThe markup and the behaviour are described at the top of this file.",
+          "name": "MesnosDialog",
+          "members": [
+            {
+              "kind": "field",
+              "name": "onSubmit",
+              "type": {
+                "text": "SubmitHandler | null | undefined"
+              },
+              "description": "Runs on submit of a form of the dialog, buttons disabled meanwhile:\nresolves → closes with the value of the submit button ('submit' if\nnone); resolves to `false` → stays open; rejects → stays open, the\nerror message in `.dialog-status`. Without it, forms behave natively\n(`method=\"dialog\"` closes)."
+            },
+            {
+              "kind": "field",
+              "name": "returnFocus",
+              "type": {
+                "text": "FocusTarget | null | undefined"
+              },
+              "description": "Default for open({ returnFocus })."
+            },
+            {
+              "kind": "field",
+              "name": "dialog",
+              "type": {
+                "text": "HTMLDialogElement | null"
+              },
+              "description": "The native <dialog>, first child element.",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "lightDismiss",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether a click on the backdrop closes the dialog (`light-dismiss` attribute)."
+            },
+            {
+              "kind": "method",
+              "name": "open",
+              "return": {
+                "type": {
+                  "text": "Promise<string>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "options",
+                  "default": "{}",
+                  "type": {
+                    "text": "OpenOptions"
+                  }
+                }
+              ],
+              "description": "Opens as a modal; resolves with the return value on close ('' for\nEscape). `options.returnFocus`: focused on close when the element\nfocused before opening is gone."
+            },
+            {
+              "kind": "method",
+              "name": "close",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "value",
+                  "default": "''"
+                }
+              ],
+              "description": "Closes with `value` as the return value."
+            },
+            {
+              "kind": "method",
+              "name": "setStatus",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "text",
+                  "type": {
+                    "text": "string"
+                  }
+                }
+              ],
+              "description": "Text of the status line (`.dialog-status`, created if needed); '' hides it."
+            }
+          ],
+          "attributes": [
+            {
+              "name": "size",
+              "description": "`md` for a wider dialog (adds the `dialog-md` class)"
+            },
+            {
+              "description": "A click on the backdrop closes the dialog",
+              "name": "light-dismiss"
+            }
+          ],
+          "superclass": {
+            "name": "HTMLElement"
+          },
+          "tagName": "mesnos-dialog",
+          "customElement": true
+        },
+        {
+          "kind": "function",
+          "name": "confirmDialog",
+          "return": {
+            "type": {
+              "text": "Promise<boolean>"
+            }
+          },
+          "parameters": [
+            {
+              "name": "options",
+              "type": {
+                "text": "ConfirmDialogOptions"
+              }
+            }
+          ],
+          "description": "Asks for a confirmation: true for the confirm button, false otherwise (Cancel, ✕, Escape, backdrop)."
+        },
+        {
+          "kind": "function",
+          "name": "alertDialog",
+          "return": {
+            "type": {
+              "text": "Promise<void>"
+            }
+          },
+          "parameters": [
+            {
+              "name": "options",
+              "type": {
+                "text": "AlertDialogOptions"
+              }
+            }
+          ],
+          "description": "Shows a message; resolves once it is dismissed."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MesnosDialog",
+          "declaration": {
+            "name": "MesnosDialog",
+            "module": "src/components/mesnos-dialog/mesnos-dialog.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "mesnos-dialog",
+          "declaration": {
+            "name": "MesnosDialog",
+            "module": "src/components/mesnos-dialog/mesnos-dialog.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "confirmDialog",
+          "declaration": {
+            "name": "confirmDialog",
+            "module": "src/components/mesnos-dialog/mesnos-dialog.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "alertDialog",
+          "declaration": {
+            "name": "alertDialog",
+            "module": "src/components/mesnos-dialog/mesnos-dialog.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/video-loop-player/index.ts",
+      "declarations": [],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "VideoLoopPlayer",
+          "declaration": {
+            "name": "VideoLoopPlayer",
+            "module": "./video-loop-player.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/video-loop-player/video-loop-player.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "A loop player for a hosted video file (MP4, WebM…), on the native\n`<video>` element, with the same interface as youtube-loop-player and\naudio-loop-player.",
+          "name": "VideoLoopPlayer",
+          "members": [
+            {
+              "kind": "field",
+              "name": "src",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "URL of the video file (required)",
+              "attribute": "src"
+            },
+            {
+              "kind": "field",
+              "name": "poster",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "URL of an image shown before playback",
+              "attribute": "poster"
+            },
+            {
+              "kind": "field",
+              "name": "preload",
+              "type": {
+                "text": "'none' | 'metadata' | 'auto'"
+              },
+              "default": "'metadata'",
+              "description": "How much to load before playback: 'none', 'metadata' or 'auto'",
+              "attribute": "preload"
+            },
+            {
+              "kind": "field",
+              "name": "showShortcuts",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true,
+              "default": "true",
+              "description": "Show the keyboard shortcuts help (\"false\" hides it)",
+              "attribute": "show-shortcuts",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "autoRestore",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true,
+              "default": "true",
+              "description": "Restore the loops and settings saved in localStorage (\"false\" starts fresh)",
+              "attribute": "auto-restore",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "storagePrefix",
+              "type": {
+                "text": "string"
+              },
+              "readonly": true,
+              "default": "'videoloop'",
+              "description": "Prefix of the localStorage keys: give two players of the same media different prefixes",
+              "attribute": "storage-prefix",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "compact",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Hide padding and use minimal styling (for embedded contexts)",
+              "attribute": "compact"
+            },
+            {
+              "kind": "field",
+              "name": "pitch",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "description": "Pitch shift in semitones (-12 to +12). Requires pitch shifter processing (SoundTouch).",
+              "attribute": "pitch"
+            },
+            {
+              "kind": "field",
+              "name": "showPitchControl",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Show pitch control button (advanced feature)",
+              "attribute": "show-pitch-control"
+            },
+            {
+              "kind": "field",
+              "name": "mediaIcon",
+              "type": {
+                "text": "string"
+              },
+              "readonly": true,
+              "description": "Media type icon for compact view (e.g., '🎵', '🎬', '📺')",
+              "default": "'🎬'",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getCompactTitle",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              },
+              "description": "Get the display title for compact view",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getMediaId",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "play",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "pause",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getCurrentTime",
+              "return": {
+                "type": {
+                  "text": "number"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getDuration",
+              "return": {
+                "type": {
+                  "text": "number"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "seekTo",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "time",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "setPlaybackRate",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "rate",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "isMediaReady",
+              "return": {
+                "type": {
+                  "text": "boolean"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "initMediaLoad",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Lazy load: start loading video on first activation (expand or play press)",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "exclusive",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "When true, starting this player pauses all other exclusive players on the page (\"false\" turns it off)",
+              "attribute": "exclusive",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "expanded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether the player is expanded (showing full controls) or collapsed (compact view)",
+              "attribute": "expanded",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "loopEnabled",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Whether loop mode is enabled - reflects to attribute for CSS. Defaults to true (ON); \"false\" turns it off.",
+              "attribute": "loop-enabled",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "editMode",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether edit mode is active (shows edit panel, drag handles). Always restores as false.",
+              "attribute": "edit-mode",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "minimal",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Ultra-compact mode: shows only title + play button + expand chevron (~44px)",
+              "attribute": "minimal",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "reloadOn",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "description": "Name of a window event that triggers a silent retry when the player is\nin the media error state — retry loading after an app-defined recovery\nevent (e.g. a session restore). No default; the component stays generic.",
+              "attribute": "reload-on",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "currentTime",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "duration",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "isPlaying",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "playbackSpeed",
+              "type": {
+                "text": "number"
+              },
+              "default": "1",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "loops",
+              "type": {
+                "text": "Loop[]"
+              },
+              "default": "[]",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "activeLoopId",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "editState",
+              "type": {
+                "text": "EditState"
+              },
+              "default": "{ loopId: null, boundary: null }",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "countdown",
+              "type": {
+                "text": "number | null"
+              },
+              "default": "null",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "draggingBoundary",
+              "type": {
+                "text": "'start' | 'end' | null"
+              },
+              "default": "null",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "zoomToLoop",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "mediaError",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "activeLoop",
+              "type": {
+                "text": "Loop | null"
+              },
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "editingLoop",
+              "type": {
+                "text": "Loop | null"
+              },
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "isEditing",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getSubtitle",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              },
+              "description": "Get optional subtitle (e.g., channel name). Override in subclass.",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "startTimeUpdate",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "stopTimeUpdate",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "checkLoopBoundary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleExpanded",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "focus",
+              "parameters": [
+                {
+                  "name": "options",
+                  "optional": true,
+                  "type": {
+                    "text": "FocusOptions"
+                  }
+                }
+              ],
+              "description": "Focus this player for keyboard shortcuts",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "showExpandButton",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether to show the expand button (override in subclasses like audio player)",
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "togglePlayPause",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "retryMediaLoad",
+              "description": "Retry loading the media after a failed load. Remembers the playback\nposition, calls media.load() (re-issuing the network request), and\nrestores the position on loadedmetadata before clearing the error\nstate. Loops, pitch, playback rate and other component state live in\ncomponent fields and are untouched. Does not auto-play.",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "seek",
+              "parameters": [
+                {
+                  "name": "seconds",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "setSpeed",
+              "parameters": [
+                {
+                  "name": "speed",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "adjustSpeed",
+              "parameters": [
+                {
+                  "name": "delta",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "returnToLoopStart",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "goToStart",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "countdownPlay",
+              "description": "Countdown play: 3-2-1 then play from current position",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "startCountdownThenPlay",
+              "parameters": [
+                {
+                  "name": "startTime",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "cancelCountdown",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "createLoop",
+              "return": {
+                "type": {
+                  "text": "Loop"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "start",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "end",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "updateLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "updates",
+                  "type": {
+                    "text": "Partial<Loop>"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "deleteLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "activateLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string | null"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleLoopEnabled",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "selectLoopByIndex",
+              "parameters": [
+                {
+                  "name": "index",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleEditMode",
+              "description": "Toggle between play and edit mode",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "enterEditMode",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "exitEditMode",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "adjustEditingBoundary",
+              "parameters": [
+                {
+                  "name": "delta",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "switchEditBoundary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "setBoundaryToCurrent",
+              "parameters": [
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "previewLoop",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "previewEnd",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getTimelineZoom",
+              "return": {
+                "type": {
+                  "text": "{ start: number; end: number; isZoomed: boolean }"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleZoom",
+              "description": "Toggle zoom to loop",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "handleTimelineClick",
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "MouseEvent"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "startDrag",
+              "parameters": [
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                },
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "MouseEvent | TouchEvent"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "handleKeyboard",
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "KeyboardEvent"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "saveCurrentState",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "restoreState",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ],
+          "events": [
+            {
+              "name": "playback-state-changed",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "When playback starts or stops (`detail.playing`)"
+            },
+            {
+              "name": "loop-created",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "When a loop is added from the toolbar (`detail.loop`)",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ],
+          "attributes": [
+            {
+              "description": "Deprecated since 0.6.0: use `show-shortcuts`.",
+              "name": "showshortcuts",
+              "deprecated": "since 0.6.0: use `show-shortcuts`."
+            },
+            {
+              "description": "Deprecated since 0.6.0: use `auto-restore`.",
+              "name": "autorestore",
+              "deprecated": "since 0.6.0: use `auto-restore`."
+            },
+            {
+              "description": "Deprecated since 0.6.0: use `storage-prefix`.",
+              "name": "storageprefix",
+              "deprecated": "since 0.6.0: use `storage-prefix`."
+            },
+            {
+              "name": "src",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "URL of the video file (required)",
+              "fieldName": "src"
+            },
+            {
+              "name": "poster",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "URL of an image shown before playback",
+              "fieldName": "poster"
+            },
+            {
+              "name": "preload",
+              "type": {
+                "text": "'none' | 'metadata' | 'auto'"
+              },
+              "default": "'metadata'",
+              "description": "How much to load before playback: 'none', 'metadata' or 'auto'",
+              "fieldName": "preload"
+            },
+            {
+              "name": "show-shortcuts",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Show the keyboard shortcuts help (\"false\" hides it)",
+              "fieldName": "showShortcuts"
+            },
+            {
+              "name": "auto-restore",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Restore the loops and settings saved in localStorage (\"false\" starts fresh)",
+              "fieldName": "autoRestore"
+            },
+            {
+              "name": "storage-prefix",
+              "type": {
+                "text": "string"
+              },
+              "default": "'videoloop'",
+              "description": "Prefix of the localStorage keys: give two players of the same media different prefixes",
+              "fieldName": "storagePrefix"
+            },
+            {
+              "name": "compact",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Hide padding and use minimal styling (for embedded contexts)",
+              "fieldName": "compact"
+            },
+            {
+              "name": "pitch",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "description": "Pitch shift in semitones (-12 to +12). Requires pitch shifter processing (SoundTouch).",
+              "fieldName": "pitch"
+            },
+            {
+              "name": "show-pitch-control",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Show pitch control button (advanced feature)",
+              "fieldName": "showPitchControl"
+            },
+            {
+              "name": "exclusive",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "When true, starting this player pauses all other exclusive players on the page (\"false\" turns it off)",
+              "fieldName": "exclusive",
+              "attribute": "exclusive",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "expanded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether the player is expanded (showing full controls) or collapsed (compact view)",
+              "fieldName": "expanded",
+              "attribute": "expanded",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "loop-enabled",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Whether loop mode is enabled - reflects to attribute for CSS. Defaults to true (ON); \"false\" turns it off.",
+              "fieldName": "loopEnabled",
+              "attribute": "loop-enabled",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "edit-mode",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether edit mode is active (shows edit panel, drag handles). Always restores as false.",
+              "fieldName": "editMode",
+              "attribute": "edit-mode",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "minimal",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Ultra-compact mode: shows only title + play button + expand chevron (~44px)",
+              "fieldName": "minimal",
+              "attribute": "minimal",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "reload-on",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "description": "Name of a window event that triggers a silent retry when the player is\nin the media error state — retry loading after an app-defined recovery\nevent (e.g. a session restore). No default; the component stays generic.",
+              "fieldName": "reloadOn",
+              "attribute": "reload-on",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ],
+          "mixins": [
+            {
+              "name": "LoopPlayerMixin",
+              "module": "/src/components/loop-player-base/index.js"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "video-loop-player",
+          "customElement": true,
+          "cssProperties": [
+            {
+              "description": "Background of the player",
+              "name": "--player-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Background of the panels (loop list, edit panel)",
+              "name": "--player-panel-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Tracks, borders and inactive controls",
+              "name": "--player-surface",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Main text",
+              "name": "--player-text-primary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Secondary text (times, labels)",
+              "name": "--player-text-secondary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Play button, active loop, progress",
+              "name": "--player-accent",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Accent on hover",
+              "name": "--player-accent-hover",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Text on the accent buttons (AA on the accent)",
+              "name": "--player-accent-text",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Delete and stop",
+              "name": "--player-danger",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Text on the danger buttons (AA on the danger colour)",
+              "name": "--player-danger-text",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Background of a loop in the list",
+              "name": "--player-item-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Background of a loop on hover",
+              "name": "--player-item-hover-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "VideoLoopPlayer",
+          "declaration": {
+            "name": "VideoLoopPlayer",
+            "module": "src/components/video-loop-player/video-loop-player.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "video-loop-player",
+          "declaration": {
+            "name": "VideoLoopPlayer",
+            "module": "src/components/video-loop-player/video-loop-player.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/youtube-loop-player/index.ts",
+      "declarations": [],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "EditState",
+          "declaration": {
+            "name": "EditState",
+            "module": "../loop-player-base/types.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "EditingBoundary",
+          "declaration": {
+            "name": "EditingBoundary",
+            "module": "../loop-player-base/types.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "Loop",
+          "declaration": {
+            "name": "Loop",
+            "module": "../loop-player-base/types.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "PlayerState",
+          "declaration": {
+            "name": "PlayerState",
+            "module": "../loop-player-base/types.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "YouTubeLoopPlayer",
+          "declaration": {
+            "name": "YouTubeLoopPlayer",
+            "module": "./youtube-loop-player.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/youtube-loop-player/youtube-loop-player.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "A loop player for a YouTube video (YouTube IFrame API), with the same\ninterface as video-loop-player and audio-loop-player.",
+          "name": "YouTubeLoopPlayer",
+          "members": [
+            {
+              "kind": "field",
+              "name": "videoId",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "The YouTube video id, e.g. `85PtFT6yei4` (required)",
+              "attribute": "video-id"
+            },
+            {
+              "kind": "field",
+              "name": "showShortcuts",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true,
+              "default": "true",
+              "description": "Show the keyboard shortcuts help (\"false\" hides it)",
+              "attribute": "show-shortcuts",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "autoRestore",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true,
+              "default": "true",
+              "description": "Restore the loops and settings saved in localStorage (\"false\" starts fresh)",
+              "attribute": "auto-restore",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "storagePrefix",
+              "type": {
+                "text": "string"
+              },
+              "readonly": true,
+              "default": "'ytloop'",
+              "description": "Prefix of the localStorage keys: give two players of the same media different prefixes",
+              "attribute": "storage-prefix",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "compact",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Hide padding and use minimal styling (for embedded contexts)",
+              "attribute": "compact"
+            },
+            {
+              "kind": "field",
+              "name": "mediaIcon",
+              "type": {
+                "text": "string"
+              },
+              "readonly": true,
+              "description": "Media type icon for compact view (e.g., '🎵', '🎬', '📺')",
+              "default": "'📺'",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getCompactTitle",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              },
+              "description": "Get the display title for compact view",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getSubtitle",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              },
+              "description": "Get channel name for subtitle display",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getMediaId",
+              "return": {
+                "type": {
+                  "text": "string"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "play",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "pause",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getCurrentTime",
+              "return": {
+                "type": {
+                  "text": "number"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getDuration",
+              "return": {
+                "type": {
+                  "text": "number"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "seekTo",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "time",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "setPlaybackRate",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "rate",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "isMediaReady",
+              "return": {
+                "type": {
+                  "text": "boolean"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "initMediaLoad",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "handleKeyboard",
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "KeyboardEvent"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "exclusive",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "When true, starting this player pauses all other exclusive players on the page (\"false\" turns it off)",
+              "attribute": "exclusive",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "expanded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether the player is expanded (showing full controls) or collapsed (compact view)",
+              "attribute": "expanded",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "loopEnabled",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Whether loop mode is enabled - reflects to attribute for CSS. Defaults to true (ON); \"false\" turns it off.",
+              "attribute": "loop-enabled",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "editMode",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether edit mode is active (shows edit panel, drag handles). Always restores as false.",
+              "attribute": "edit-mode",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "minimal",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Ultra-compact mode: shows only title + play button + expand chevron (~44px)",
+              "attribute": "minimal",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "reloadOn",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "description": "Name of a window event that triggers a silent retry when the player is\nin the media error state — retry loading after an app-defined recovery\nevent (e.g. a session restore). No default; the component stays generic.",
+              "attribute": "reload-on",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "currentTime",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "duration",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "isPlaying",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "playbackSpeed",
+              "type": {
+                "text": "number"
+              },
+              "default": "1",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "loops",
+              "type": {
+                "text": "Loop[]"
+              },
+              "default": "[]",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "activeLoopId",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "editState",
+              "type": {
+                "text": "EditState"
+              },
+              "default": "{ loopId: null, boundary: null }",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "countdown",
+              "type": {
+                "text": "number | null"
+              },
+              "default": "null",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "draggingBoundary",
+              "type": {
+                "text": "'start' | 'end' | null"
+              },
+              "default": "null",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "zoomToLoop",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "mediaError",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "activeLoop",
+              "type": {
+                "text": "Loop | null"
+              },
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "editingLoop",
+              "type": {
+                "text": "Loop | null"
+              },
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "isEditing",
+              "type": {
+                "text": "boolean"
+              },
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "startTimeUpdate",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "stopTimeUpdate",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "checkLoopBoundary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleExpanded",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "focus",
+              "parameters": [
+                {
+                  "name": "options",
+                  "optional": true,
+                  "type": {
+                    "text": "FocusOptions"
+                  }
+                }
+              ],
+              "description": "Focus this player for keyboard shortcuts",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "showExpandButton",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether to show the expand button (override in subclasses like audio player)",
+              "readonly": true,
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "togglePlayPause",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "retryMediaLoad",
+              "description": "Retry loading the media after a failed load. Remembers the playback\nposition, calls media.load() (re-issuing the network request), and\nrestores the position on loadedmetadata before clearing the error\nstate. Loops, pitch, playback rate and other component state live in\ncomponent fields and are untouched. Does not auto-play.",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "seek",
+              "parameters": [
+                {
+                  "name": "seconds",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "setSpeed",
+              "parameters": [
+                {
+                  "name": "speed",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "adjustSpeed",
+              "parameters": [
+                {
+                  "name": "delta",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "returnToLoopStart",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "goToStart",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "countdownPlay",
+              "description": "Countdown play: 3-2-1 then play from current position",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "startCountdownThenPlay",
+              "parameters": [
+                {
+                  "name": "startTime",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "cancelCountdown",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "createLoop",
+              "return": {
+                "type": {
+                  "text": "Loop"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "start",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "end",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "updateLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "updates",
+                  "type": {
+                    "text": "Partial<Loop>"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "deleteLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "activateLoop",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string | null"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleLoopEnabled",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "selectLoopByIndex",
+              "parameters": [
+                {
+                  "name": "index",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleEditMode",
+              "description": "Toggle between play and edit mode",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "enterEditMode",
+              "parameters": [
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "exitEditMode",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "adjustEditingBoundary",
+              "parameters": [
+                {
+                  "name": "delta",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "switchEditBoundary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "setBoundaryToCurrent",
+              "parameters": [
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "previewLoop",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "previewEnd",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getTimelineZoom",
+              "return": {
+                "type": {
+                  "text": "{ start: number; end: number; isZoomed: boolean }"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "toggleZoom",
+              "description": "Toggle zoom to loop",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "handleTimelineClick",
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "MouseEvent"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "startDrag",
+              "parameters": [
+                {
+                  "name": "boundary",
+                  "type": {
+                    "text": "'start' | 'end'"
+                  }
+                },
+                {
+                  "name": "loopId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "MouseEvent | TouchEvent"
+                  }
+                }
+              ],
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "saveCurrentState",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "restoreState",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ],
+          "events": [
+            {
+              "name": "playback-state-changed",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "When playback starts or stops (`detail.playing`)"
+            },
+            {
+              "name": "loop-created",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "When a loop is added from the toolbar (`detail.loop`)",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ],
+          "attributes": [
+            {
+              "description": "Deprecated since 0.6.0: use `video-id`.",
+              "name": "videoid",
+              "deprecated": "since 0.6.0: use `video-id`."
+            },
+            {
+              "description": "Deprecated since 0.6.0: use `show-shortcuts`.",
+              "name": "showshortcuts",
+              "deprecated": "since 0.6.0: use `show-shortcuts`."
+            },
+            {
+              "description": "Deprecated since 0.6.0: use `auto-restore`.",
+              "name": "autorestore",
+              "deprecated": "since 0.6.0: use `auto-restore`."
+            },
+            {
+              "description": "Deprecated since 0.6.0: use `storage-prefix`.",
+              "name": "storageprefix",
+              "deprecated": "since 0.6.0: use `storage-prefix`."
+            },
+            {
+              "name": "video-id",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "The YouTube video id, e.g. `85PtFT6yei4` (required)",
+              "fieldName": "videoId"
+            },
+            {
+              "name": "show-shortcuts",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Show the keyboard shortcuts help (\"false\" hides it)",
+              "fieldName": "showShortcuts"
+            },
+            {
+              "name": "auto-restore",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Restore the loops and settings saved in localStorage (\"false\" starts fresh)",
+              "fieldName": "autoRestore"
+            },
+            {
+              "name": "storage-prefix",
+              "type": {
+                "text": "string"
+              },
+              "default": "'ytloop'",
+              "description": "Prefix of the localStorage keys: give two players of the same media different prefixes",
+              "fieldName": "storagePrefix"
+            },
+            {
+              "name": "compact",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Hide padding and use minimal styling (for embedded contexts)",
+              "fieldName": "compact"
+            },
+            {
+              "name": "exclusive",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "When true, starting this player pauses all other exclusive players on the page (\"false\" turns it off)",
+              "fieldName": "exclusive",
+              "attribute": "exclusive",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "expanded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether the player is expanded (showing full controls) or collapsed (compact view)",
+              "fieldName": "expanded",
+              "attribute": "expanded",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "loop-enabled",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Whether loop mode is enabled - reflects to attribute for CSS. Defaults to true (ON); \"false\" turns it off.",
+              "fieldName": "loopEnabled",
+              "attribute": "loop-enabled",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "edit-mode",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Whether edit mode is active (shows edit panel, drag handles). Always restores as false.",
+              "fieldName": "editMode",
+              "attribute": "edit-mode",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "minimal",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Ultra-compact mode: shows only title + play button + expand chevron (~44px)",
+              "fieldName": "minimal",
+              "attribute": "minimal",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "name": "reload-on",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "description": "Name of a window event that triggers a silent retry when the player is\nin the media error state — retry loading after an app-defined recovery\nevent (e.g. a session restore). No default; the component stays generic.",
+              "fieldName": "reloadOn",
+              "attribute": "reload-on",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ],
+          "mixins": [
+            {
+              "name": "LoopPlayerMixin",
+              "module": "/src/components/loop-player-base/index.js"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "youtube-loop-player",
+          "customElement": true,
+          "cssProperties": [
+            {
+              "description": "Background of the player",
+              "name": "--player-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Background of the panels (loop list, edit panel)",
+              "name": "--player-panel-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Tracks, borders and inactive controls",
+              "name": "--player-surface",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Main text",
+              "name": "--player-text-primary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Secondary text (times, labels)",
+              "name": "--player-text-secondary",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Play button, active loop, progress",
+              "name": "--player-accent",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Accent on hover",
+              "name": "--player-accent-hover",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Text on the accent buttons (AA on the accent)",
+              "name": "--player-accent-text",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Delete and stop",
+              "name": "--player-danger",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Text on the danger buttons (AA on the danger colour)",
+              "name": "--player-danger-text",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Background of a loop in the list",
+              "name": "--player-item-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            },
+            {
+              "description": "Background of a loop on hover",
+              "name": "--player-item-hover-bg",
+              "inheritedFrom": {
+                "name": "LoopPlayerMixin",
+                "module": "src/components/loop-player-base/mixin.ts"
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "YouTubeLoopPlayer",
+          "declaration": {
+            "name": "YouTubeLoopPlayer",
+            "module": "src/components/youtube-loop-player/youtube-loop-player.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "youtube-loop-player",
+          "declaration": {
+            "name": "YouTubeLoopPlayer",
+            "module": "src/components/youtube-loop-player/youtube-loop-player.ts"
+          }
+        }
+      ]
+    }
+  ]
+}

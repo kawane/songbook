@@ -1,0 +1,202 @@
+/* ==========================================================================
+   Dark Theme
+   Contains dark mode color values and maps them to semantic variables
+   ========================================================================== */
+
+/* Dark theme source values */
+:root {
+    /* Dark backgrounds */
+    --dark-bg-base: #0f0f0f;
+    --dark-bg-surface: #1a1a1a;
+    --dark-bg-elevated: #282828;
+    --dark-bg-overlay: rgba(0, 0, 0, 0.75);
+
+    /* Dark text */
+    --dark-text-primary: #ffffff;
+    --dark-text-secondary: #aaaaaa;
+    --dark-text-muted: #929292; /* AA as text up to the elevated background */
+    --dark-text-inverse: #0f0f0f;
+
+    /* Dark accent */
+    --dark-accent: #3ea6ff;
+    --dark-accent-hover: #65b8ff;
+
+    /* Dark semantic */
+    --dark-success: #4caf50;
+    --dark-success-bg: rgba(76, 175, 80, 0.15);
+    --dark-warning: #ff9800;
+    --dark-warning-bg: rgba(255, 152, 0, 0.15);
+    --dark-danger: #ff4444;
+    --dark-danger-bg: rgba(255, 68, 68, 0.15);
+    /* Text on the bright danger and success of the dark theme: dark ink
+       (white is 3.4:1 and 2.8:1) */
+    --dark-text-on-danger: #0f0f0f;
+    --dark-text-on-success: #0f0f0f;
+    --dark-info: #3ea6ff;
+    --dark-info-bg: rgba(62, 166, 255, 0.15);
+
+    /* Dark headings - same palette as light, brightened */
+    --dark-heading-1: #d4763f;
+    --dark-heading-2: #a4b82e;
+    --dark-heading-3: #a4b82e;
+    --dark-heading-4: #8a9a26;
+
+    /* Dark borders */
+    --dark-border: #3f3f3f;
+    --dark-border-strong: #525252;
+
+    /* Dark forms */
+    --dark-input-bg: #1a1a1a;
+    --dark-input-border: #3f3f3f;
+
+    /* Dark code */
+    --dark-code-bg: #1a1a1a;
+    --dark-code-text: #aaaaaa;
+
+    /* Dark Player Structure */
+    --dark-player-bg: #1a1a1a;
+    --dark-player-panel-bg: #282828;
+    --dark-player-surface: #3f3f3f;
+    --dark-player-text-primary: #ffffff;
+    --dark-player-text-secondary: #aaaaaa;
+
+    /* Dark Player Accents */
+    --dark-player-accent: #a4b82e;
+    /* Bright olive */
+    --dark-player-accent-hover: #b8cc34;
+    --dark-player-active: #a4b82e;
+    --dark-player-danger: #da4167;
+    /* Cerise for stop/delete */
+    --dark-player-accent-text: #1a1a1a;
+    --dark-player-danger-text: #000000;
+
+    /* Dark Player Item States */
+    --dark-player-item-bg: #1a1a1a;
+    --dark-player-item-hover-bg: #3f3f3f;
+    --dark-player-item-selected-bg: #a4b82e;
+    --dark-player-item-selected-text: #1a1a1a;
+}
+
+/* Dark theme - explicit user choice via data-theme attribute */
+[data-theme="dark"] {
+    --color-bg-base: var(--dark-bg-base);
+    --color-bg-surface: var(--dark-bg-surface);
+    --color-bg-elevated: var(--dark-bg-elevated);
+    --color-bg-overlay: var(--dark-bg-overlay);
+
+    --color-text-primary: var(--dark-text-primary);
+    --color-text-secondary: var(--dark-text-secondary);
+    --color-text-muted: var(--dark-text-muted);
+    --color-text-inverse: var(--dark-text-inverse);
+
+    --color-accent: var(--dark-accent);
+    --color-accent-hover: var(--dark-accent-hover);
+
+    --color-success: var(--dark-success);
+    --color-success-bg: var(--dark-success-bg);
+    --color-warning: var(--dark-warning);
+    --color-warning-bg: var(--dark-warning-bg);
+    --color-danger: var(--dark-danger);
+    --color-danger-bg: var(--dark-danger-bg);
+    --color-text-on-danger: var(--dark-text-on-danger);
+    --color-text-on-success: var(--dark-text-on-success);
+    --color-info: var(--dark-info);
+    --color-info-bg: var(--dark-info-bg);
+
+    --color-heading-1: var(--dark-heading-1);
+    --color-heading-2: var(--dark-heading-2);
+    --color-heading-3: var(--dark-heading-3);
+    --color-heading-4: var(--dark-heading-4);
+
+    --color-border: var(--dark-border);
+    --color-border-strong: var(--dark-border-strong);
+
+    --color-input-bg: var(--dark-input-bg);
+    --color-input-border: var(--dark-input-border);
+    --color-input-focus: var(--dark-accent);
+
+    --color-code-bg: var(--dark-code-bg);
+    --color-code-text: var(--dark-code-text);
+
+    /* Shared Player Variables */
+    --player-bg: var(--dark-player-bg);
+    --player-panel-bg: var(--dark-player-panel-bg);
+    --player-surface: var(--dark-player-surface);
+    --player-text-primary: var(--dark-player-text-primary);
+    --player-text-secondary: var(--dark-player-text-secondary);
+    --player-accent: var(--dark-player-accent);
+    --player-accent-hover: var(--dark-player-accent-hover);
+    --player-active: var(--dark-player-active);
+    --player-danger: var(--dark-player-danger);
+    --player-accent-text: var(--dark-player-accent-text);
+    --player-danger-text: var(--dark-player-danger-text);
+    --player-item-bg: var(--dark-player-item-bg);
+    --player-item-hover-bg: var(--dark-player-item-hover-bg);
+    --player-item-selected-bg: var(--dark-player-item-selected-bg);
+    --player-item-selected-text: var(--dark-player-item-selected-text);
+
+    color-scheme: dark;
+}
+
+/* Dark theme - system preference (only when no explicit choice) */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        --color-bg-base: var(--dark-bg-base);
+        --color-bg-surface: var(--dark-bg-surface);
+        --color-bg-elevated: var(--dark-bg-elevated);
+        --color-bg-overlay: var(--dark-bg-overlay);
+
+        --color-text-primary: var(--dark-text-primary);
+        --color-text-secondary: var(--dark-text-secondary);
+        --color-text-muted: var(--dark-text-muted);
+        --color-text-inverse: var(--dark-text-inverse);
+
+        --color-accent: var(--dark-accent);
+        --color-accent-hover: var(--dark-accent-hover);
+
+        --color-success: var(--dark-success);
+        --color-success-bg: var(--dark-success-bg);
+        --color-warning: var(--dark-warning);
+        --color-warning-bg: var(--dark-warning-bg);
+        --color-danger: var(--dark-danger);
+        --color-danger-bg: var(--dark-danger-bg);
+    --color-text-on-danger: var(--dark-text-on-danger);
+    --color-text-on-success: var(--dark-text-on-success);
+        --color-info: var(--dark-info);
+        --color-info-bg: var(--dark-info-bg);
+
+        --color-heading-1: var(--dark-heading-1);
+        --color-heading-2: var(--dark-heading-2);
+        --color-heading-3: var(--dark-heading-3);
+        --color-heading-4: var(--dark-heading-4);
+
+        --color-border: var(--dark-border);
+        --color-border-strong: var(--dark-border-strong);
+
+        --color-input-bg: var(--dark-input-bg);
+        --color-input-border: var(--dark-input-border);
+        --color-input-focus: var(--dark-accent);
+
+        --color-code-bg: var(--dark-code-bg);
+        --color-code-text: var(--dark-code-text);
+
+        /* Shared Player Variables */
+        --player-bg: var(--dark-player-bg);
+        --player-panel-bg: var(--dark-player-panel-bg);
+        --player-surface: var(--dark-player-surface);
+        --player-text-primary: var(--dark-player-text-primary);
+        --player-text-secondary: var(--dark-player-text-secondary);
+        --player-accent: var(--dark-player-accent);
+        --player-accent-hover: var(--dark-player-accent-hover);
+        --player-active: var(--dark-player-active);
+        --player-danger: var(--dark-player-danger);
+    --player-accent-text: var(--dark-player-accent-text);
+    --player-danger-text: var(--dark-player-danger-text);
+        --player-item-bg: var(--dark-player-item-bg);
+        --player-item-hover-bg: var(--dark-player-item-hover-bg);
+        --player-item-selected-bg: var(--dark-player-item-selected-bg);
+        --player-item-selected-text: var(--dark-player-item-selected-text);
+
+        color-scheme: dark;
+    }
+}
