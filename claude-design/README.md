@@ -12,6 +12,7 @@ interfaces sont celles des dépôts au 7 novembre 2026.
 |---|---|
 | `README.md` | ce brief |
 | `CAPTURES.md` | l'index des captures, avec une légende par écran |
+| `PISTES.md` | ce qui s'annonce : 39 pistes classées par priorité et faisabilité, les possibilités techniques, et ce que l'interface doit prévoir |
 | `screenshots/<appli>/` | les captures en PNG ; suffixes `-dark` (thème sombre) et `-mobile` (390 px de large) |
 | `design-system/` | jetons (`variables.css`, `light.css`, `dark.css`), feuille complète `mesnos.style.css` (v0.6.0), API des web components (`custom-elements.json`) |
 
@@ -210,15 +211,48 @@ décisions.
 
 ## 7. Ce qui s'annonce
 
-Spécifications et idées du carnet qui toucheront l'interface :
-- **La page d'un atelier** (spécifiée en novembre 2026) : ranger les chansons d'un atelier en
-  sections choisies (« répertoire », « envisagées »), avec un ordre et une note, sans perdre la
-  découverte automatique des nouvelles chansons.
-- **Partager avec un groupe** (idée, novembre 2026) : inviter une personne par un lien personnel,
-  voir ses appareils, la révoquer ; une page « Ton prénom ? » pour demander l'accès.
-- **Dans la bibliothèque** : champ à pastilles (`<mesnos-tag-input>`), bascule de thème
-  (`<theme-toggle>`), bouton d'utilisateur connecté (`<mesnos-user-button>`), notifications
-  (`<mesnos-toast>`).
+Le détail est dans [`PISTES.md`](PISTES.md) : **39 pistes** tirées des idées et des
+spécifications du carnet, de ses issues ouvertes et de celles de learnsong, components et users,
+classées par priorité et faisabilité, chacune avec ce que l'interface doit prévoir pour
+l'accueillir.
+
+**La direction.** learnsong ira sans doute plus loin qu'un site statique (dit par le propriétaire
+en novembre 2026). Ce n'est pas le cas aujourd'hui, mais l'ergonomie doit le permettre. La sortie
+de Deno, avant octobre 2027, est le moment naturel pour choisir entre :
+- statique, comme aujourd'hui ;
+- statique avec un petit service à côté ;
+- pages rendues par un serveur.
+
+Une application installable, du calcul audio dans le navigateur et du calcul lourd sur un serveur
+peuvent s'y ajouter. `PISTES.md` décrit ce que chaque modèle permet et ce qu'il impose à l'interface.
+
+**Les pistes, par horizon :**
+- **En cours ou prêt** : page d'atelier en sections, formats de contenu et songbook comme source
+  de learnsong, lecteurs fiables et accessibles, sortie de Deno, console d'exploitation,
+  composants manquants (pastilles, thème, compte, notifications, menu mobile), interfaces en
+  français.
+- **Sans serveur** : recherche et étiquettes, journal de pratique, vitesse progressive, liens vers
+  un passage, lecteurs sur l'écran verrouillé, songbook en scène (défilement, pupitre), saisie de
+  grilles au téléphone, tables d'arrangement interactives.
+- **Avec un petit service** : éditer depuis le téléphone, capture rapide en cours, liens de partage
+  révocables, partager avec un groupe, synchronisation entre appareils, listes de répétition,
+  suivi des leçons, comptes et passkeys.
+- **Ambitieux** : lecteur installable hors ligne, s'enregistrer et se réécouter, boucles suggérées
+  par l'analyse audio, découpe dans le navigateur, suites de danse, transcription en ABC,
+  séparation des pistes.
+- **Un jour** : espaces de collaboration, pédale, métronome et accordeur, diagrammes d'accords,
+  accompagnement généré, extension « Envoyer au lecteur », packs d'exercices, association ou école.
+
+**Ce que l'interface doit prévoir dès maintenant** :
+1. une coquille commune (marque, navigation entre outils, recherche, compte, état de
+   synchronisation) ;
+2. une page de chanson en blocs qui peut grandir ;
+3. un mode pratique plein écran ;
+4. un badge de visibilité et un dialogue « Partager » unique ;
+5. un motif pour les tâches longues ;
+6. la capture au pouce ;
+7. une famille de collections (sections, étiquettes, listes) ;
+8. des états dégradés et vides dessinés.
 
 ## 8. Comment ces captures ont été faites
 
