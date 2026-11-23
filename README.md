@@ -77,10 +77,11 @@ thanks to Elena.
 Docker
 ======
 
-Build the image to launch songbook
+Build the image to launch songbook (`--pull` fetches the latest Java base
+image, which is how security fixes of the JDK reach the server)
 
 ```
-docker build -t songbook .
+docker build --pull -t songbook .
 ```
 
 Launch a container

@@ -25,7 +25,7 @@ decisions): [mesnos/carnet.mesnos.ovh](https://git.mesnos.ovh/mesnos/carnet.mesn
 ## Commands
 
 ```sh
-docker build -t songbook .                                  # build
+docker build --pull -t songbook .                           # build (--pull: latest Java base image, for JDK security fixes)
 docker run --rm -p 8000:8000 -v "$PWD/data:/data" -e ADMIN_KEY_LOGIN=true songbook   # run on :8000 (key in data/administrator.key)
 npm ci && npm test   # API tests (Node 24, Docker required: they build and run the image)
 ```
