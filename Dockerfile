@@ -21,4 +21,8 @@ ENV APP_VERSION=$APP_VERSION
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD wget -qO- "http://127.0.0.1:${PORT}/api/health" || exit 1
 
-ENTRYPOINT ["java", "-cp", "/songbook/lib/*", "songbook.server.Server"]
+# -XX:-UseBASE64Intrinsics: Java4Shell (CVE-2026-114938), a heap overflow in
+# the AVX-512 Base64 decoder of HotSpot, fixed in 25.0.5.1. The flag keeps that
+# code path off even when the image is built on a stale base image (build with
+# --pull). songbook decodes no Base64 today, so it costs nothing.
+ENTRYPOINT ["java", "-XX:-UseBASE64Intrinsics", "-cp", "/songbook/lib/*", "songbook.server.Server"]
